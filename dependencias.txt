@@ -1,0 +1,2 @@
+para la navegacion entre las diferentes archivos
+npm install react-router-dom react-icons
