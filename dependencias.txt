@@ -1,2 +1,4 @@
 para la navegacion entre las diferentes archivos
 npm install react-router-dom react-icons
+Para poder hacer funcionar el firebase instalar:
+npm install firebase
