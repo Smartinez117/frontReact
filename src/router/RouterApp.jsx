@@ -12,8 +12,9 @@ import Home from "../components/home/Home"
 function RouterApp() {
   return (
     <Routes>
-      <Route path="/" element={<Login/>} />
-      <Route path="/home" element={<Home/>} />
+      {/*<Route path="/" element={<Login/>} />  */}
+       {/*<Route path="/home" element={<Home/>} />*/}
+       <Route path="/" element={<App/>} /> {/*<-- modificacion para saltarse el home*/}
       <Route path="/adopcion" element={<Fadopcion />} />
       <Route path="/perdida" element={<Fperdida />} />
       <Route path="/busqueda" element={<Fbusqueda />} />

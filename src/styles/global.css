@@ -1,8 +1,10 @@
+/*prueba de los styles para la interfase*/
+
 body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f0f4f8;
+  background-image: url('/imagen1.jpg'); /*cualquier cosa solo tienen que cambiar el nombre de la imagen de fondo, hay 3 opciones*/
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .main-container {
@@ -19,12 +21,6 @@ body {
   padding: 1rem 2rem;
 }
 
-.menu {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-top: 2rem;
-}
 
 button {
   padding: 1rem;
@@ -38,4 +34,40 @@ button {
 
 button:hover {
   background-color: #4caf50;
+}
+
+/*agregacion de cuadrados para los botones*/
+.menu-btn {
+  width: 100%;
+  max-width: 150px;      /* Tamaño máximo del cuadrado */
+  aspect-ratio: 1 / 1;   /* Hace el botón perfectamente cuadrado */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 1rem;
+  border-radius: 12px;
+  white-space: normal;   /* Permite que el texto haga salto de línea */
+  word-break: break-word;
+  min-height: 0;         /* Fix para Safari */
+}
+
+/* Responsive: en móvil, los botones ocupan 2 por fila */
+@media (max-width: 767.98px) {
+  .col-6 {
+    max-width: 50%;
+    flex: 0 0 50%;
+  }
+}
+
+/* Responsive: en pantallas muy pequeñas, los botones ocupan todo el ancho */
+@media (max-width: 575.98px) {
+  .col-6 {
+    max-width: 100%;
+    flex: 0 0 100%;
+  }
+  .menu-btn {
+    max-width: 100%;
+    font-size: 0.9rem;
+  }
 }
