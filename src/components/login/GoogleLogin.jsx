@@ -1,13 +1,17 @@
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup , GoogleAuthProvider } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
-import { auth, provider } from '../../firebase';
+import { auth } from '../../firebase';
 
 function Login() {
   const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
-      const result = await signInWithPopup(auth, provider);
+      const customProvider = new GoogleAuthProvider(); //El custom provider es para que cada vez que ingreses a Redema Tengas que iniciarsesion y no se te inicie automaticamente
+      customProvider.setCustomParameters({
+      prompt: 'select_account'
+      });
+      const result = await signInWithPopup(auth, customProvider);
       const user = result.user;
       const idToken = await user.getIdToken();
 
@@ -27,7 +31,7 @@ function Login() {
       });
 
       if (response.ok) {
-        navigate('/home');
+        navigate('/app');
       } else {
         alert("Error en autenticación con backend");
       }

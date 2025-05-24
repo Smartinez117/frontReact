@@ -6,15 +6,15 @@ import Fbusqueda from '../components/busqueda/Fbusqueda';
 import Fveterinaria from '../components/veterinaria/Fveterinaria';
 import Fcomunidad from '../components/comunidad/Fcomunidad';
 import Login from "../components/login/GoogleLogin";
-import Home from "../components/home/Home"
+
 
 
 function RouterApp() {
   return (
     <Routes>
-      {/*<Route path="/" element={<Login/>} />  */}
-       {/*<Route path="/home" element={<Home/>} />*/}
-       <Route path="/" element={<App/>} /> {/*<-- modificacion para saltarse el home*/}
+      {/*<Route path="/" element={<Login/>} />
+      <Route path="/app" element={<App/>} /> */} 
+      <Route path="/" element={<App/>} /> {/*<-- modificacion para saltarse el login*/}
       <Route path="/adopcion" element={<Fadopcion />} />
       <Route path="/perdida" element={<Fperdida />} />
       <Route path="/busqueda" element={<Fbusqueda />} />

@@ -1,15 +1,31 @@
 
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './styles/global.css';
 
 function App() {
   const navigate = useNavigate();
+  const [userName, setUserName] = useState('');
+  const [userPhoto, setUserPhoto] = useState('');
+  
+    useEffect(() => {
+      const name = localStorage.getItem("userName");
+      const photo = localStorage.getItem("userPhoto");
+  
+      if (name && photo) {
+        setUserName(name);
+        setUserPhoto(photo);
+      } 
+    });
 
   return (
     <div className="main-container">
       <header className="header">
         <h1>REDEMA</h1>
-        <div className="user-info">Hola, Ana!</div>
+        <div className="user-info">
+          <img src={userPhoto} alt="Perfil" style={{ width: '40px', borderRadius: '50%', marginRight: '10px' }} />
+          Hola, {userName}!
+        </div>
       </header>
       <h2>Conectando corazones con patas</h2>
       {/*cambio del menu para que los botones sean cuadrados y sean mas interactivos*/}
