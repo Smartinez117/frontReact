@@ -1,0 +1,25 @@
+
+
+/* Centrado total de la pantalla */
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Toma toda la altura de la ventana */
+  text-align: center;
+}
+
+/* Título principal */
+.login-container h1 {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+
+/* Parte de "REDEMA" destacada */
+#nombre\ empresa {
+  color: #34a853; /* Un verde similar al de la imagen */
+  font-weight: bold;
+}

@@ -1,6 +1,8 @@
 import { signInWithPopup , GoogleAuthProvider } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase';
+import './GoogleLogin.css';
+
 
 function Login() {
   const navigate = useNavigate();
@@ -42,8 +44,11 @@ function Login() {
 
   return (
     <div className="login-container">
-      <h1>Bienvenido a REDEMA</h1>
-      <button onClick={handleLogin}>Iniciar sesión con Google</button>
+      <h1>Bienvenido a <span id="nombre empresa">REDEMA</span></h1>
+      <button onClick={handleLogin}>
+        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" width="20" height="20" />
+         Iniciar sesión con Google
+        </button>
     </div>
   );
 }
