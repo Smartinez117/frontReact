@@ -2,6 +2,9 @@ import { signInWithPopup , GoogleAuthProvider } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase';
 import './GoogleLogin.css';
+import '../../styles/global.css';
+
+import { BiFontFamily } from "react-icons/bi";
 
 
 function Login() {
@@ -43,13 +46,17 @@ function Login() {
   };
 
   return (
-    <div className="login-container">
-      <h1>Bienvenido a <span id="nombre empresa">REDEMA</span></h1>
-      <button onClick={handleLogin}>
-        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" width="20" height="20" />
-         Iniciar sesión con Google
-        </button>
-    </div>
+        <div className="d-flex justify-content-center align-items-center vh-100" style={{ backgroundImage: "url('/ruta/al/fondo.jpg')", backgroundSize: 'cover' }}>
+          <div className="p-4 rounded shadow" style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', textAlign: 'center' }}>
+            <h1 >Bienvenido a <span className="logo-redema">Redema</span></h1>
+            <h2>¡La Red De Mascotas!</h2>
+            <button className="btn btn-outline-success mt-3" onClick={handleLogin}>
+              <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" width="20" height="20" className="me-2" />
+              Iniciar sesión con Google
+            </button>
+          </div>
+        </div>
+
   );
 }
 
