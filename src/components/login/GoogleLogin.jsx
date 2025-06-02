@@ -6,6 +6,8 @@ import '../../styles/global.css';
 
 import { BiFontFamily } from "react-icons/bi";
 
+import iconoGOOGLE from '../../assets/iconoGOOGLE.svg';
+
 
 function Login() {
   const navigate = useNavigate();
@@ -51,7 +53,7 @@ function Login() {
             <h1 >Bienvenido a <span className="logo-redema">Redema</span></h1>
             <h2>¡La Red De Mascotas!</h2>
             <button className="btn btn-outline-success mt-3" onClick={handleLogin}>
-              <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" width="20" height="20" className="me-2" />
+              <img src={iconoGOOGLE} alt="Google logo" width="20" height="20" className="me-2" />
               Iniciar sesión con Google
             </button>
           </div>
