@@ -11,7 +11,6 @@ import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
-import AdbIcon from '@mui/icons-material/Adb';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -38,7 +37,7 @@ const Navbar = () => {
     setAnchorElUser(null);
   };
 
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const [userName, setUserName] = useState('');
   const [userPhoto, setUserPhoto] = useState('');
   
@@ -54,15 +53,30 @@ const Navbar = () => {
 
 
   return (
-    <AppBar position="static">
+    <AppBar 
+      position="static"
+      sx={{
+        backgroundColor: '#607D8B'
+      }}
+      >
       <Container maxWidth="xl">
         <Toolbar disableGutters>
-          <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
+        <Box
+          component="img"
+          src="/logo.png"
+          alt="Logo"
+          sx={{ 
+            width: 40, 
+            height: 40, 
+            mr: 1, 
+            display: { xs: 'none', md: 'block' },
+          }}
+        />
           <Typography
             variant="h6"
             noWrap
             component="a"
-            href="#"
+            href="/home"
             sx={{
               mr: 2,
               display: { xs: 'none', md: 'flex' },
@@ -83,7 +97,7 @@ const Navbar = () => {
               onClick={handleOpenNavMenu}
               color="inherit"
             >
-              <MenuIcon />
+            <MenuIcon />
             </IconButton>
             <Menu
               anchorEl={anchorElNav}
@@ -107,12 +121,22 @@ const Navbar = () => {
             </Menu>
           </Box>
 
-          <AdbIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
+          <Box
+            component="img"
+            src="/logo.png"
+            alt="Logo"
+            sx={{ 
+              width: 40, 
+              height: 40, 
+              mr: 1, 
+              display: { xs: 'block', md: 'none' } 
+            }}
+          />
           <Typography
             variant="h5"
             noWrap
             component="a"
-            href="#"
+            href="/home"
             sx={{
               mr: 2,
               display: { xs: 'flex', md: 'none' },

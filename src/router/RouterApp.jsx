@@ -7,6 +7,7 @@ import Fveterinaria from '../components/veterinaria/Fveterinaria';
 import Fcomunidad from '../components/comunidad/Fcomunidad';
 import Login from "../components/login/GoogleLogin";
 import Home from '../components/home/Home';
+import Publicar from '../components/Publicar/Publicar';
 import MainLayout from '../layouts/MainLayout';
 
 
@@ -27,6 +28,7 @@ function RouterApp() {
       {/* Rutas que usan MainLayout */}
       <Route element={<MainLayout />}>
         <Route path="/home" element={<Home />} />
+        <Route path="/publicar" element={<Publicar />} />
       </Route>
 
     </Routes>

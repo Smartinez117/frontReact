@@ -4,32 +4,32 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import CardActionArea from '@mui/material/CardActionArea';
+import PostAddIcon from '@mui/icons-material/PostAdd';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import TravelExploreIcon from '@mui/icons-material/TravelExplore';
+import { Link } from 'react-router-dom';
 
 const cards = [
   {
     id: 1,
-    title: '🐶 Adoptar Mascota',
-    description: 'Conocé mascotas que buscan un hogar.',
+    title: 'Publicá',
+    description: 'Publica una búsqueda, encuentro, adopción o estado crítico',
+    icon: <PostAddIcon fontSize="large" color="primary" />,
+    url: "/publicar"
   },
   {
     id: 2,
-    title: '🆘 Reportar Mascota Perdida',
-    description: 'Publicá si perdiste a tu mascota.',
+    title: 'Buscá',
+    description: 'Busca o filtra entre miles de publicaciones',
+    icon: <VisibilityIcon fontSize="large" color="primary" />,
+    url: "/buscar"
   },
   {
     id: 3,
-    title: '📍 Encontré una Mascota',
-    description: 'Ayudá a reunirla con su familia.',
-  },
-  {
-    id: 4,
-    title: '💊 Asistencia Veterinaria',
-    description: 'Solicitá o ofrecé ayuda médica.',
-  },
-  {
-    id: 5,
-    title: '👥 Historias y Comunidad',
-    description: 'Compartí experiencias con otros usuarios.',
+    title: 'Navegá',
+    description: 'Busca veterinarias, refugios y más!',
+    icon: <TravelExploreIcon fontSize="large" color="primary" />,
+    url: "/navegar"
   },
 ];
 
@@ -50,6 +50,8 @@ const Home = () => {
         {cards.map((card, index) => (
           <Card key={card.id}>
             <CardActionArea
+              component={card.url ? Link : 'div'}
+              to={card.url}
               onClick={() => setSelectedCard(index)}
               data-active={selectedCard === index ? '' : undefined}
               sx={{
@@ -63,10 +65,15 @@ const Home = () => {
               }}
             >
               <CardContent>
-                <Typography variant="h5" component="div">
+                {card.icon && (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+                    {card.icon}
+                  </Box>
+                )}
+                <Typography variant="h5" component="div" align="center">
                   {card.title}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" align="center">
                   {card.description}
                 </Typography>
               </CardContent>
