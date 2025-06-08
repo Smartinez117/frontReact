@@ -6,6 +6,9 @@ import Fbusqueda from '../components/busqueda/Fbusqueda';
 import Fveterinaria from '../components/veterinaria/Fveterinaria';
 import Fcomunidad from '../components/comunidad/Fcomunidad';
 import Login from "../components/login/GoogleLogin";
+import Home from '../components/home/Home';
+import MainLayout from '../layouts/MainLayout';
+
 
 
 
@@ -20,6 +23,12 @@ function RouterApp() {
       <Route path="/busqueda" element={<Fbusqueda />} />
       <Route path="/veterinaria" element={<Fveterinaria />} />
       <Route path="/comunidad" element={<Fcomunidad />} />
+
+      {/* Rutas que usan MainLayout */}
+      <Route element={<MainLayout />}>
+        <Route path="/home" element={<Home />} />
+      </Route>
+
     </Routes>
   );
 }
