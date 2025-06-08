@@ -16,7 +16,7 @@ function RouterApp() {
   return (
     <Routes>
       <Route path="/" element={<App/>} />
-      {/*<Route path="/" element={<Login/>} /> {/*<-- modificacion para saltarse el login*/}
+      <Route path="/" element={<Login/>} />
       <Route path="/app" element={<App/>} />
       <Route path="/adopcion" element={<Fadopcion />} />
       <Route path="/perdida" element={<Fperdida />} />

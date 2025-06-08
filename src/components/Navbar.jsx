@@ -12,9 +12,11 @@ import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const pages = ['Products', 'Pricing', 'Blog'];
-const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
+const settings = ['Notificaciones', 'Perfil', 'Dashboard', 'Cerrar sesión'];
 
 const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
@@ -36,6 +38,21 @@ const Navbar = () => {
     setAnchorElUser(null);
   };
 
+    const navigate = useNavigate();
+  const [userName, setUserName] = useState('');
+  const [userPhoto, setUserPhoto] = useState('');
+  
+    useEffect(() => {
+      const name = localStorage.getItem("userName");
+      const photo = localStorage.getItem("userPhoto");
+  
+      if (name && photo) {
+        setUserName(name);
+        setUserPhoto(photo);
+      } 
+    });
+
+
   return (
     <AppBar position="static">
       <Container maxWidth="xl">
@@ -56,7 +73,7 @@ const Navbar = () => {
               textDecoration: 'none',
             }}
           >
-            LOGO
+            REDEMA
           </Typography>
 
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
@@ -107,7 +124,7 @@ const Navbar = () => {
               textDecoration: 'none',
             }}
           >
-            LOGO
+            REDEMA
           </Typography>
 
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
@@ -125,7 +142,7 @@ const Navbar = () => {
           <Box sx={{ flexGrow: 0 }}>
             <Tooltip title="Open settings">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="User" src="/static/images/avatar/2.jpg" />
+                <Avatar alt="User" src={userPhoto} />
               </IconButton>
             </Tooltip>
             <Menu
