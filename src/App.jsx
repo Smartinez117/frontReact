@@ -23,7 +23,20 @@ function App() {
       <header className="header">
         <h1>REDEMA</h1>
         <div className="user-info">
-          <img src={userPhoto} alt="Perfil" style={{ width: '40px', borderRadius: '50%', marginRight: '10px' }} />
+{userPhoto ? (
+  <img
+    src={userPhoto}
+    alt="Perfil"
+    style={{ width: '40px', borderRadius: '50%', marginRight: '10px' }}
+  />
+) : (
+  <img
+    src="/default-profile.png"
+    alt="Perfil"
+    style={{ width: '40px', borderRadius: '50%', marginRight: '10px' }}
+  />
+)}
+
           Hola, {userName}!
         </div>
       </header>

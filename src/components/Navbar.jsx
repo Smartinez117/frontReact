@@ -41,15 +41,13 @@ const Navbar = () => {
   const [userName, setUserName] = useState('');
   const [userPhoto, setUserPhoto] = useState('');
   
-    useEffect(() => {
-      const name = localStorage.getItem("userName");
-      const photo = localStorage.getItem("userPhoto");
-  
-      if (name && photo) {
-        setUserName(name);
-        setUserPhoto(photo);
-      } 
-    });
+useEffect(() => {
+  const name = localStorage.getItem("userName");
+  const photo = localStorage.getItem("userPhoto");
+
+  if (name) setUserName(name);
+  if (photo) setUserPhoto(photo);
+}, []); // <- esta línea faltaba
 
 
   return (
@@ -166,7 +164,14 @@ const Navbar = () => {
           <Box sx={{ flexGrow: 0 }}>
             <Tooltip title="Open settings">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="User" src={userPhoto} />
+
+              {userPhoto ? (
+            <Avatar alt="User" src={userPhoto} />
+              ) : (
+
+                <Avatar alt="User" src="/default-profile.png" />
+              )}
+          
               </IconButton>
             </Tooltip>
             <Menu
