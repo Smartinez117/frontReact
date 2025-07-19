@@ -2,5 +2,10 @@ para la navegacion entre las diferentes archivos
 npm install react-router-dom react-icons
 Para poder hacer funcionar el firebase instalar:
 npm install firebase
+
 para usar las funciones de bootstrap:
 npm install bootstrap
+
+para MUI:
+npm install @mui/material @emotion/react @emotion/styled
+npm install @mui/icons-material
