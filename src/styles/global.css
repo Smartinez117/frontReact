@@ -1,78 +1,95 @@
-/*prueba de los styles para la interfase*/
-
 body {
-  background-image: url('/imagen1.jpg'); /*cualquier cosa solo tienen que cambiar el nombre de la imagen de fondo, hay 3 opciones*/
+  background-image: url('/imagen1.jpg');
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
+  margin: 0;
+  font-family: Arial, sans-serif;
 }
 
 .main-container {
   text-align: center;
   padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #2e7d32;
+  background-color: rgba(46, 125, 50, 0.95);
   color: white;
   padding: 1rem 2rem;
+  border-radius: 8px;
 }
 
-
-button {
-  padding: 1rem;
-  font-size: 1rem;
-  cursor: pointer;
-  background-color: #66bb6a;
-  border: none;
-  border-radius: 5px;
-  color: white;
+.user-info img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
 }
 
-button:hover {
-  background-color: #4caf50;
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
 }
 
-/*agregacion de cuadrados para los botones*/
 .menu-btn {
-  width: 100%;
-  max-width: 150px;      /* Tamaño máximo del cuadrado */
-  aspect-ratio: 1 / 1;   /* Hace el botón perfectamente cuadrado */
+  background-color: #66bb6a;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 1rem;
+  min-width: 160px;
+  min-height: 160px;
+  max-width: 200px;
+  max-height: 200px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  text-align: center;
+  gap: 0.5rem;
   font-size: 1rem;
-  border-radius: 12px;
-  white-space: normal;   /* Permite que el texto haga salto de línea */
-  word-break: break-word;
-  min-height: 0;         /* Fix para Safari */
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-/* Responsive: en móvil, los botones ocupan 2 por fila */
+.menu-btn span:first-child {
+  font-size: 2rem;
+}
+
+.menu-btn span:last-child {
+  line-height: 1.2;
+}
+
+.menu-btn:hover {
+  background-color: #4caf50;
+  transform: translateY(-4px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+}
+
 @media (max-width: 767.98px) {
-  .col-6 {
-    max-width: 50%;
-    flex: 0 0 50%;
+  .menu-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* Responsive: en pantallas muy pequeñas, los botones ocupan todo el ancho */
 @media (max-width: 575.98px) {
-  .col-6 {
-    max-width: 100%;
-    flex: 0 0 100%;
+  .menu-grid {
+    grid-template-columns: 1fr;
   }
   .menu-btn {
     max-width: 100%;
-    font-size: 0.9rem;
+    width: 100%;
+    min-height: 120px;
   }
 }
 
-/* fuente del logo */
 @font-face {
   font-family: 'Chewy';
   src: url('/assets/fonts/Chewy-Regular.ttf') format('truetype');

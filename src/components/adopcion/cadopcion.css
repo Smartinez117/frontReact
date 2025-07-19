@@ -1,4 +1,85 @@
-.adopcion-container {
-  padding: 2rem;
-  background-color: #fff3e0;
+.contenedor-principal {
+  font-family: Arial, sans-serif;
+  background: #fdfdfb;
+  padding: 1rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.menu-btn, .perfil {
+  width: 40px;
+  height: 40px;
+  background: #ccc;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.busqueda {
+  display: flex;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.busqueda input {
+  flex: 1;
+  padding: 0.5rem;
+  margin-right: 1rem;
+}
+
+.filtros button, .crear-btn {
+  margin-right: 0.5rem;
+}
+
+.crear-btn {
+  background: #f5c518;
+  padding: 0.5rem 1rem;
+  border: none;
+  cursor: pointer;
+}
+
+.publicaciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card img {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.acciones button {
+  margin-top: 0.5rem;
+  margin-right: 0.5rem;
+  background: #f5c518;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.paginacion {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.paginacion button {
+  margin: 0 0.2rem;
+  padding: 0.5rem 1rem;
+}
+
+.paginacion .activo {
+  background: #f5c518;
 }
