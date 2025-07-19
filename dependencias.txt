@@ -9,3 +9,7 @@ npm install bootstrap
 para MUI:
 npm install @mui/material @emotion/react @emotion/styled
 npm install @mui/icons-material
+npm install @mui/joy
+
+para un carrusel de imagenes piola:
+npm install keen-slider react
