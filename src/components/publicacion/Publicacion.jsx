@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
 import { useKeenSlider } from "keen-slider/react";
 import "keen-slider/keen-slider.min.css";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -9,9 +11,7 @@ import Backdrop from "@mui/material/Backdrop";
 import Fade from "@mui/material/Fade";
 import Typography from "@mui/material/Typography";
 
-const portada =
-  "https://www.infobae.com/resizer/v2/ZLTNTSTDZ5GU5OG2KLHAFBEWSQ.jpg?auth=a1016acf99183762b70de5d2b3776de88cfd4e162aca2fa51251f2e4570b28f2&smart=true&width=1200&height=630&quality=85";
-
+// Estilo del modal
 const styleModal = {
   position: "absolute",
   top: "50%",
@@ -28,6 +28,7 @@ const styleModal = {
   justifyContent: "center",
 };
 
+// Carrusel adaptativo en altura
 const AdaptiveHeight = (slider) => {
   function updateHeight() {
     slider.container.style.height =
@@ -37,6 +38,7 @@ const AdaptiveHeight = (slider) => {
   slider.on("slideChanged", updateHeight);
 };
 
+// Flechas
 function Arrow({ left, onClick, disabled }) {
   return (
     <svg
@@ -70,17 +72,29 @@ function Arrow({ left, onClick, disabled }) {
 }
 
 export default function Publicacion() {
-  const imagenes = [
-    portada,
-    "https://placekitten.com/800/400",
-    "https://placebear.com/800/400",
-  ];
-
+  const { id } = useParams();
+  const [publicacion, setPublicacion] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0); // para carrusel en la página
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [modalSlide, setModalSlide] = useState(0);
   const [loaded, setLoaded] = useState(false);
 
-  // Slider en la página
+  // Traer datos desde el backend
+  useEffect(() => {
+    axios
+      .get(`http://127.0.0.1:5000/publicaciones/${id}`)
+      .then((res) => {
+        setPublicacion(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error al obtener la publicación:", err);
+        setLoading(false);
+      });
+  }, [id]);
+
+  // Slider de portada
   const [sliderRef, instanceRef] = useKeenSlider(
     {
       initial: 0,
@@ -94,14 +108,11 @@ export default function Publicacion() {
     [AdaptiveHeight]
   );
 
-  // Para el modal: trackea slide actual dentro del modal también
-  const [modalSlide, setModalSlide] = useState(0);
-
-  // Creamos el slider del modal sólo si el modal está abierto
+  // Slider del modal
   const [sliderModalRef, instanceModalRef] = useKeenSlider(
     open
       ? {
-          initial: currentSlide, // arranca en la slide clickeada
+          initial: currentSlide,
           slideChanged(s) {
             setModalSlide(s.track.details.rel);
           },
@@ -113,21 +124,24 @@ export default function Publicacion() {
     [AdaptiveHeight]
   );
 
-  // Abrir modal y setear slide inicial para modal igual al clickeado
   const handleOpen = (idx) => {
-    setCurrentSlide(idx); // actualiza slide en página
-    setModalSlide(idx); // inicializa modal en esta slide
+    setCurrentSlide(idx);
+    setModalSlide(idx);
     setOpen(true);
   };
 
   const handleClose = () => setOpen(false);
 
-  // Cuando el modal abre, sincronizamos el slider del modal para que esté en la slide correcta
   useEffect(() => {
     if (open && instanceModalRef?.current) {
       instanceModalRef.current.moveToIdx(modalSlide);
     }
   }, [open, modalSlide, instanceModalRef]);
+
+  if (loading) return <Typography sx={{ p: 4 }}>Cargando publicación...</Typography>;
+  if (!publicacion) return <Typography sx={{ p: 4 }}>No se encontró la publicación</Typography>;
+
+  const { titulo, descripcion, fecha_creacion, imagenes = [] } = publicacion;
 
   return (
     <>
@@ -142,71 +156,67 @@ export default function Publicacion() {
             boxShadow: 2,
           }}
         >
-          {/* Carrusel visible en la página */}
-          <Box
-            ref={sliderRef}
-            className="keen-slider"
-            sx={{ overflow: "hidden", position: "relative" }}
-          >
-            {imagenes.map((src, i) => (
-              <Box
-                key={i}
-                className={`keen-slider__slide number-slide${i + 1}`}
-                component="img"
-                src={src}
-                alt={`Slide ${i + 1}`}
-                onClick={() => handleOpen(i)} // Abrir modal en la slide que tocaste
-                sx={{
-                  width: "100%",
-                  height: 300,
-                  objectFit: "cover",
-                  borderRadius: 2,
-                  userSelect: "none",
-                  cursor: "pointer",
-                }}
-              />
-            ))}
-
-            {loaded && instanceRef.current && (
-              <>
-                <Arrow
-                  left
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    instanceRef.current?.prev();
+          {/* Carrusel en la página */}
+          {imagenes.length > 0 && (
+            <Box
+              ref={sliderRef}
+              className="keen-slider"
+              sx={{ overflow: "hidden", position: "relative" }}
+            >
+              {imagenes.map((src, i) => (
+                <Box
+                  key={i}
+                  className="keen-slider__slide"
+                  component="img"
+                  src={src}
+                  alt={`Slide ${i + 1}`}
+                  onClick={() => handleOpen(i)}
+                  sx={{
+                    width: "100%",
+                    height: 300,
+                    objectFit: "cover",
+                    borderRadius: 2,
+                    userSelect: "none",
+                    cursor: "pointer",
                   }}
-                  disabled={currentSlide === 0}
                 />
-                <Arrow
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    instanceRef.current?.next();
-                  }}
-                  disabled={
-                    currentSlide ===
-                    instanceRef.current.track.details.slides.length - 1
-                  }
-                />
-              </>
-            )}
-          </Box>
+              ))}
 
-          {/* Texto de la publicación */}
-        <Typography variant="solid" color="primary" noWrap>
-            Fecha
-        </Typography>
-          <Typography variant="h4" gutterBottom sx={{ mt: 3 }}>
-            National Parks
-          </Typography>
-          <Typography variant="h5" sx={{ mb: 1 }}>
-            Yosemite National Park
-          </Typography>
-          <Typography paragraph>
-            Yosemite National Park is a national park spanning 747,956 acres (1,169.4
-            sq mi; 3,025.2 km2) in the western Sierra Nevada of Central California.
-          </Typography>
+              {loaded && instanceRef.current && (
+                <>
+                  <Arrow
+                    left
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      instanceRef.current?.prev();
+                    }}
+                    disabled={currentSlide === 0}
+                  />
+                  <Arrow
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      instanceRef.current?.next();
+                    }}
+                    disabled={
+                      currentSlide ===
+                      instanceRef.current.track.details.slides.length - 1
+                    }
+                  />
+                </>
+              )}
+            </Box>
+          )}
 
-          {/* Modal con carrusel ampliado */}
+          {/* Información textual */}
+          <Typography color="primary" sx={{ mt: 3 }}>
+            {new Date(fecha_creacion).toLocaleString()}
+          </Typography>
+          <Typography variant="h4" gutterBottom sx={{ mt: 1 }}>
+            {titulo}
+          </Typography>
+          <Typography paragraph>{descripcion}</Typography>
+
+          {/* Modal con carrusel */}
           <Modal
             open={open}
             onClose={handleClose}
@@ -225,7 +235,7 @@ export default function Publicacion() {
                     {imagenes.map((src, i) => (
                       <Box
                         key={i}
-                        className={`keen-slider__slide number-slide${i + 1}`}
+                        className="keen-slider__slide"
                         component="img"
                         src={src}
                         alt={`Slide ${i + 1}`}
@@ -235,7 +245,6 @@ export default function Publicacion() {
                           objectFit: "contain",
                           borderRadius: 2,
                           userSelect: "none",
-                          cursor: "default",
                         }}
                       />
                     ))}

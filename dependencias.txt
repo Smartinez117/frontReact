@@ -13,3 +13,6 @@ npm install @mui/joy
 
 para un carrusel de imagenes piola:
 npm install keen-slider react
+
+para trabajar con las url:
+npm install axios
