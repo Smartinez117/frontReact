@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   TextField,
@@ -18,11 +18,63 @@ const Publicar = () => {
   const [categoria, setCategoria] = useState('');
   const [imagenes, setImagenes] = useState([]);
 
+  const [provincias, setProvincias] = useState([]);
+  const [departamentos, setDepartamentos] = useState([]);
+  const [localidades, setLocalidades] = useState([]);
+
+  const [provinciaSeleccionada, setProvinciaSeleccionada] = useState('');
+  const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState('');
+  const [localidadSeleccionada, setLocalidadSeleccionada] = useState('');
+
+  // Cargar provincias al montar el componente
+  useEffect(() => {
+    fetch('http://localhost:5000/api/ubicacion/provincias')
+      .then(res => res.json())
+      .then(data => setProvincias(data))
+      .catch(err => console.error('Error al cargar provincias:', err));
+  }, []);
+
+  // Cargar departamentos cuando cambia provincia
+  useEffect(() => {
+    if (provinciaSeleccionada) {
+      fetch(`http://localhost:5000/api/ubicacion/departamentos?provincia_id=${provinciaSeleccionada}`)
+        .then(res => res.json())
+        .then(data => setDepartamentos(data))
+        .catch(err => console.error('Error al cargar departamentos:', err));
+    } else {
+      setDepartamentos([]);
+      setDepartamentoSeleccionado('');
+      setLocalidades([]);
+      setLocalidadSeleccionada('');
+    }
+  }, [provinciaSeleccionada]);
+
+  // Cargar localidades cuando cambia departamento
+  useEffect(() => {
+    if (departamentoSeleccionado) {
+      fetch(`http://localhost:5000/api/ubicacion/localidades?departamento_id=${departamentoSeleccionado}`)
+        .then(res => res.json())
+        .then(data => setLocalidades(data))
+        .catch(err => console.error('Error al cargar localidades:', err));
+    } else {
+      setLocalidades([]);
+      setLocalidadSeleccionada('');
+    }
+  }, [departamentoSeleccionado]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
     const nombresImagenes = imagenes.map((img) => img.name).join(', ') || 'Ninguna';
-    alert(`Título: ${titulo}\nDescripción: ${descripcion}\nCategoría: ${categoria}\nImágenes: ${nombresImagenes}`);
+    alert(
+      `Título: ${titulo}
+      Descripción: ${descripcion}
+      Categoría: ${categoria}
+      Provincia ID: ${provinciaSeleccionada}
+      Departamento ID: ${departamentoSeleccionado}
+      Localidad ID: ${localidadSeleccionada}
+      Imágenes: ${nombresImagenes}`
+    );
   };
 
   const handleFileChange = (e) => {
@@ -76,6 +128,52 @@ const Publicar = () => {
             required
           />
 
+          {/* Select Provincia */}
+          <FormControl fullWidth required>
+            <InputLabel id="provincia-label">Provincia</InputLabel>
+            <Select
+              labelId="provincia-label"
+              value={provinciaSeleccionada}
+              onChange={(e) => setProvinciaSeleccionada(e.target.value)}
+              label="Provincia"
+            >
+              {provincias.map((p) => (
+                <MenuItem key={p.id} value={p.id}>{p.nombre}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* Select Departamento */}
+          <FormControl fullWidth required disabled={!provinciaSeleccionada}>
+            <InputLabel id="departamento-label">Departamento/Municipio/Comuna</InputLabel>
+            <Select
+              labelId="departamento-label"
+              value={departamentoSeleccionado}
+              onChange={(e) => setDepartamentoSeleccionado(e.target.value)}
+              label="Departamento"
+            >
+              {departamentos.map((d) => (
+                <MenuItem key={d.id} value={d.id}>{d.nombre}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* Select Localidad */}
+          <FormControl fullWidth required disabled={!departamentoSeleccionado}>
+            <InputLabel id="localidad-label">Localidad/Barrio</InputLabel>
+            <Select
+              labelId="localidad-label"
+              value={localidadSeleccionada}
+              onChange={(e) => setLocalidadSeleccionada(e.target.value)}
+              label="Localidad"
+            >
+              {localidades.map((l) => (
+                <MenuItem key={l.id} value={l.id}>{l.nombre}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* Imágenes */}
           <Button variant="contained" component="label">
             Cargar imágenes
             <input
