@@ -16,3 +16,7 @@ npm install keen-slider react
 
 para trabajar con las url:
 npm install axios
+
+mapas:
+npm install leaflet react-leaflet
+

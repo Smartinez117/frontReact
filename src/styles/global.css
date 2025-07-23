@@ -103,3 +103,5 @@ body {
   font-family: 'Chewy', cursive;
   font-weight: bold;
 }
+
+@import "leaflet/dist/leaflet.css";

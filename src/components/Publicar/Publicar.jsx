@@ -1,210 +1,140 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Container,
-  InputLabel,
-  MenuItem,
-  FormControl,
-  Select,
-  Paper,
-} from '@mui/material';
+import 'leaflet/dist/leaflet.css';
 
-const Publicar = () => {
-  const [titulo, setTitulo] = useState('');
-  const [descripcion, setDescripcion] = useState('');
-  const [categoria, setCategoria] = useState('');
-  const [imagenes, setImagenes] = useState([]);
+import L from 'leaflet';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 
+
+// Fix para que aparezcan los íconos de marcador en Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
+
+const marcadorIcono = new L.Icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
+function MapaInteractivo({ lat, lng, setLatLng }) {
+  const map = useMapEvents({
+    click(e) {
+      setLatLng({ lat: e.latlng.lat, lng: e.latlng.lng });
+    },
+  });
+
+  useEffect(() => {
+    map.setView([lat, lng], 13);
+  }, [lat, lng]);
+
+  return <Marker position={[lat, lng]} icon={marcadorIcono} />;
+}
+
+export default function Publicar() {
   const [provincias, setProvincias] = useState([]);
   const [departamentos, setDepartamentos] = useState([]);
   const [localidades, setLocalidades] = useState([]);
 
-  const [provinciaSeleccionada, setProvinciaSeleccionada] = useState('');
-  const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState('');
-  const [localidadSeleccionada, setLocalidadSeleccionada] = useState('');
+  const [provinciaId, setProvinciaId] = useState('');
+  const [departamentoId, setDepartamentoId] = useState('');
+  const [localidadId, setLocalidadId] = useState('');
+  const [coordenadas, setCoordenadas] = useState({ lat: -34.6, lng: -58.4 }); // Por defecto Buenos Aires
 
-  // Cargar provincias al montar el componente
-  useEffect(() => {
-    fetch('http://localhost:5000/api/ubicacion/provincias')
-      .then(res => res.json())
-      .then(data => setProvincias(data))
-      .catch(err => console.error('Error al cargar provincias:', err));
-  }, []);
+  // Fetch provincias al montar
+useEffect(() => {
+  fetch('http://localhost:5000/api/ubicacion/provincias')
+    .then(res => res.json())
+    .then(data => {
+      setProvincias(data); // o como se llame tu setter
+    })
+    .catch(error => console.error('Error al obtener provincias:', error));
+}, []);
 
-  // Cargar departamentos cuando cambia provincia
+
+  // Fetch departamentos
   useEffect(() => {
-    if (provinciaSeleccionada) {
-      fetch(`http://localhost:5000/api/ubicacion/departamentos?provincia_id=${provinciaSeleccionada}`)
+    if (provinciaId) {
+      fetch(`http://localhost:5000/api/ubicacion/departamentos?provincia_id=${provinciaId}`)
         .then(res => res.json())
-        .then(data => setDepartamentos(data))
-        .catch(err => console.error('Error al cargar departamentos:', err));
+        .then(setDepartamentos);
     } else {
       setDepartamentos([]);
-      setDepartamentoSeleccionado('');
-      setLocalidades([]);
-      setLocalidadSeleccionada('');
+      setDepartamentoId('');
     }
-  }, [provinciaSeleccionada]);
+  }, [provinciaId]);
 
-  // Cargar localidades cuando cambia departamento
+  // Fetch localidades
   useEffect(() => {
-    if (departamentoSeleccionado) {
-      fetch(`http://localhost:5000/api/ubicacion/localidades?departamento_id=${departamentoSeleccionado}`)
+    if (departamentoId) {
+      fetch(`http://localhost:5000/api/ubicacion/localidades?departamento_id=${departamentoId}`)
         .then(res => res.json())
-        .then(data => setLocalidades(data))
-        .catch(err => console.error('Error al cargar localidades:', err));
+        .then(setLocalidades);
     } else {
       setLocalidades([]);
-      setLocalidadSeleccionada('');
+      setLocalidadId('');
     }
-  }, [departamentoSeleccionado]);
+  }, [departamentoId]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const nombresImagenes = imagenes.map((img) => img.name).join(', ') || 'Ninguna';
-    alert(
-      `Título: ${titulo}
-      Descripción: ${descripcion}
-      Categoría: ${categoria}
-      Provincia ID: ${provinciaSeleccionada}
-      Departamento ID: ${departamentoSeleccionado}
-      Localidad ID: ${localidadSeleccionada}
-      Imágenes: ${nombresImagenes}`
-    );
-  };
-
-  const handleFileChange = (e) => {
-    setImagenes(Array.from(e.target.files));
+  // Al elegir localidad, actualizar coordenadas del mapa
+  const handleLocalidadChange = (e) => {
+    const id = e.target.value;
+    setLocalidadId(id);
+    const loc = localidades.find(l => l.id.toString() === id);
+    if (loc) {
+      setCoordenadas({ lat: parseFloat(loc.latitud), lng: parseFloat(loc.longitud) });
+    }
   };
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 4 }}>
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Publicar
-        </Typography>
+    <div>
+      <h2>Publicar Mascota</h2>
 
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
-          noValidate
-          sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}
+      <label>Provincia:</label>
+      <select value={provinciaId} onChange={e => setProvinciaId(e.target.value)}>
+        <option value="">Seleccioná una provincia</option>
+        {provincias.map(prov => (
+          <option key={prov.id} value={prov.id}>{prov.nombre}</option>
+        ))}
+      </select>
+
+
+      <label>Departamento / Municipio:</label>
+      <select value={departamentoId} onChange={e => setDepartamentoId(e.target.value)} disabled={!provinciaId}>
+        <option value="">Seleccionar...</option>
+        {departamentos.map(d => (
+          <option key={d.id} value={d.id}>{d.nombre}</option>
+        ))}
+      </select>
+
+      <label>Localidad:</label>
+      <select value={localidadId} onChange={handleLocalidadChange} disabled={!departamentoId}>
+        <option value="">Seleccionar...</option>
+        {localidades.map(l => (
+          <option key={l.id} value={l.id}>{l.nombre}</option>
+        ))}
+      </select>
+
+      <div style={{ height: '400px', marginTop: '1rem' }}>
+        <MapContainer
+          center={[coordenadas.lat, coordenadas.lng]}
+          zoom={13}
+          style={{ height: '100%', width: '100%' }}
         >
-          <FormControl fullWidth required>
-            <InputLabel id="categoria-label">Categoría</InputLabel>
-            <Select
-              labelId="categoria-label"
-              id="categoria"
-              value={categoria}
-              label="Categoría"
-              onChange={(e) => setCategoria(e.target.value)}
-            >
-              <MenuItem value="adopcion">Adopción</MenuItem>
-              <MenuItem value="perdida">Mascota perdida</MenuItem>
-              <MenuItem value="encontrada">Mascota encontrada</MenuItem>
-              <MenuItem value="critico">Estado crítico</MenuItem>
-            </Select>
-          </FormControl>
-
-          <TextField
-            label="Título"
-            variant="outlined"
-            value={titulo}
-            onChange={(e) => setTitulo(e.target.value)}
-            required
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+          <MapaInteractivo lat={coordenadas.lat} lng={coordenadas.lng} setLatLng={setCoordenadas} />
+        </MapContainer>
+      </div>
 
-          <TextField
-            label="Descripción"
-            variant="outlined"
-            multiline
-            rows={4}
-            value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
-            required
-          />
-
-          {/* Select Provincia */}
-          <FormControl fullWidth required>
-            <InputLabel id="provincia-label">Provincia</InputLabel>
-            <Select
-              labelId="provincia-label"
-              value={provinciaSeleccionada}
-              onChange={(e) => setProvinciaSeleccionada(e.target.value)}
-              label="Provincia"
-            >
-              {provincias.map((p) => (
-                <MenuItem key={p.id} value={p.id}>{p.nombre}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {/* Select Departamento */}
-          <FormControl fullWidth required disabled={!provinciaSeleccionada}>
-            <InputLabel id="departamento-label">Departamento/Municipio/Comuna</InputLabel>
-            <Select
-              labelId="departamento-label"
-              value={departamentoSeleccionado}
-              onChange={(e) => setDepartamentoSeleccionado(e.target.value)}
-              label="Departamento"
-            >
-              {departamentos.map((d) => (
-                <MenuItem key={d.id} value={d.id}>{d.nombre}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {/* Select Localidad */}
-          <FormControl fullWidth required disabled={!departamentoSeleccionado}>
-            <InputLabel id="localidad-label">Localidad/Barrio</InputLabel>
-            <Select
-              labelId="localidad-label"
-              value={localidadSeleccionada}
-              onChange={(e) => setLocalidadSeleccionada(e.target.value)}
-              label="Localidad"
-            >
-              {localidades.map((l) => (
-                <MenuItem key={l.id} value={l.id}>{l.nombre}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {/* Imágenes */}
-          <Button variant="contained" component="label">
-            Cargar imágenes
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              hidden
-              onChange={handleFileChange}
-            />
-          </Button>
-
-          {imagenes.length > 0 && (
-            <Box>
-              <Typography variant="body2" color="text.secondary">
-                Imágenes seleccionadas:
-              </Typography>
-              <ul>
-                {imagenes.map((img, i) => (
-                  <li key={i}>{img.name}</li>
-                ))}
-              </ul>
-            </Box>
-          )}
-
-          <Button type="submit" variant="contained" color="primary">
-            Publicar
-          </Button>
-        </Box>
-      </Paper>
-    </Container>
+      <p>Latitud: {coordenadas.lat.toFixed(6)} | Longitud: {coordenadas.lng.toFixed(6)}</p>
+    </div>
   );
-};
-
-export default Publicar;
+}
