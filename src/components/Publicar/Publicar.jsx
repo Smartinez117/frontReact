@@ -1,11 +1,12 @@
 import 'leaflet/dist/leaflet.css';
-
 import L from 'leaflet';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -18,8 +19,24 @@ import ToggleButtonGroup from '@mui/joy/ToggleButtonGroup';
 import Select, { selectClasses } from '@mui/joy/Select';
 import Option from '@mui/joy/Option';
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
+import Autocomplete from '@mui/joy/Autocomplete';
+import FormControl from '@mui/joy/FormControl';
+import FormLabel from '@mui/joy/FormLabel';
+import SvgIcon from '@mui/joy/SvgIcon';
+import { styled } from '@mui/joy';
 
-// Fix para que aparezcan los íconos de marcador en Leaflet
+const VisuallyHiddenInput = styled('input')`
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  white-space: nowrap;
+  width: 1px;
+`;
+
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -59,12 +76,13 @@ export default function Publicar() {
   const [localidadId, setLocalidadId] = useState('');
   const [coordenadas, setCoordenadas] = useState({ lat: -34.6, lng: -58.4 });
 
-  // Fetch provincias
+  const [etiquetas, setEtiquetas] = useState([]);
+
   useEffect(() => {
     fetch('http://localhost:5000/api/ubicacion/provincias')
       .then(res => res.json())
       .then(setProvincias)
-      .catch(error => console.error('Error al obtener provincias:', error));
+      .catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -88,6 +106,16 @@ export default function Publicar() {
       setLocalidadId('');
     }
   }, [departamentoId]);
+
+  useEffect(() => {
+    // Cargar etiquetas reales desde la API
+    fetch('http://localhost:5000/api/etiquetas')
+      .then(res => res.json())
+      .then(data => {
+        const mapped = data.map(e => ({ label: e.nombre, id: e.id }));
+        setEtiquetas(mapped);
+      });
+  }, []);
 
   const handleLocalidadChange = (id) => {
     setLocalidadId(id);
@@ -119,6 +147,7 @@ export default function Publicar() {
             value={seleccionado}
             onChange={(event, newValue) => setSeleccionado(newValue)}
             sx={{ my: 2, gap: 1, flexWrap: 'wrap' }}
+            exclusive
           >
             <Button value="Adopción">Adopción</Button>
             <Button value="Búsqueda">Búsqueda</Button>
@@ -129,7 +158,7 @@ export default function Publicar() {
           <Input placeholder="Título" sx={{ my: 2 }} />
           <Textarea placeholder="Descripción del caso…" minRows={2} sx={{ mb: 2 }} />
 
-          {/* Select: Provincia */}
+          {/* Select Provincia */}
           <Select
             placeholder="Seleccioná una provincia"
             value={provinciaId || null}
@@ -151,9 +180,9 @@ export default function Publicar() {
             ))}
           </Select>
 
-          {/* Select: Departamento */}
+          {/* Select Departamento */}
           <Select
-            placeholder="Seleccioná un departamento"
+            placeholder="Seleccioná un partido/departamento/comuna"
             value={departamentoId || null}
             onChange={(e, val) => setDepartamentoId(val)}
             disabled={!provinciaId}
@@ -165,7 +194,7 @@ export default function Publicar() {
             ))}
           </Select>
 
-          {/* Select: Localidad */}
+          {/* Select Localidad */}
           <Select
             placeholder="Seleccioná una localidad"
             value={localidadId || null}
@@ -192,6 +221,49 @@ export default function Publicar() {
           </div>
 
           <p>Latitud: {coordenadas.lat.toFixed(6)} | Longitud: {coordenadas.lng.toFixed(6)}</p>
+
+          {/* Etiquetas */}
+          <FormControl id="multiple-limit-tags" sx={{ mt: 3 }}>
+            <FormLabel>Etiquetas</FormLabel>
+            <Autocomplete
+              multiple
+              placeholder="Seleccioná etiquetas"
+              limitTags={3}
+              options={etiquetas}
+              getOptionLabel={(option) => option.label}
+              defaultValue={["Perro", "Gato"]}
+              sx={{ width: '100%' }}
+            />
+          </FormControl>
+
+          {/* Subida de imágenes */}
+          <Button
+            component="label"
+            role={undefined}
+            tabIndex={-1}
+            variant="outlined"
+            color="neutral"
+            startDecorator={
+              <SvgIcon>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"
+                  />
+                </svg>
+              </SvgIcon>
+            }
+          >
+            Subir imágenes
+            <VisuallyHiddenInput type="file" multiple />
+          </Button>
         </div>
       </Container>
     </React.Fragment>
