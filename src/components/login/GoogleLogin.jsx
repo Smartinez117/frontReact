@@ -26,7 +26,8 @@ function Login() {
       localStorage.setItem("userName", user.displayName);
       localStorage.setItem("userPhoto", user.photoURL);
       localStorage.setItem("userEmail", user.email);
-      localStorage.setItem("userToken", idToken);
+      localStorage.setItem("token", idToken); //  así lo esperás en el fetch más adelante
+
 
       // Enviamos token al backend
       const response = await fetch("http://localhost:5000/api/login", {
