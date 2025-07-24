@@ -66,6 +66,9 @@ function MapaInteractivo({ lat, lng, setLatLng }) {
 }
 
 export default function Publicar() {
+  const [titulo, setTitulo] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+
   const [seleccionado, setSeleccionado] = useState('');
   const [provincias, setProvincias] = useState([]);
   const [departamentos, setDepartamentos] = useState([]);
@@ -77,6 +80,10 @@ export default function Publicar() {
   const [coordenadas, setCoordenadas] = useState({ lat: -34.6, lng: -58.4 });
 
   const [etiquetas, setEtiquetas] = useState([]);
+  const [etiquetasSeleccionadas, setEtiquetasSeleccionadas] = useState([]);
+  
+  // Estado para las imágenes
+  const [imagenesSeleccionadas, setImagenesSeleccionadas] = useState([]);
 
   useEffect(() => {
     fetch('http://localhost:5000/api/ubicacion/provincias')
@@ -108,12 +115,15 @@ export default function Publicar() {
   }, [departamentoId]);
 
   useEffect(() => {
-    // Cargar etiquetas reales desde la API
     fetch('http://localhost:5000/api/etiquetas')
       .then(res => res.json())
       .then(data => {
         const mapped = data.map(e => ({ label: e.nombre, id: e.id }));
         setEtiquetas(mapped);
+
+        // Asignar automáticamente Perro y Gato si existen
+        const iniciales = mapped.filter(et => ['Perro', 'Gato'].includes(et.label));
+        setEtiquetasSeleccionadas(iniciales);
       });
   }, []);
 
@@ -124,6 +134,66 @@ export default function Publicar() {
       setCoordenadas({ lat: parseFloat(loc.latitud), lng: parseFloat(loc.longitud) });
     }
   };
+
+  // Función para manejar la selección de imágenes
+  const handleImagenesChange = (event) => {
+    const files = Array.from(event.target.files);
+    setImagenesSeleccionadas(files);
+  };
+
+const handlePublicar = async () => {
+  try {
+    // 1. Preparar imágenes para enviar al endpoint del backend
+    const formData = new FormData();
+    imagenesSeleccionadas.forEach((img) => {
+      formData.append("imagenes", img);
+    });
+
+    // 2. Subir imágenes al backend y obtener URLs
+    const resImagenes = await fetch("http://localhost:5000/subir-imagenes", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!resImagenes.ok) throw new Error("Error al subir imágenes");
+
+    const dataImagenes = await resImagenes.json();
+    const urlsImagenes = dataImagenes.urls;
+    const datos = {
+      categoria: seleccionado,
+      titulo: titulo,
+      descripcion: descripcion,
+      provincia_id: provinciaId,
+      departamento_id: departamentoId,
+      localidad_id: localidadId,
+      coordenadas: coordenadas,
+      etiquetas: etiquetasSeleccionadas.map(e => e.id), // solo IDs
+      imagenes: urlsImagenes
+    };
+    console.log("🟢 JSON que se enviará al backend:", JSON.stringify(datos, null, 2));
+
+  // 4. Enviar datos al backend
+    const res = await fetch("http://localhost:5000/publicaciones", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(datos),
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      console.log("Publicación creada:", data);
+      alert("✅ ¡Publicación enviada con éxito!");
+    } else {
+      throw new Error(data.error || "Error en el envío");
+    }
+    } catch (error) {
+    console.error("Error al publicar:", error);
+    alert("❌ Ocurrió un error al publicar");
+    }
+  };
+
 
   return (
     <React.Fragment>
@@ -155,32 +225,33 @@ export default function Publicar() {
             <Button value="Estado Crítico">Estado Crítico</Button>
           </ToggleButtonGroup>
 
-          <Input placeholder="Título" sx={{ my: 2 }} />
-          <Textarea placeholder="Descripción del caso…" minRows={2} sx={{ mb: 2 }} />
+          <Input 
+            placeholder="Título" 
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)} 
+            sx={{ my: 2 }} 
+          />
 
-          {/* Select Provincia */}
+          <Textarea 
+            placeholder="Descripción del caso…" 
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
+            minRows={2} 
+            sx={{ mb: 2 }} 
+          />
+
           <Select
             placeholder="Seleccioná una provincia"
             value={provinciaId || null}
             onChange={(e, val) => setProvinciaId(val)}
             indicator={<KeyboardArrowDown />}
-            sx={{
-              width: '100%',
-              mb: 2,
-              [`& .${selectClasses.indicator}`]: {
-                transition: '0.2s',
-                [`&.${selectClasses.expanded}`]: {
-                  transform: 'rotate(-180deg)',
-                },
-              },
-            }}
+            sx={{ width: '100%', mb: 2 }}
           >
             {provincias.map((prov) => (
               <Option key={prov.id} value={prov.id.toString()}>{prov.nombre}</Option>
             ))}
           </Select>
 
-          {/* Select Departamento */}
           <Select
             placeholder="Seleccioná un partido/departamento/comuna"
             value={departamentoId || null}
@@ -194,7 +265,6 @@ export default function Publicar() {
             ))}
           </Select>
 
-          {/* Select Localidad */}
           <Select
             placeholder="Seleccioná una localidad"
             value={localidadId || null}
@@ -208,7 +278,6 @@ export default function Publicar() {
             ))}
           </Select>
 
-          {/* Mapa */}
           <div style={{ height: '400px', marginTop: '1rem' }}>
             <MapContainer
               center={[coordenadas.lat, coordenadas.lng]}
@@ -222,7 +291,6 @@ export default function Publicar() {
 
           <p>Latitud: {coordenadas.lat.toFixed(6)} | Longitud: {coordenadas.lng.toFixed(6)}</p>
 
-          {/* Etiquetas */}
           <FormControl id="multiple-limit-tags" sx={{ mt: 3 }}>
             <FormLabel>Etiquetas</FormLabel>
             <Autocomplete
@@ -230,13 +298,13 @@ export default function Publicar() {
               placeholder="Seleccioná etiquetas"
               limitTags={3}
               options={etiquetas}
+              value={etiquetasSeleccionadas}
+              onChange={(event, value) => setEtiquetasSeleccionadas(value)}
               getOptionLabel={(option) => option.label}
-              defaultValue={["Perro", "Gato"]}
               sx={{ width: '100%' }}
             />
           </FormControl>
 
-          {/* Subida de imágenes */}
           <Button
             component="label"
             role={undefined}
@@ -261,8 +329,36 @@ export default function Publicar() {
               </SvgIcon>
             }
           >
-            Subir imágenes
-            <VisuallyHiddenInput type="file" multiple />
+            Subir imágenes ({imagenesSeleccionadas.length})
+            <VisuallyHiddenInput 
+              type="file" 
+              multiple 
+              accept="image/*"
+              onChange={handleImagenesChange}
+            />
+          </Button>
+          
+          {imagenesSeleccionadas.length > 0 && (
+            <p style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: '#666' }}>
+              {imagenesSeleccionadas.map(file => file.name).join(', ')}
+            </p>
+          )}
+
+                    <Button
+            size="lg"
+            variant="solid"
+            sx={{
+              width: '100%',
+              mt: 4,
+              backgroundColor: '#F1B400',
+              color: '#0D171C',
+              '&:hover': {
+                backgroundColor: '#d9a900',
+              },
+            }}
+            onClick={handlePublicar}
+          >
+            Publicar
           </Button>
         </div>
       </Container>
