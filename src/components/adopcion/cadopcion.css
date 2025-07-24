@@ -1,7 +1,11 @@
 .contenedor-principal {
   font-family: Arial, sans-serif;
-  background: #fdfdfb;
-  padding: 1rem;
+  background: white;
+  padding: 0.15rem;
+}
+
+body{
+  background-color: white;
 }
 
 .header {

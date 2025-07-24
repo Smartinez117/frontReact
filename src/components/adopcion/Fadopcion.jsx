@@ -1,33 +1,29 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './cadopcion.css';
-
-const publicaciones = [
-  {
-    nombre: 'Indio',
-    raza: 'Golden Retriever',
-    ciudad: 'Campana',
-    hashtags: ['#Perro', '#Adopción', '#BuenosAires'],
-    imagen: '/assets/perro1.png',
-  },
-  {
-    nombre: 'Mittens',
-    raza: 'Golden Retriever',
-    ciudad: 'Campana',
-    hashtags: ['#Gato', '#Adopción', '#BuenosAires'],
-    imagen: '/assets/gato1.png',
-  },
-  {
-    nombre: 'Max',
-    raza: 'Golden Retriever',
-    ciudad: 'Campana',
-    hashtags: ['#Perro', '#Adopción', '#BuenosAires'],
-    imagen: '/assets/perro2.png',
-  },
-];
-
+import { getPublicacionesFiltradas } from '../../services/adopcionService';
 
 function Fadopcion() {
- const [pagina, setPagina] = useState(1);
+  const [pagina, setPagina] = useState(1);
+  const [publicaciones, setPublicaciones] = useState([]);
+  const [categoria, setCategoria] = useState('');
+  const [busqueda, setBusqueda] = useState('');
+
+  useEffect(() => {
+    async function cargarPublicaciones() {
+      try {
+        const filtros = {
+          categoria: categoria || undefined,
+          etiquetas: busqueda || undefined,
+          limit: 9
+        };
+        const resultado = await getPublicacionesFiltradas(filtros);
+        setPublicaciones(resultado);
+      } catch (error) {
+        console.error('Error al obtener publicaciones:', error);
+      }
+    }
+    cargarPublicaciones();
+  }, [categoria, busqueda]);
 
   return (
     <div className="contenedor-principal">
@@ -37,22 +33,27 @@ function Fadopcion() {
         <div className="perfil"></div>
       </header>
       <div className="busqueda">
-        <input type="text" placeholder="Buscar" />
+        <input
+          type="text"
+          placeholder="Buscar por etiquetas..."
+          value={busqueda}
+          onChange={e => setBusqueda(e.target.value)}
+        />
         <div className="filtros">
-          <button>Perros ▼</button>
-          <button>Gatos ▼</button>
-          <button>Otros ▼</button>
+          <button onClick={() => setCategoria('Perro')}>Perros ▼</button>
+          <button onClick={() => setCategoria('Gato')}>Gatos ▼</button>
+          <button onClick={() => setCategoria('')}>Todos ▼</button>
         </div>
         <button className="crear-btn">Crear publicación</button>
       </div>
       <div className="publicaciones">
-        {publicaciones.map((pub, index) => (
-          <div className="card" key={index}>
-            <img src={pub.imagen} alt={pub.nombre} />
-            <h2>{pub.nombre}</h2>
-            <p>{pub.raza}</p>
-            <p><span className="icon">📍</span> {pub.ciudad}</p>
-            <p>{pub.hashtags.join(', ')}</p>
+        {publicaciones.map((pub) => (
+          <div className="card" key={pub.id}>
+            <img src={pub.imagenes[0]} alt={pub.titulo} />
+            <h2>{pub.titulo}</h2>
+            <p>{pub.categoria}</p>
+            <p><span className="icon">📍</span> {pub.coordenadas?.join(', ')}</p>
+            <p>{pub.etiquetas.map(e => `#${e}`).join(', ')}</p>
             <div className="acciones">
               <button>↩ Compartir</button>
               <button>📷 Qr</button>
