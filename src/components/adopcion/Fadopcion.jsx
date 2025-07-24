@@ -1,78 +1,136 @@
-import { useEffect, useState } from 'react';
-import './cadopcion.css';
-import { getPublicacionesFiltradas } from '../../services/adopcionService';
+import React, { useState, useEffect } from 'react';
+import { fetchPublicacionesFiltradas } from '../../services/adopcionService'; // Ajusta ruta si hace falta
 
-function Fadopcion() {
-  const [pagina, setPagina] = useState(1);
+// Importamos iconos desde react-icons para compartir y QR
+import { FaShareAlt, FaQrcode } from 'react-icons/fa';
+
+import './cadopcion.css'; // Importamos estilos
+
+const categoriasPosibles = [
+  { label: "Adopción", value: "adopcion" },
+  { label: "Búsqueda", value: "busqueda" },
+  { label: "Estado crítico", value: "estado critico" }
+];
+
+const FAdopcion = () => {
+  // Estado para categorías seleccionadas en filtros (checkboxes)
+  const [categorias, setCategorias] = useState([]);
+
+  // Lista de publicaciones obtenidas
   const [publicaciones, setPublicaciones] = useState([]);
-  const [categoria, setCategoria] = useState('');
-  const [busqueda, setBusqueda] = useState('');
 
-  useEffect(() => {
-    async function cargarPublicaciones() {
-      try {
-        const filtros = {
-          categoria: categoria || undefined,
-          etiquetas: busqueda || undefined,
-          limit: 9
-        };
-        const resultado = await getPublicacionesFiltradas(filtros);
-        setPublicaciones(resultado);
-      } catch (error) {
-        console.error('Error al obtener publicaciones:', error);
-      }
+  // Estado carga y error
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Controla cambio en selección de checkbox de categorías
+  const handleCategoriaChange = (e) => {
+    const value = e.target.value;
+    if (e.target.checked) {
+      setCategorias(prev => [...prev, value]);
+    } else {
+      setCategorias(prev => prev.filter(cat => cat !== value));
     }
-    cargarPublicaciones();
-  }, [categoria, busqueda]);
+  };
+
+  // Efecto para llamar al backend cada vez que cambian las categorías
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+
+    // Armamos parámetros para la consulta GET
+    const params = {};
+
+    // Si hay categorías seleccionadas, enviamos concatenadas por coma
+    if (categorias.length > 0) {
+      params.categoria = categorias.join(',');
+    }
+
+    fetchPublicacionesFiltradas(params)
+      .then(setPublicaciones)
+      .catch((e) => setError(e.message || 'Error al obtener publicaciones'))
+      .finally(() => setLoading(false));
+    
+  }, [categorias]);
 
   return (
-    <div className="contenedor-principal">
-      <header className="header">
-        <button className="menu-btn">☰</button>
-        <h1>Publicaciones</h1>
-        <div className="perfil"></div>
-      </header>
-      <div className="busqueda">
-        <input
-          type="text"
-          placeholder="Buscar por etiquetas..."
-          value={busqueda}
-          onChange={e => setBusqueda(e.target.value)}
-        />
-        <div className="filtros">
-          <button onClick={() => setCategoria('Perro')}>Perros ▼</button>
-          <button onClick={() => setCategoria('Gato')}>Gatos ▼</button>
-          <button onClick={() => setCategoria('')}>Todos ▼</button>
+    <div className="fadopcion-container">
+      {/* Header con filtros y botón */}
+      <div className="header-filtros">
+        {/* Checkbox para categorías */}
+        <div className="categorias-filtros">
+          {categoriasPosibles.map(({ label, value }) => (
+            <label key={value}>
+              <input
+                type="checkbox"
+                value={value}
+                checked={categorias.includes(value)}
+                onChange={handleCategoriaChange}
+              />
+              {label}
+            </label>
+          ))}
         </div>
-        <button className="crear-btn">Crear publicación</button>
+
+        {/* Botón superior derecho (sin funcionalidad) */}
+        <button className="boton-crear" type="button">
+          Nueva publicación
+        </button>
       </div>
-      <div className="publicaciones">
-        {publicaciones.map((pub) => (
-          <div className="card" key={pub.id}>
-            <img src={pub.imagenes[0]} alt={pub.titulo} />
-            <h2>{pub.titulo}</h2>
-            <p>{pub.categoria}</p>
-            <p><span className="icon">📍</span> {pub.coordenadas?.join(', ')}</p>
-            <p>{pub.etiquetas.map(e => `#${e}`).join(', ')}</p>
-            <div className="acciones">
-              <button>↩ Compartir</button>
-              <button>📷 Qr</button>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="paginacion">
-        {[1, 2, 3, 4, 5].map((num) => (
-          <button
-            key={num}
-            className={pagina === num ? 'activo' : ''}
-            onClick={() => setPagina(num)}>
-            {num}
-          </button>
-        ))}
-      </div>
+
+      {/* Estados de carga y error */}
+      {loading && <p>Cargando publicaciones...</p>}
+      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+
+      {/* Lista de publicaciones */}
+      {!loading && !error && (
+        <ul className="lista-publicaciones">
+          {publicaciones.length === 0 && (
+            <li>No hay publicaciones que coincidan con los filtros.</li>
+          )}
+          {publicaciones.map(pub => {
+            // Tomamos solo la primera imagen para mostrar
+            const imagenPrincipal = pub.imagenes.length > 0 ? pub.imagenes[0] : null;
+
+            return (
+              <li key={pub.id} className="publicacion-card">
+                {imagenPrincipal && (
+                  <img
+                    src={imagenPrincipal}
+                    alt={`Imagen de ${pub.titulo}`}
+                    className="publicacion-imagen"
+                  />
+                )}
+                <div className="publicacion-contenido">
+                  <h3 className="publicacion-titulo">{pub.titulo}</h3>
+                  <span className="publicacion-categoria">{pub.categoria}</span>
+
+                  {/* Etiquetas como chips */}
+                  <div className="publicacion-etiquetas">
+                    {pub.etiquetas.map((etiqueta, idx) => (
+                      <span key={idx} className="etiqueta-chip">
+                        {etiqueta}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Botones compartir y QR (sin función) */}
+                  <div className="publicacion-acciones">
+                    <button className="boton-icono" type="button" title="Compartir">
+                      <FaShareAlt />
+                    </button>
+                    <button className="boton-icono" type="button" title="QR">
+                      <FaQrcode />
+                    </button>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
-}
+};
 
-export default Fadopcion;
+export default FAdopcion;

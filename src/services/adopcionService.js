@@ -1,28 +1,36 @@
-// src/services/adopcionService.js
-import { mapearPublicacion } from '../models/publicacion';
+import Publicacion from '../models/publicacion';
 
-const BASE_URL = 'http://localhost:5000/publicaciones'; // cambia por tu dominio real
+const BASE_URL = 'http://localhost:5000';
 
-// GET publicación por ID
-export async function getPublicacionPorId(id) {
-  const res = await fetch(`${BASE_URL}/${id}`);
-  if (!res.ok) throw new Error('No se pudo obtener la publicación');
-  const data = await res.json();
-  return mapearPublicacion(data);
+// Función para obtener publicaciones filtradas desde el backend
+export async function fetchPublicacionesFiltradas(params) {
+  // Convertimos los parámetros de filtro en query string
+  const query = new URLSearchParams(params).toString();
+
+  // Hacemos la petición GET a la URL completa con filtros
+  const response = await fetch(`${BASE_URL}/publicaciones/filtrar?${query}`);
+
+  if (!response.ok) {
+    throw new Error(`Error al obtener publicaciones: ${response.statusText}`);
+  }
+
+  // Obtenemos el JSON con la lista de publicaciones
+  const data = await response.json();
+
+  // Convertimos cada objeto recibido en una instancia de Publicacion
+  return data.map(pub => new Publicacion(pub));
 }
 
-// GET publicaciones filtradas
-export async function getPublicacionesFiltradas(filtros = {}) {
-  const params = new URLSearchParams();
+// Opcional: función para obtener una publicación por ID si la necesitas
+export async function fetchPublicacionPorId(id) {
+  const response = await fetch(`${BASE_URL}/publicaciones/${id}`);
 
-  Object.entries(filtros).forEach(([clave, valor]) => {
-    if (valor !== undefined && valor !== null && valor !== '') {
-      params.append(clave, valor);
-    }
-  });
+  if (!response.ok) {
+    throw new Error(`Error al obtener la publicación: ${response.statusText}`);
+  }
 
-  const res = await fetch(`${BASE_URL}/filtrar?${params.toString()}`);
-  if (!res.ok) throw new Error('Error al obtener publicaciones filtradas');
-  const data = await res.json();
-  return data.map(mapearPublicacion);
+  const data = await response.json();
+  return new Publicacion(data);
 }
+
+

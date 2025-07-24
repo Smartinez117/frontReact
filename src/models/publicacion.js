@@ -1,14 +1,28 @@
-// src/models/publicacion.js
-export const mapearPublicacion = (pub) => ({
-  id: pub.id,
-  titulo: pub.titulo,
-  descripcion: pub.descripcion,
-  categoria: pub.categoria,
-  etiquetas: pub.etiquetas?.split(',').map(e => e.trim()) || [],
-  coordenadas: pub.coordenadas,
-  imagenes: pub.imagenes || [],
-  fecha_creacion: pub.fecha_creacion,
-  fecha_modificacion: pub.fecha_modificacion,
-  id_usuario: pub.id_usuario,
-  id_locacion: pub.id_locacion
-});
+// models/Publicacion.js
+export default class Publicacion {
+  constructor({
+    id,
+    id_usuario,
+    id_locacion,
+    titulo,
+    descripcion,
+    categoria,
+    etiquetas,
+    fecha_creacion,
+    fecha_modificacion,
+    coordenadas,
+    imagenes = [] // arreglo de URLs de imágenes
+  }) {
+    this.id = id;
+    this.id_usuario = id_usuario;
+    this.id_locacion = id_locacion;
+    this.titulo = titulo;
+    this.descripcion = descripcion;
+    this.categoria = categoria;
+    this.etiquetas = etiquetas;
+    this.fecha_creacion = fecha_creacion;
+    this.fecha_modificacion = fecha_modificacion;
+    this.coordenadas = coordenadas;
+    this.imagenes = imagenes;
+  }
+}
