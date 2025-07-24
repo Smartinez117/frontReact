@@ -25,6 +25,8 @@ import FormLabel from '@mui/joy/FormLabel';
 import SvgIcon from '@mui/joy/SvgIcon';
 import { styled } from '@mui/joy';
 
+import { getAuth } from "firebase/auth";
+
 const VisuallyHiddenInput = styled('input')`
   clip: rect(0 0 0 0);
   clip-path: inset(50%);
@@ -163,9 +165,7 @@ const handlePublicar = async () => {
       categoria: seleccionado,
       titulo: titulo,
       descripcion: descripcion,
-      provincia_id: provinciaId,
-      departamento_id: departamentoId,
-      localidad_id: localidadId,
+      id_locacion: localidadId,
       coordenadas: coordenadas,
       etiquetas: etiquetasSeleccionadas.map(e => e.id), // solo IDs
       imagenes: urlsImagenes
@@ -173,10 +173,12 @@ const handlePublicar = async () => {
     console.log("🟢 JSON que se enviará al backend:", JSON.stringify(datos, null, 2));
 
   // 4. Enviar datos al backend
+    const token = localStorage.getItem("token");
     const res = await fetch("http://localhost:5000/publicaciones", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}` // ⬅️ Agregás el token aquí
       },
       body: JSON.stringify(datos),
     });
