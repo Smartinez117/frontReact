@@ -76,7 +76,7 @@ const FAdopcion = () => {
         </div>
 
         {/* Botón superior derecho (navega a /perdida) */}
-        <button className="boton-crear" type="button" onClick={() => navigate('/perdida')}>
+        <button className="boton-crear" type="button" onClick={() => navigate('/publicar')}>
           Nueva publicación
         </button>
       </div>
