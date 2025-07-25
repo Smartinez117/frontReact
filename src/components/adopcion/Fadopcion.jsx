@@ -84,7 +84,7 @@ const FAdopcion = () => {
         </div>
 
         {/* Botón superior derecho (navega a /perdida) */}
-        <button className="boton-crear" type="button" onClick={() => navigate('/perdida')}>
+        <button className="boton-crear" type="button" onClick={() => navigate('/publicar')}>
           Nueva publicación
         </button>
       </div>
@@ -141,6 +141,7 @@ const FAdopcion = () => {
                     className="boton-crear boton-detalle"
                     data-id={pub.id}
                     aria-label={`Detalle publicación ${pub.titulo}`}
+                    onClick={() => navigate(`/publicacion/${pub.id}`)}
                   >
                     Ver detalle
                   </button>
