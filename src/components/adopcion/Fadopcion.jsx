@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetchPublicacionesFiltradas } from '../../services/adopcionService'; // Ajusta ruta si hace falta
 import { useNavigate } from 'react-router-dom';
+import QR from "../qr/fqr.jsx";
 
 // Importamos iconos desde react-icons para compartir y QR
 import { FaShareAlt, FaQrcode } from 'react-icons/fa';
@@ -15,6 +16,7 @@ const categoriasPosibles = [
 
 const FAdopcion = () => {
   const navigate = useNavigate();
+  const [idPublicacion, setIdPublicacion] = useState(null);
 
   // Estado para categorías seleccionadas en filtros (checkboxes)
   const [categorias, setCategorias] = useState([]);
@@ -35,6 +37,12 @@ const FAdopcion = () => {
       setCategorias(prev => prev.filter(cat => cat !== value));
     }
   };
+  //actualizacion del estado 
+  const handleClick = (e) => {
+  const id = Number(e.currentTarget.getAttribute("data-id"));
+  setIdPublicacion(id); // actualizar estado directamente aquí
+};
+
 
   // Efecto para llamar al backend cada vez que cambian las categorías
   useEffect(() => {
@@ -119,10 +127,10 @@ const FAdopcion = () => {
 
                   {/* Botones compartir y QR (sin función) */}
                   <div className="publicacion-acciones">
-                    <button className="boton-icono" type="button" title="Compartir">
+                    <button className="boton-icono" type="button" title="Compartir" data-id={pub.id}>
                       <FaShareAlt />
                     </button>
-                    <button className="boton-icono" type="button" title="QR">
+                    <button className="boton-icono" type="button" title="QR" data-id={pub.id}  onClick={handleClick}>
                       <FaQrcode />
                     </button>
                   </div>
@@ -142,6 +150,11 @@ const FAdopcion = () => {
           })}
         </ul>
       )}
+          {idPublicacion && (
+      <div className="qr-container" style={{ marginTop: '30px' }}>
+        <QR idPublicacion={idPublicacion} />
+      </div>
+    )}
     </div>
   );
 };

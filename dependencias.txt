@@ -2,6 +2,8 @@ para la navegacion entre las diferentes archivos
 npm install react-router-dom react-icons
 Para poder hacer funcionar el firebase instalar:
 npm install firebase
+para usar el qr usar:
+npm install react-qr-code
 
 para usar las funciones de bootstrap:
 npm install bootstrap
