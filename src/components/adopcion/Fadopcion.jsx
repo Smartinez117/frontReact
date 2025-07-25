@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { fetchPublicacionesFiltradas } from '../../services/adopcionService'; // Ajusta ruta si hace falta
+import { useNavigate } from 'react-router-dom';
 
 // Importamos iconos desde react-icons para compartir y QR
 import { FaShareAlt, FaQrcode } from 'react-icons/fa';
@@ -13,6 +14,8 @@ const categoriasPosibles = [
 ];
 
 const FAdopcion = () => {
+  const navigate = useNavigate();
+
   // Estado para categorías seleccionadas en filtros (checkboxes)
   const [categorias, setCategorias] = useState([]);
 
@@ -72,8 +75,8 @@ const FAdopcion = () => {
           ))}
         </div>
 
-        {/* Botón superior derecho (sin funcionalidad) */}
-        <button className="boton-crear" type="button">
+        {/* Botón superior derecho (navega a /perdida) */}
+        <button className="boton-crear" type="button" onClick={() => navigate('/perdida')}>
           Nueva publicación
         </button>
       </div>
@@ -123,6 +126,16 @@ const FAdopcion = () => {
                       <FaQrcode />
                     </button>
                   </div>
+
+                  {/* Botón adicional debajo (mismo estilo que boton-crear) con data-id */}
+                  <button
+                    type="button"
+                    className="boton-crear boton-detalle"
+                    data-id={pub.id}
+                    aria-label={`Detalle publicación ${pub.titulo}`}
+                  >
+                    Ver detalle
+                  </button>
                 </div>
               </li>
             );

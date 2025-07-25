@@ -32,7 +32,7 @@
   user-select: none;
 }
 
-/* Estilo para el botón superior derecho */
+/* Estilo para el botón superior derecho y botones de detalle */
 .boton-crear {
   background-color: #f2b01e;
   color: black;
@@ -49,13 +49,20 @@
   background-color: #d69917;
 }
 
-/* Lista de publicaciones en columna */
+/* En caso de querer un pequeño margen para botones detalle */
+.boton-detalle {
+  margin-top: 12px;
+  align-self: flex-start;
+}
+
+/* Lista de publicaciones en grid flexible */
 .lista-publicaciones {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
+  padding-left: 0;
+  list-style: none;
 }
-
 
 /* Tarjeta individual de publicación */
 .publicacion-card {
@@ -66,12 +73,13 @@
   align-items: flex-start; /* Cards alinean el contenido arriba */
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   min-height: 120px;
+  flex-direction: row;
 }
 
 /* Imagen de la publicación */
 .publicacion-imagen {
   width: 150px;
-  height: auto;        /* Imagen adapta su altura */
+  height: auto;         /* Imagen adapta su altura */
   border-radius: 10px;
   object-fit: cover;
   margin-right: 20px;
@@ -120,7 +128,7 @@
   user-select: none;
 }
 
-/* Contenedor de botones acciones */
+/* Contenedor de botones acciones compartir y QR */
 .publicacion-acciones {
   display: flex;
   gap: 15px;
