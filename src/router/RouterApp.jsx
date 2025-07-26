@@ -10,9 +10,8 @@ import Home from '../components/home/Home';
 import Publicar from '../components/Publicar/Publicar';
 import Publicacion from '../components/publicacion/Publicacion';
 import MainLayout from '../layouts/MainLayout';
-
-
-
+//importacion de las publicaciones del perfil de usuario.
+import SelfPublications from '../components/Perfil/selfPublications';
 
 function RouterApp() {
   return (
@@ -25,6 +24,8 @@ function RouterApp() {
       <Route path="/busqueda" element={<Fbusqueda />} />
       <Route path="/veterinaria" element={<Fveterinaria />} />
       <Route path="/comunidad" element={<Fcomunidad />} />
+      <Route path="/perfil" element={<SelfPublications/>} />
+
 
       {/* Rutas que usan MainLayout */}
       <Route element={<MainLayout />}>
