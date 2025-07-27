@@ -8,6 +8,7 @@ import Fcomunidad from '../components/comunidad/Fcomunidad';
 import Login from "../components/login/GoogleLogin";
 import Home from '../components/home/Home';
 import Publicar from '../components/Publicar/Publicar';
+import Buscar from '../components/buscar/Buscar';
 import Publicacion from '../components/publicacion/Publicacion';
 import MainLayout from '../layouts/MainLayout';
 //importacion de las publicaciones del perfil de usuario.
@@ -16,7 +17,7 @@ import SelfPublications from '../components/Perfil/selfPublications';
 function RouterApp() {
   return (
     <Routes>
-      <Route path="/" element={<App/>} />
+      
       <Route path="/login" element={<Login/>} />
       <Route path="/app" element={<App/>} />
       <Route path="/adopcion" element={<Fadopcion />} />
@@ -29,8 +30,11 @@ function RouterApp() {
 
       {/* Rutas que usan MainLayout */}
       <Route element={<MainLayout />}>
+        {/*<Route path="/" element={<App/>} />*/}
+        <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
         <Route path="/publicar" element={<Publicar />} />
+        <Route path="/buscar" element={<Buscar />} />
         <Route path="/publicacion/prueba" element={<Publicacion />} />
         <Route path="/publicacion/:id" element={<Publicacion />} />
       </Route>
