@@ -1,122 +1,226 @@
 import React, { useState, useEffect } from 'react';
-import { fetchPublicacionesFiltradas } from '../../services/adopcionService'; // Ajusta ruta si hace falta
+import { fetchPublicacionesFiltradas } from '../../services/adopcionService';
 import { useNavigate } from 'react-router-dom';
 import QR from "../qr/fqr.jsx";
-
-// Importamos iconos desde react-icons para compartir y QR
 import { FaShareAlt, FaQrcode } from 'react-icons/fa';
-
-import './Buscar.css'; // Importamos estilos
+import './Buscar.css';
+import { FormControl, FormLabel, TextField } from '@mui/material';
+import Autocomplete from '@mui/material/Autocomplete';
 
 const categoriasPosibles = [
-  { label: "Adopción", value: "adopcion" },
-  { label: "Búsqueda", value: "busqueda" },
-  { label: "Estado crítico", value: "estado critico" }
+  { label: "Adopción", value: "Adopción" },
+  { label: "Búsqueda", value: "Búsqueda" },
+  { label: "Encuentro", value: "Encuentro" },
+  { label: "Estado crítico", value: "Estado Crítico" }
 ];
 
 const Buscar = () => {
   const navigate = useNavigate();
   const [idPublicacion, setIdPublicacion] = useState(null);
 
-  // Estado para categorías seleccionadas en filtros (checkboxes)
   const [categorias, setCategorias] = useState([]);
-
-  // Lista de publicaciones obtenidas
   const [publicaciones, setPublicaciones] = useState([]);
-
-  // Estado carga y error
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Controla cambio en selección de checkbox de categorías
-  const handleCategoriaChange = (e) => {
-    const value = e.target.value;
-    if (e.target.checked) {
-      setCategorias(prev => [...prev, value]);
-    } else {
-      setCategorias(prev => prev.filter(cat => cat !== value));
-    }
-  };
-  //actualizacion del estado 
-  const handleClick = (e) => {
-  const id = Number(e.currentTarget.getAttribute("data-id"));
-  setIdPublicacion(id); // actualizar estado directamente aquí
-};
+  const [fechaDesde, setFechaDesde] = useState('');
+  const [fechaHasta, setFechaHasta] = useState('');
+  const [radioKm, setRadioKm] = useState('');
+  const [tagsSeleccionados, setTagsSeleccionados] = useState([]);
+
+  const [latitud, setLatitud] = useState(null);
+  const [longitud, setLongitud] = useState(null);
+  const [etiquetasDisponibles, setEtiquetasDisponibles] = useState([]);
+  const [etiquetasSeleccionadas, setEtiquetasSeleccionadas] = useState([]);
+
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
 
-  // Efecto para llamar al backend cada vez que cambian las categorías
   useEffect(() => {
+    // Obtener etiquetas desde backend
+    fetch('http://localhost:5000/api/etiquetas')
+    .then(res => res.json())
+    .then(data => {
+      const mapped = data.map(e => ({ label: e.nombre, id: e.id }));
+      setEtiquetasDisponibles(mapped);
+    })
+    .catch(err => console.error("Error al obtener etiquetas:", err));
+
+
+    // Obtener ubicación del navegador
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLatitud(position.coords.latitude);
+          setLongitud(position.coords.longitude);
+        },
+        (err) => {
+          console.warn("Ubicación no disponible:", err.message);
+        }
+      );
+    }
+
+    // Cargar publicaciones por defecto
+    aplicarFiltros();
+  }, []);
+
+  const aplicarFiltros = () => {
     setLoading(true);
     setError(null);
 
-    // Armamos parámetros para la consulta GET
     const params = {};
 
-    // Si hay categorías seleccionadas, enviamos concatenadas por coma
-    if (categorias.length > 0) {
-      params.categoria = categorias.join(',');
+    if (categorias.length > 0) params.categoria = categorias[0];
+    if (fechaDesde) params.fecha_min = fechaDesde;
+    if (fechaHasta) params.fecha_max = fechaHasta;
+
+    const radio = parseFloat(radioKm);
+    if (!isNaN(radio)) params.radio = radio;
+
+    if (tagsSeleccionados.length > 0)
+      params.etiquetas = tagsSeleccionados.join(',');
+
+    if (latitud && longitud) {
+      params.lat = latitud;
+      params.lon = longitud;
     }
 
     fetchPublicacionesFiltradas(params)
       .then(setPublicaciones)
-      .catch((e) => setError(e.message || 'Error al obtener publicaciones'))
+      .catch((e) => {
+        console.error("Error en fetch:", e);
+        setError(e.message || 'Error al obtener publicaciones');
+      })
       .finally(() => setLoading(false));
-    
-  }, [categorias]);
+  };
+
+  const handleCategoriaChange = (value) => {
+    if (categorias.includes(value)) {
+      setCategorias(categorias.filter(cat => cat !== value));
+    } else {
+      setCategorias([value]);
+    }
+  };
+
+  const handleClickQR = (e) => {
+    const id = Number(e.currentTarget.getAttribute("data-id"));
+    setIdPublicacion(id);
+  };
 
   return (
     <div className="buscar-container">
-      {/* Header con filtros y botón */}
       <div className="header-filtros">
-        {/* Checkbox para categorías */}
-        <div className="categorias-filtros">
-          {categoriasPosibles.map(({ label, value }) => (
-            <label key={value}>
-              <input
-                type="checkbox"
-                value={value}
-                checked={categorias.includes(value)}
-                onChange={handleCategoriaChange}
-              />
-              {label}
-            </label>
-          ))}
-        </div>
 
-        {/* Botón superior derecho (navega a /perdida) */}
+        <button
+          className="boton-toggle-filtros"
+          onClick={() => setMostrarFiltros(prev => !prev)}
+          style={{ marginBottom: '1rem' }}
+        >
+          {mostrarFiltros ? 'Ocultar filtros' : 'Mostrar filtros'}
+        </button>
+
+        {mostrarFiltros && (
+          <div className="filtros-avanzados">
+            <div className="filtros-avanzados">
+              <div className="filtro-grupo">
+                <label>Categoría:</label>
+                {categoriasPosibles.map(({ label, value }) => (
+                  <button
+                    key={value}
+                    className={`filtro-boton ${categorias.includes(value) ? 'activo' : ''}`}
+                    onClick={() => handleCategoriaChange(value)}
+                    type="button"
+                  >
+                    {label}
+                  </button>
+                ))}
+                {categorias.length > 0 && (
+                  <button
+                    className="filtro-boton limpiar"
+                    onClick={() => setCategorias([])}
+                    type="button"
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
+
+              <div className="filtro-grupo">
+                <label>Fecha desde:</label>
+                <input type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
+                <label>hasta:</label>
+                <input type="date" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
+              </div>
+
+              <div className="filtro-grupo">
+                <label>Radio desde tu ubicación (km):</label>
+                <input
+                  type="number"
+                  placeholder="Ej: 20"
+                  value={radioKm}
+                  onChange={e => setRadioKm(e.target.value)}
+                />
+              </div>
+
+              <div className="filtro-grupo">
+                <FormControl fullWidth sx={{ mt: 1 }}>
+                  <FormLabel>Etiquetas</FormLabel>
+                  <Autocomplete
+                    multiple
+                    options={etiquetasDisponibles}
+                    value={etiquetasSeleccionadas}
+                    onChange={(event, newValue) => {
+                      setEtiquetasSeleccionadas(newValue);
+                      setTagsSeleccionados(newValue.map(opt => opt.label)); // importante para aplicarFiltros
+                    }}
+                    getOptionLabel={(option) => option.label}
+                    renderInput={(params) => (
+                      <TextField {...params} placeholder="Seleccioná etiquetas" />
+                    )}
+                  />
+                </FormControl>
+              </div>
+
+
+              <button className="boton-aplicar-filtros" onClick={aplicarFiltros}>
+                Aplicar filtros
+              </button>
+            </div>  
+          </div>
+        )}
+
         <button className="boton-crear" type="button" onClick={() => navigate('/publicar')}>
           Nueva publicación
         </button>
       </div>
 
-      {/* Estados de carga y error */}
       {loading && <p>Cargando publicaciones...</p>}
       {error && <p style={{ color: 'red' }}>Error: {error}</p>}
 
-      {/* Lista de publicaciones */}
       {!loading && !error && (
         <ul className="lista-publicaciones">
           {publicaciones.length === 0 && (
             <li>No hay publicaciones que coincidan con los filtros.</li>
           )}
           {publicaciones.map(pub => {
-            // Tomamos solo la primera imagen para mostrar
             const imagenPrincipal = pub.imagenes.length > 0 ? pub.imagenes[0] : null;
 
             return (
               <li key={pub.id} className="publicacion-card">
                 {imagenPrincipal && (
-                  <img
-                    src={imagenPrincipal}
-                    alt={`Imagen de ${pub.titulo}`}
-                    className="publicacion-imagen"
-                  />
+                  <div className="publicacion-imagen-container">
+                    <img
+                      src={imagenPrincipal}
+                      alt={`Imagen de ${pub.titulo}`}
+                      className="publicacion-imagen"
+                    />
+                  </div>
                 )}
+
                 <div className="publicacion-contenido">
                   <h3 className="publicacion-titulo">{pub.titulo}</h3>
                   <span className="publicacion-categoria">{pub.categoria}</span>
 
-                  {/* Etiquetas como chips */}
                   <div className="publicacion-etiquetas">
                     {pub.etiquetas.map((etiqueta, idx) => (
                       <span key={idx} className="etiqueta-chip">
@@ -125,22 +229,19 @@ const Buscar = () => {
                     ))}
                   </div>
 
-                  {/* Botones compartir y QR (sin función) */}
                   <div className="publicacion-acciones">
                     <button className="boton-icono" type="button" title="Compartir" data-id={pub.id}>
                       <FaShareAlt />
                     </button>
-                    <button className="boton-icono" type="button" title="QR" data-id={pub.id}  onClick={handleClick}>
+                    <button className="boton-icono" type="button" title="QR" data-id={pub.id} onClick={handleClickQR}>
                       <FaQrcode />
                     </button>
                   </div>
 
-                  {/* Botón adicional debajo (mismo estilo que boton-crear) con data-id */}
                   <button
                     type="button"
                     className="boton-crear boton-detalle"
                     data-id={pub.id}
-                    aria-label={`Detalle publicación ${pub.titulo}`}
                     onClick={() => navigate(`/publicacion/${pub.id}`)}
                   >
                     Ver detalle
@@ -151,11 +252,12 @@ const Buscar = () => {
           })}
         </ul>
       )}
-          {idPublicacion && (
-      <div className="qr-container" style={{ marginTop: '30px' }}>
-        <QR idPublicacion={idPublicacion} />
-      </div>
-    )}
+
+      {idPublicacion && (
+        <div className="qr-container" style={{ marginTop: '30px' }}>
+          <QR idPublicacion={idPublicacion} />
+        </div>
+      )}
     </div>
   );
 };
