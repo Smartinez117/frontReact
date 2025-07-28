@@ -1,6 +1,6 @@
 // SelfPublications.jsx
 import React, { useState, useEffect } from 'react';
-import { fetchPublicacionesFiltradas } from '../../services/adopcionService'; // Ajusta ruta si hace falta
+import { fetchPublicacionesFiltradas } from '../../services/perfilService'; // Ajusta ruta si hace falta
 import { useNavigate } from 'react-router-dom';
 // Importo íconos solo si hace falta, por ahora quitados
 import './cselfPublications.css';

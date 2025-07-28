@@ -12,7 +12,7 @@ import Buscar from '../components/buscar/Buscar';
 import Publicacion from '../components/publicacion/Publicacion';
 import MainLayout from '../layouts/MainLayout';
 //importacion de las publicaciones del perfil de usuario.
-import SelfPublications from '../components/Perfil/selfPublications';
+import Perfil from '../components/Perfil/Perfil';
 
 
 function RouterApp() {
@@ -26,7 +26,7 @@ function RouterApp() {
       <Route path="/busqueda" element={<Fbusqueda />} />
       <Route path="/veterinaria" element={<Fveterinaria />} />
       <Route path="/comunidad" element={<Fcomunidad />} />
-      <Route path="/perfil" element={<SelfPublications/>} />
+      <Route path="/perfil" element={<Perfil/>} />
 
 
       {/* Rutas que usan MainLayout */}

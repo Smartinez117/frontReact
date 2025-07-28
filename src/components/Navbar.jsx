@@ -80,6 +80,8 @@ const Navbar = () => {
         .catch((error) => {
           console.error("Error al cerrar sesión:", error);
         });
+    } else if (setting === "Perfil") {
+    navigate("/perfil");
     } else {
       console.log(`Seleccionaste: ${setting}`);
     }
