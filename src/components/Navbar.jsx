@@ -15,8 +15,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 
-const pages = ['Products', 'Pricing', 'Blog'];
-const settings = ['Notificaciones', 'Perfil', 'Dashboard', 'Cerrar sesión'];
+const pages = ['Inicio', 'Publicar', 'Buscar', 'Mapa', 'Configuracion'];
+const settings = ['Notificaciones', 'Mi perfil', 'Dashboard', 'Cerrar sesión'];
 
 const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
@@ -68,28 +68,44 @@ const Navbar = () => {
   }, [navigate]);
 
   const handleUserMenuClick = (setting) => {
-    if (setting === "Cerrar sesión") {
-      const auth = getAuth();
-      signOut(auth)
-        .then(() => {
-          localStorage.removeItem("userName");
-          localStorage.removeItem("userPhoto");
-          console.log("🔒 Sesión cerrada");
-          navigate("/login");
-        })
-        .catch((error) => {
-          console.error("Error al cerrar sesión:", error);
-        });
-    } else if (setting === "Perfil") {
-    navigate("/perfil");
-    } else {
-      console.log(`Seleccionaste: ${setting}`);
+    const auth = getAuth();
+
+    switch (setting) {
+      case "Cerrar sesión":
+        signOut(auth)
+          .then(() => {
+            localStorage.removeItem("userName");
+            localStorage.removeItem("userPhoto");
+            console.log("🔒 Sesión cerrada");
+            navigate("/login");
+          })
+          .catch((error) => {
+            console.error("Error al cerrar sesión:", error);
+          });
+        break;
+
+      case "Mi perfil":
+        navigate("/perfil");
+        break;
+
+      case "Notificaciones":
+        navigate("/notificaciones");
+        break;
+
+      case "Dashboard":
+        navigate("/dashboard");
+        break;
+
+      default:
+        console.log(`Opción no reconocida: ${setting}`);
     }
+
     handleCloseUserMenu();
   };
 
+
   return (
-    <AppBar position="static" sx={{ backgroundColor: '#607D8B' }}>
+    <AppBar position="static" sx={{ backgroundColor: '#edece1ff' }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <Box
@@ -114,7 +130,7 @@ const Navbar = () => {
               fontFamily: 'monospace',
               fontWeight: 700,
               letterSpacing: '.3rem',
-              color: 'inherit',
+              color: 'black',
               textDecoration: 'none',
             }}
           >
@@ -126,7 +142,7 @@ const Navbar = () => {
               size="large"
               aria-label="open navigation menu"
               onClick={handleOpenNavMenu}
-              color="inherit"
+              color="black"
             >
               <MenuIcon />
             </IconButton>
@@ -139,10 +155,18 @@ const Navbar = () => {
               sx={{ display: { xs: 'block', md: 'none' } }}
             >
               {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
+                <MenuItem
+                  key={page}
+                  onClick={() => {
+                    handleCloseNavMenu();
+                    const ruta = page.toLowerCase() === 'inicio' ? '/home' : `/${page.toLowerCase()}`;
+                    navigate(ruta);
+                  }}
+                >
                   <Typography textAlign="center">{page}</Typography>
                 </MenuItem>
               ))}
+
             </Menu>
           </Box>
 
@@ -169,23 +193,19 @@ const Navbar = () => {
               fontFamily: 'monospace',
               fontWeight: 700,
               letterSpacing: '.3rem',
-              color: 'inherit',
+              color: 'black',
               textDecoration: 'none',
             }}
           >
             REDEMA
           </Typography>
 
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            {pages.map((page) => (
-              <Button
-                key={page}
-                onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: 'white', display: 'block' }}
-              >
-                {page}
-              </Button>
-            ))}
+          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 1 }}>
+            <Button onClick={() => navigate('/home')} sx={{ my: 2, color: 'black' }}>Inicio</Button>
+            <Button onClick={() => navigate('/publicar')} sx={{ my: 2, color: 'black' }}>Publicar</Button>
+            <Button onClick={() => navigate('/buscar')} sx={{ my: 2, color: 'black' }}>Buscar</Button>
+            <Button onClick={() => navigate('/mapa')} sx={{ my: 2, color: 'black' }}>Mapa</Button>
+            <Button onClick={() => navigate('/configuracion')} sx={{ my: 2, color: 'black' }}>Configuración</Button>
           </Box>
 
           <Box sx={{ flexGrow: 0 }}>
