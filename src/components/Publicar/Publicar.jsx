@@ -173,7 +173,16 @@ const handlePublicar = async () => {
     console.log("🟢 JSON que se enviará al backend:", JSON.stringify(datos, null, 2));
 
   // 4. Enviar datos al backend
-    const token = localStorage.getItem("token");
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  if (!user) {
+   alert("Debés iniciar sesión para publicar");
+   return;
+  }
+
+const token = await user.getIdToken();
+
     const res = await fetch("http://localhost:5000/publicaciones", {
       method: "POST",
       headers: {

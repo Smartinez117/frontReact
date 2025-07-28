@@ -13,6 +13,7 @@ import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 
 const pages = ['Products', 'Pricing', 'Blog'];
 const settings = ['Notificaciones', 'Perfil', 'Dashboard', 'Cerrar sesión'];
@@ -40,36 +41,66 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('');
   const [userPhoto, setUserPhoto] = useState('');
-  
-useEffect(() => {
-  const name = localStorage.getItem("userName");
-  const photo = localStorage.getItem("userPhoto");
 
-  if (name) setUserName(name);
-  if (photo) setUserPhoto(photo);
-}, []); // <- esta línea faltaba
+  useEffect(() => {
+    const auth = getAuth();
 
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("🟢 Usuario logueado:", user.email);
+
+        const name = localStorage.getItem("userName");
+        const photo = localStorage.getItem("userPhoto");
+
+        if (name) setUserName(name);
+        if (photo) setUserPhoto(photo);
+      } else {
+        console.log("🔴 No hay usuario logueado");
+        setUserName('');
+        setUserPhoto('');
+        localStorage.removeItem("userName");
+        localStorage.removeItem("userPhoto");
+        navigate("/login");
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
+  const handleUserMenuClick = (setting) => {
+    if (setting === "Cerrar sesión") {
+      const auth = getAuth();
+      signOut(auth)
+        .then(() => {
+          localStorage.removeItem("userName");
+          localStorage.removeItem("userPhoto");
+          console.log("🔒 Sesión cerrada");
+          navigate("/login");
+        })
+        .catch((error) => {
+          console.error("Error al cerrar sesión:", error);
+        });
+    } else {
+      console.log(`Seleccionaste: ${setting}`);
+    }
+    handleCloseUserMenu();
+  };
 
   return (
-    <AppBar 
-      position="static"
-      sx={{
-        backgroundColor: '#607D8B'
-      }}
-      >
+    <AppBar position="static" sx={{ backgroundColor: '#607D8B' }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
-        <Box
-          component="img"
-          src="/logo.png"
-          alt="Logo"
-          sx={{ 
-            width: 40, 
-            height: 40, 
-            mr: 1, 
-            display: { xs: 'none', md: 'block' },
-          }}
-        />
+          <Box
+            component="img"
+            src="/logo.png"
+            alt="Logo"
+            sx={{
+              width: 40,
+              height: 40,
+              mr: 1,
+              display: { xs: 'none', md: 'block' },
+            }}
+          />
           <Typography
             variant="h6"
             noWrap
@@ -95,20 +126,14 @@ useEffect(() => {
               onClick={handleOpenNavMenu}
               color="inherit"
             >
-            <MenuIcon />
+              <MenuIcon />
             </IconButton>
             <Menu
               anchorEl={anchorElNav}
               open={Boolean(anchorElNav)}
               onClose={handleCloseNavMenu}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'left',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'left',
-              }}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'left' }}
               sx={{ display: { xs: 'block', md: 'none' } }}
             >
               {pages.map((page) => (
@@ -123,11 +148,11 @@ useEffect(() => {
             component="img"
             src="/logo.png"
             alt="Logo"
-            sx={{ 
-              width: 40, 
-              height: 40, 
-              mr: 1, 
-              display: { xs: 'block', md: 'none' } 
+            sx={{
+              width: 40,
+              height: 40,
+              mr: 1,
+              display: { xs: 'block', md: 'none' },
             }}
           />
           <Typography
@@ -162,16 +187,13 @@ useEffect(() => {
           </Box>
 
           <Box sx={{ flexGrow: 0 }}>
-            <Tooltip title="Open settings">
+            <Tooltip title="Abrir opciones">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-
-              {userPhoto ? (
-            <Avatar alt="User" src={userPhoto} />
-              ) : (
-
-                <Avatar alt="User" src="/default-profile.png" />
-              )}
-          
+                {userPhoto ? (
+                  <Avatar alt="User" src={userPhoto} />
+                ) : (
+                  <Avatar alt="User" src="/default-profile.png" />
+                )}
               </IconButton>
             </Tooltip>
             <Menu
@@ -179,17 +201,11 @@ useEffect(() => {
               anchorEl={anchorElUser}
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
+              anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
             >
               {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                <MenuItem key={setting} onClick={() => handleUserMenuClick(setting)}>
                   <Typography textAlign="center">{setting}</Typography>
                 </MenuItem>
               ))}

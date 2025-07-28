@@ -1,3 +1,4 @@
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './styles/global.css';
@@ -8,13 +9,25 @@ function App() {
   const [userPhoto, setUserPhoto] = useState('');
 
   useEffect(() => {
-    const name = localStorage.getItem("userName");
-    const photo = localStorage.getItem("userPhoto");
+    const auth = getAuth();
 
-    if (name && photo) {
-      setUserName(name);
-      setUserPhoto(photo);
-    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Si hay usuario logueado, guardar sus datos
+        setUserName(user.displayName);
+        setUserPhoto(user.photoURL);
+        localStorage.setItem("userName", user.displayName);
+        localStorage.setItem("userPhoto", user.photoURL);
+      } else {
+        // Si no hay usuario, redirigir o limpiar datos
+        setUserName('');
+        setUserPhoto('');
+        localStorage.removeItem("userName");
+        localStorage.removeItem("userPhoto");
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return (
