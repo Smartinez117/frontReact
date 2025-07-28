@@ -1,25 +1,64 @@
-
-
-/* Centrado total de la pantalla */
 .login-container {
+  height: 100vh;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh; /* Toma toda la altura de la ventana */
+  background-color: #f9f7f3;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.login-content {
   text-align: center;
 }
 
-/* Título principal */
-.login-container h1 {
-  font-size: 2.5rem;
-  color: #333;
-  margin-bottom: 20px;
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 
-/* Parte de "REDEMA" destacada */
-#nombre\ empresa {
-  color: #34a853; /* Un verde similar al de la imagen */
+.logo {
+  width: 240px;
+  height: auto;
+  margin-right: 0.8rem;
+}
+
+.nombre-redema {
+  font-size: 2rem;
+  color: #924c4c;
+  margin-top: 0.5rem;
+}
+
+.bienvenida {
+  font-size: 1.25rem;
   font-weight: bold;
+  margin: 1rem 0;
+  color: #333;
+}
+
+.google-button {
+  background-color: #fbbc04;
+  border: none;
+  color: #000;
+  font-weight: 500;
+  padding: 10px 60px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.3s;
+}
+
+.google-button:hover {
+  background-color: #e0a800;
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
 }
