@@ -30,7 +30,7 @@ function Login() {
       });
 
       if (response.ok) {
-        navigate('/app');
+        navigate('/home');
       } else {
         alert("Error en autenticación con backend");
       }
