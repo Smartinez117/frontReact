@@ -23,9 +23,13 @@ import Autocomplete from '@mui/joy/Autocomplete';
 import FormControl from '@mui/joy/FormControl';
 import FormLabel from '@mui/joy/FormLabel';
 import SvgIcon from '@mui/joy/SvgIcon';
+import Alert from '@mui/joy/Alert';
+import Typography from '@mui/joy/Typography';
 import { styled } from '@mui/joy';
 
 import { getAuth } from "firebase/auth";
+
+import { useNavigate } from 'react-router-dom';
 
 const VisuallyHiddenInput = styled('input')`
   clip: rect(0 0 0 0);
@@ -70,22 +74,35 @@ function MapaInteractivo({ lat, lng, setLatLng }) {
 export default function Publicar() {
   const [titulo, setTitulo] = useState('');
   const [descripcion, setDescripcion] = useState('');
-
   const [seleccionado, setSeleccionado] = useState('');
   const [provincias, setProvincias] = useState([]);
   const [departamentos, setDepartamentos] = useState([]);
   const [localidades, setLocalidades] = useState([]);
-
   const [provinciaId, setProvinciaId] = useState('');
   const [departamentoId, setDepartamentoId] = useState('');
   const [localidadId, setLocalidadId] = useState('');
   const [coordenadas, setCoordenadas] = useState({ lat: -34.6, lng: -58.4 });
-
   const [etiquetas, setEtiquetas] = useState([]);
   const [etiquetasSeleccionadas, setEtiquetasSeleccionadas] = useState([]);
-  
-  // Estado para las imágenes
   const [imagenesSeleccionadas, setImagenesSeleccionadas] = useState([]);
+  const [errores, setErrores] = useState([]);
+  const navigate = useNavigate();
+
+  const validarCampos = () => {
+    const nuevosErrores = [];
+    if (!seleccionado) nuevosErrores.push("Categoría");
+    if (!titulo.trim()) nuevosErrores.push("Título");
+    if (!descripcion.trim()) nuevosErrores.push("Descripción");
+    if (descripcion.length > 500) nuevosErrores.push("Descripción excede 500 caracteres");
+    if (!provinciaId) nuevosErrores.push("Provincia");
+    if (!departamentoId) nuevosErrores.push("Departamento");
+    if (!localidadId) nuevosErrores.push("Localidad");
+    if (etiquetasSeleccionadas.length === 0) nuevosErrores.push("Etiquetas");
+    if (imagenesSeleccionadas.length === 0) nuevosErrores.push("Imágenes");
+    return nuevosErrores;
+  };
+
+  const camposValidos = (campo) => !errores.includes(campo);
 
   useEffect(() => {
     fetch('http://localhost:5000/api/ubicacion/provincias')
@@ -122,8 +139,6 @@ export default function Publicar() {
       .then(data => {
         const mapped = data.map(e => ({ label: e.nombre, id: e.id }));
         setEtiquetas(mapped);
-
-        // Asignar automáticamente Perro y Gato si existen
         const iniciales = mapped.filter(et => ['Perro', 'Gato'].includes(et.label));
         setEtiquetasSeleccionadas(iniciales);
       });
@@ -137,241 +152,227 @@ export default function Publicar() {
     }
   };
 
-  // Función para manejar la selección de imágenes
   const handleImagenesChange = (event) => {
     const files = Array.from(event.target.files);
     setImagenesSeleccionadas(files);
   };
 
-const handlePublicar = async () => {
-  try {
-    // 1. Preparar imágenes para enviar al endpoint del backend
-    const formData = new FormData();
-    imagenesSeleccionadas.forEach((img) => {
-      formData.append("imagenes", img);
-    });
+  const handlePublicar = async () => {
+    const nuevosErrores = validarCampos();
+    setErrores(nuevosErrores);
+    if (nuevosErrores.length > 0) return;
 
-    // 2. Subir imágenes al backend y obtener URLs
-    const resImagenes = await fetch("http://localhost:5000/subir-imagenes", {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      const formData = new FormData();
+      imagenesSeleccionadas.forEach((img) => {
+        formData.append("imagenes", img);
+      });
 
-    if (!resImagenes.ok) throw new Error("Error al subir imágenes");
+      const resImagenes = await fetch("http://localhost:5000/subir-imagenes", {
+        method: "POST",
+        body: formData,
+      });
 
-    const dataImagenes = await resImagenes.json();
-    const urlsImagenes = dataImagenes.urls;
-    const datos = {
-      categoria: seleccionado,
-      titulo: titulo,
-      descripcion: descripcion,
-      id_locacion: localidadId,
-      coordenadas: coordenadas,
-      etiquetas: etiquetasSeleccionadas.map(e => e.id), // solo IDs
-      imagenes: urlsImagenes
-    };
-    console.log("🟢 JSON que se enviará al backend:", JSON.stringify(datos, null, 2));
+      if (!resImagenes.ok) throw new Error("Error al subir imágenes");
 
-  // 4. Enviar datos al backend
-  const auth = getAuth();
-  const user = auth.currentUser;
+      const dataImagenes = await resImagenes.json();
+      const urlsImagenes = dataImagenes.urls;
 
-  if (!user) {
-   alert("Debés iniciar sesión para publicar");
-   return;
-  }
+      const datos = {
+        categoria: seleccionado,
+        titulo,
+        descripcion,
+        id_locacion: localidadId,
+        coordenadas,
+        etiquetas: etiquetasSeleccionadas.map(e => e.id),
+        imagenes: urlsImagenes
+      };
 
-const token = await user.getIdToken();
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) {
+        alert("Debés iniciar sesión para publicar");
+        return;
+      }
+      const token = await user.getIdToken();
 
-    const res = await fetch("http://localhost:5000/publicaciones", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}` // ⬅️ Agregás el token aquí
-      },
-      body: JSON.stringify(datos),
-    });
+      const res = await fetch("http://localhost:5000/publicaciones", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(datos),
+      });
 
-    const data = await res.json();
-    if (res.ok) {
-      console.log("Publicación creada:", data);
-      alert("✅ ¡Publicación enviada con éxito!");
-    } else {
-      throw new Error(data.error || "Error en el envío");
-    }
+      const data = await res.json();
+      if (res.ok) {
+        console.log("Publicación creada:", data);
+        alert("✅ ¡Publicación enviada con éxito!");
+        navigate(`/publicacion/${data.id_publicacion}`);
+      } else {
+        throw new Error(data.error || "Error en el envío");
+      }
     } catch (error) {
-    console.error("Error al publicar:", error);
-    alert("❌ Ocurrió un error al publicar");
+      console.error("Error al publicar:", error);
+      alert("❌ Ocurrió un error al publicar");
     }
   };
-
 
   return (
     <React.Fragment>
       <CssBaseline />
-      <Container maxWidth="md" sx={{ position: 'relative' }}>
-        <Box
-          sx={{
-            bgcolor: '#ffffff',
-            height: '100vh',
-            width: '100vw',
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            zIndex: -1,
-          }}
-        />
-        <div>
-          <h2>Crear publicación</h2>
+      <Container maxWidth="md">
+        <Typography level="h3" sx={{ mt: 2 }}>Crear publicación</Typography>
 
-          <ToggleButtonGroup
-            value={seleccionado}
-            onChange={(event, newValue) => setSeleccionado(newValue)}
-            sx={{ my: 2, gap: 1, flexWrap: 'wrap' }}
-            exclusive
-          >
-            <Button value="Adopción">Adopción</Button>
-            <Button value="Búsqueda">Búsqueda</Button>
-            <Button value="Encuentro">Encuentro</Button>
-            <Button value="Estado Crítico">Estado Crítico</Button>
-          </ToggleButtonGroup>
-
-          <Input 
-            placeholder="Título" 
-            value={titulo}
-            onChange={(e) => setTitulo(e.target.value)} 
-            sx={{ my: 2 }} 
-          />
-
-          <Textarea 
-            placeholder="Descripción del caso…" 
-            value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
-            minRows={2} 
-            sx={{ mb: 2 }} 
-          />
-
-          <Select
-            placeholder="Seleccioná una provincia"
-            value={provinciaId || null}
-            onChange={(e, val) => setProvinciaId(val)}
-            indicator={<KeyboardArrowDown />}
-            sx={{ width: '100%', mb: 2 }}
-          >
-            {provincias.map((prov) => (
-              <Option key={prov.id} value={prov.id.toString()}>{prov.nombre}</Option>
-            ))}
-          </Select>
-
-          <Select
-            placeholder="Seleccioná un partido/departamento/comuna"
-            value={departamentoId || null}
-            onChange={(e, val) => setDepartamentoId(val)}
-            disabled={!provinciaId}
-            indicator={<KeyboardArrowDown />}
-            sx={{ width: '100%', mb: 2 }}
-          >
-            {departamentos.map((d) => (
-              <Option key={d.id} value={d.id.toString()}>{d.nombre}</Option>
-            ))}
-          </Select>
-
-          <Select
-            placeholder="Seleccioná una localidad"
-            value={localidadId || null}
-            onChange={(e, val) => handleLocalidadChange(val)}
-            disabled={!departamentoId}
-            indicator={<KeyboardArrowDown />}
-            sx={{ width: '100%', mb: 3 }}
-          >
-            {localidades.map((l) => (
-              <Option key={l.id} value={l.id.toString()}>{l.nombre}</Option>
-            ))}
-          </Select>
-
-          <div style={{ height: '400px', marginTop: '1rem' }}>
-            <MapContainer
-              center={[coordenadas.lat, coordenadas.lng]}
-              zoom={13}
-              style={{ height: '100%', width: '100%' }}
+        <ToggleButtonGroup
+          value={seleccionado}
+          onChange={(event, newValue) => setSeleccionado(newValue)}
+          sx={{ my: 2, gap: 1, flexWrap: 'wrap' }}
+          exclusive
+        >
+          {["Adopción", "Búsqueda", "Encuentro", "Estado Crítico"].map(opcion => (
+            <Button
+              key={opcion}
+              value={opcion}
+              color={seleccionado === opcion ? "success" : errores.includes("Categoría") ? "danger" : "neutral"}
             >
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              <MapaInteractivo lat={coordenadas.lat} lng={coordenadas.lng} setLatLng={setCoordenadas} />
-            </MapContainer>
-          </div>
+              {opcion}
+            </Button>
+          ))}
+        </ToggleButtonGroup>
 
-          <p>Latitud: {coordenadas.lat.toFixed(6)} | Longitud: {coordenadas.lng.toFixed(6)}</p>
+        <Input
+          placeholder="Título"
+          value={titulo}
+          onChange={(e) => setTitulo(e.target.value)}
+          color={titulo.trim() ? "success" : errores.includes("Título") ? "danger" : "neutral"}
+          sx={{ my: 2 }}
+        />
 
-          <FormControl id="multiple-limit-tags" sx={{ mt: 3 }}>
-            <FormLabel>Etiquetas</FormLabel>
-            <Autocomplete
-              multiple
-              placeholder="Seleccioná etiquetas"
-              limitTags={3}
-              options={etiquetas}
-              value={etiquetasSeleccionadas}
-              onChange={(event, value) => setEtiquetasSeleccionadas(value)}
-              getOptionLabel={(option) => option.label}
-              sx={{ width: '100%' }}
-            />
-          </FormControl>
+        <Textarea
+          placeholder="Descripción del caso…"
+          value={descripcion}
+          onChange={(e) => setDescripcion(e.target.value)}
+          minRows={2}
+          maxRows={5}
+          color={descripcion && descripcion.length <= 500 ? "success" : errores.includes("Descripción") ? "danger" : "neutral"}
+          sx={{ mb: 2 }}
+        />
 
-          <Button
-            component="label"
-            role={undefined}
-            tabIndex={-1}
-            variant="outlined"
-            color="neutral"
-            startDecorator={
-              <SvgIcon>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"
-                  />
-                </svg>
-              </SvgIcon>
-            }
+        <Select
+          placeholder="Seleccioná una provincia"
+          value={provinciaId || null}
+          onChange={(e, val) => setProvinciaId(val)}
+          indicator={<KeyboardArrowDown />}
+          color={provinciaId ? "success" : errores.includes("Provincia") ? "danger" : "neutral"}
+          sx={{ width: '100%', mb: 2 }}
+        >
+          {provincias.map((prov) => (
+            <Option key={prov.id} value={prov.id.toString()}>{prov.nombre}</Option>
+          ))}
+        </Select>
+
+        <Select
+          placeholder="Seleccioná un departamento"
+          value={departamentoId || null}
+          onChange={(e, val) => setDepartamentoId(val)}
+          disabled={!provinciaId}
+          indicator={<KeyboardArrowDown />}
+          color={departamentoId ? "success" : errores.includes("Departamento") ? "danger" : "neutral"}
+          sx={{ width: '100%', mb: 2 }}
+        >
+          {departamentos.map((d) => (
+            <Option key={d.id} value={d.id.toString()}>{d.nombre}</Option>
+          ))}
+        </Select>
+
+        <Select
+          placeholder="Seleccioná una localidad"
+          value={localidadId || null}
+          onChange={(e, val) => handleLocalidadChange(val)}
+          disabled={!departamentoId}
+          indicator={<KeyboardArrowDown />}
+          color={localidadId ? "success" : errores.includes("Localidad") ? "danger" : "neutral"}
+          sx={{ width: '100%', mb: 3 }}
+        >
+          {localidades.map((l) => (
+            <Option key={l.id} value={l.id.toString()}>{l.nombre}</Option>
+          ))}
+        </Select>
+
+        <div style={{ height: '400px', marginTop: '1rem' }}>
+          <MapContainer
+            center={[coordenadas.lat, coordenadas.lng]}
+            zoom={13}
+            style={{ height: '100%', width: '100%' }}
           >
-            Subir imágenes ({imagenesSeleccionadas.length})
-            <VisuallyHiddenInput 
-              type="file" 
-              multiple 
-              accept="image/*"
-              onChange={handleImagenesChange}
-            />
-          </Button>
-          
-          {imagenesSeleccionadas.length > 0 && (
-            <p style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: '#666' }}>
-              {imagenesSeleccionadas.map(file => file.name).join(', ')}
-            </p>
-          )}
-
-                    <Button
-            size="lg"
-            variant="solid"
-            sx={{
-              width: '100%',
-              mt: 4,
-              backgroundColor: '#F1B400',
-              color: '#0D171C',
-              '&:hover': {
-                backgroundColor: '#d9a900',
-              },
-            }}
-            onClick={handlePublicar}
-          >
-            Publicar
-          </Button>
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <MapaInteractivo lat={coordenadas.lat} lng={coordenadas.lng} setLatLng={setCoordenadas} />
+          </MapContainer>
         </div>
+
+        <Typography level="body2" sx={{ mt: 1 }}>
+          Latitud: {coordenadas.lat.toFixed(6)} | Longitud: {coordenadas.lng.toFixed(6)}
+        </Typography>
+
+        <FormControl sx={{ mt: 3 }}>
+          <FormLabel>Etiquetas</FormLabel>
+          <Autocomplete
+            multiple
+            placeholder="Seleccioná etiquetas"
+            limitTags={3}
+            options={etiquetas}
+            value={etiquetasSeleccionadas}
+            onChange={(event, value) => setEtiquetasSeleccionadas(value)}
+            getOptionLabel={(option) => option.label}
+            color={
+              etiquetasSeleccionadas.length > 0
+                ? "success"
+                : errores.includes("Etiquetas")
+                ? "danger"
+                : "neutral"
+            }
+            sx={{ width: '100%' }}
+          />
+        </FormControl>
+
+        <Button
+          component="label"
+          variant="outlined"
+          color={
+            imagenesSeleccionadas.length > 0
+              ? "success"
+              : errores.includes("Imágenes")
+              ? "danger"
+              : "neutral"
+          }
+          startDecorator={<SvgIcon>...</SvgIcon>}
+        >
+          Subir imágenes ({imagenesSeleccionadas.length})
+          <VisuallyHiddenInput type="file" multiple accept="image/*" onChange={handleImagenesChange} />
+        </Button>
+
+        {imagenesSeleccionadas.length > 0 && (
+          <Typography level="body2" sx={{ mt: 1, color: '#666' }}>
+            {imagenesSeleccionadas.map(file => file.name).join(', ')}
+          </Typography>
+        )}
+
+        {errores.length > 0 && (
+          <Alert color="danger" variant="soft" sx={{ my: 2 }}>
+            Faltan completar los siguientes campos: {errores.join(", ")}
+          </Alert>
+        )}
+
+        <Button
+          size="lg"
+          variant="solid"
+          sx={{ width: '100%', mt: 4, backgroundColor: '#F1B400', color: '#0D171C', '&:hover': { backgroundColor: '#d9a900' } }}
+          onClick={handlePublicar}
+        >
+          Publicar
+        </Button>
       </Container>
     </React.Fragment>
   );
