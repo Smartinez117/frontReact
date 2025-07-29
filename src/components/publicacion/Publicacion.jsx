@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { useKeenSlider } from "keen-slider/react";
 import "keen-slider/keen-slider.min.css";
+
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
@@ -10,8 +11,22 @@ import Modal from "@mui/material/Modal";
 import Backdrop from "@mui/material/Backdrop";
 import Fade from "@mui/material/Fade";
 import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Divider from "@mui/material/Divider";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
-// Estilo del modal
+// Evitar error de ícono por defecto en Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png",
+});
+
+// Modal styles
 const styleModal = {
   position: "absolute",
   top: "50%",
@@ -28,7 +43,7 @@ const styleModal = {
   justifyContent: "center",
 };
 
-// Carrusel adaptativo en altura
+// Slider resizing
 const AdaptiveHeight = (slider) => {
   function updateHeight() {
     slider.container.style.height =
@@ -38,7 +53,7 @@ const AdaptiveHeight = (slider) => {
   slider.on("slideChanged", updateHeight);
 };
 
-// Flechas
+// Slider arrows
 function Arrow({ left, onClick, disabled }) {
   return (
     <svg
@@ -74,13 +89,15 @@ function Arrow({ left, onClick, disabled }) {
 export default function Publicacion() {
   const { id } = useParams();
   const [publicacion, setPublicacion] = useState(null);
+  const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [modalSlide, setModalSlide] = useState(0);
   const [loaded, setLoaded] = useState(false);
+  const [verDescripcionCompleta, setVerDescripcionCompleta] = useState(false);
 
-  // Traer datos desde el backend
+  // Obtener publicación
   useEffect(() => {
     axios
       .get(`http://127.0.0.1:5000/publicaciones/${id}`)
@@ -94,7 +111,17 @@ export default function Publicacion() {
       });
   }, [id]);
 
-  // Slider de portada
+  // Obtener usuario
+  useEffect(() => {
+    if (publicacion?.id_usuario) {
+      axios
+        .get(`http://127.0.0.1:5000/usuario/${publicacion.id_usuario}`)
+        .then((res) => setUsuario(res.data))
+        .catch((err) => console.error("Error al obtener el usuario:", err));
+    }
+  }, [publicacion]);
+
+  // Slider principal
   const [sliderRef, instanceRef] = useKeenSlider(
     {
       initial: 0,
@@ -108,7 +135,7 @@ export default function Publicacion() {
     [AdaptiveHeight]
   );
 
-  // Slider del modal
+  // Slider modal
   const [sliderModalRef, instanceModalRef] = useKeenSlider(
     open
       ? {
@@ -141,7 +168,15 @@ export default function Publicacion() {
   if (loading) return <Typography sx={{ p: 4 }}>Cargando publicación...</Typography>;
   if (!publicacion) return <Typography sx={{ p: 4 }}>No se encontró la publicación</Typography>;
 
-  const { titulo, descripcion, fecha_creacion, imagenes = [] } = publicacion;
+  const {
+    titulo,
+    descripcion,
+    fecha_creacion,
+    coordenadas = [],
+    imagenes = [],
+    etiquetas = [],
+    categoria,
+  } = publicacion;
 
   return (
     <>
@@ -149,14 +184,14 @@ export default function Publicacion() {
       <Container maxWidth="md">
         <Box
           sx={{
-            bgcolor: "#cfe8fc",
+            bgcolor: "#f8f9fa",
             minHeight: "100vh",
             p: 3,
             borderRadius: 2,
             boxShadow: 2,
           }}
         >
-          {/* Carrusel en la página */}
+          {/* Carrusel de imágenes */}
           {imagenes.length > 0 && (
             <Box
               ref={sliderRef}
@@ -207,16 +242,84 @@ export default function Publicacion() {
             </Box>
           )}
 
-          {/* Información textual */}
-          <Typography color="primary" sx={{ mt: 3 }}>
+          {/* Usuario */}
+          {usuario && (
+            <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
+              <Box
+                component="img"
+                src={usuario.foto_perfil_url || "/default-profile.png"}
+                alt={usuario.nombre}
+                sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  mr: 2,
+                }}
+              />
+              <Typography variant="subtitle1">Publicado por {usuario.nombre}</Typography>
+            </Box>
+          )}
+
+          <Typography color="text.secondary" sx={{ mt: 1 }}>
             {new Date(fecha_creacion).toLocaleString()}
           </Typography>
-          <Typography variant="h4" gutterBottom sx={{ mt: 1 }}>
+
+          <Typography variant="h4" gutterBottom sx={{ mt: 2 }}>
             {titulo}
           </Typography>
-          <Typography paragraph>{descripcion}</Typography>
 
-          {/* Modal con carrusel */}
+          <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 1 }}>
+            Categoría: {categoria}
+          </Typography>
+
+          {/* Etiquetas */}
+          {etiquetas.length > 0 && (
+            <Box sx={{ mb: 2 }}>
+              {etiquetas.map((tag, i) => (
+                <Chip key={i} label={tag} color="primary" variant="outlined" sx={{ mr: 1, mb: 1 }} />
+              ))}
+            </Box>
+          )}
+
+          {/* Descripción */}
+          <Typography paragraph>
+            {verDescripcionCompleta || descripcion.length <= 200
+              ? descripcion
+              : `${descripcion.substring(0, 200)}...`}
+          </Typography>
+          {descripcion.length > 200 && (
+            <Button
+              variant="text"
+              onClick={() => setVerDescripcionCompleta(!verDescripcionCompleta)}
+            >
+              {verDescripcionCompleta ? "Mostrar menos" : "Mostrar más"}
+            </Button>
+          )}
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* Mapa */}
+          {coordenadas.length === 2 && (
+            <Box sx={{ height: 300 }}>
+              <MapContainer
+                center={[coordenadas[0], coordenadas[1]]}
+                zoom={15}
+                scrollWheelZoom={false}
+                style={{ height: "100%", width: "100%", borderRadius: 8 }}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a>'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <Marker position={[coordenadas[0], coordenadas[1]]}>
+                  <Popup>Ubicación de la publicación</Popup>
+                </Marker>
+              </MapContainer>
+            </Box>
+          )}
+
+          {/* Modal de imágenes */}
           <Modal
             open={open}
             onClose={handleClose}
