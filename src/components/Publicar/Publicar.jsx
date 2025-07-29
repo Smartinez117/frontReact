@@ -274,7 +274,7 @@ export default function Publicar() {
         </Select>
 
         <Select
-          placeholder="Seleccioná un departamento"
+          placeholder="Seleccioná un partido/departamento/comuna"
           value={departamentoId || null}
           onChange={(e, val) => setDepartamentoId(val)}
           disabled={!provinciaId}
@@ -288,7 +288,7 @@ export default function Publicar() {
         </Select>
 
         <Select
-          placeholder="Seleccioná una localidad"
+          placeholder="Seleccioná una localidad/barrio"
           value={localidadId || null}
           onChange={(e, val) => handleLocalidadChange(val)}
           disabled={!departamentoId}

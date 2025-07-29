@@ -47,7 +47,7 @@ const Navbar = () => {
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log("🟢 Usuario logueado:", user.email);
+        //console.log("🟢 Usuario logueado:", user.email);
 
         const name = localStorage.getItem("userName");
         const photo = localStorage.getItem("userPhoto");
@@ -55,7 +55,7 @@ const Navbar = () => {
         if (name) setUserName(name);
         if (photo) setUserPhoto(photo);
       } else {
-        console.log("🔴 No hay usuario logueado");
+        //console.log("🔴 No hay usuario logueado");
         setUserName('');
         setUserPhoto('');
         localStorage.removeItem("userName");
