@@ -13,6 +13,7 @@ import Publicacion from '../components/publicacion/Publicacion';
 import MainLayout from '../layouts/MainLayout';
 //importacion de las publicaciones del perfil de usuario.
 import Perfil from '../components/Perfil/Perfil';
+import Configuracion from '../components/configuracion/Configuracion.jsx';
 
 
 function RouterApp() {
@@ -39,6 +40,7 @@ function RouterApp() {
         <Route path="/publicacion/prueba" element={<Publicacion />} />
         <Route path="/publicacion/:id" element={<Publicacion />} />
         <Route path="/perfil" element={<Perfil/>} />
+        <Route path="/configuracion" element={<Configuracion/>} />
       </Route>
 
     </Routes>
