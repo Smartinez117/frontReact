@@ -1,4 +1,6 @@
 import Publicacion from '../models/publicacion';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+
 const BASE_URL = 'http://localhost:5000';
 
 // Función para obtener publicaciones filtradas desde el backend
@@ -37,6 +39,77 @@ export async function eliminarPublicacion(id) {
 
   return await response.json(); // mensaje confirmando eliminación
 }
+
+
+export function fetchMisPublicaciones() {
+  const auth = getAuth();
+
+  return new Promise((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      unsubscribe();
+
+      if (!user) {
+        reject(new Error("Usuario no autenticado"));
+        return;
+      }
+
+      try {
+        const token = await user.getIdToken();
+
+        const response = await fetch(`${BASE_URL}/publicaciones/mis-publicaciones`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error al obtener tus publicaciones: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        resolve(data.map(pub => new Publicacion(pub)));
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
+}
+
+
+export function fetchUsuarioActual() {
+  const auth = getAuth();
+
+  return new Promise((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      unsubscribe(); // Evita que se llame múltiples veces
+
+      if (!user) {
+        reject(new Error("Usuario no autenticado"));
+        return;
+      }
+
+      try {
+        const token = await user.getIdToken();
+
+        const res = await fetch('http://localhost:5000/usuarios/me', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (!res.ok) throw new Error("Error al obtener el usuario");
+
+        const data = await res.json();
+        resolve(data);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
+}
+
+
 
 // talvez no seria lo mas profesional el usar la funcion de adopcion en este paso pero es la misma,
 //aunque talvez seria mas conveiente hacer una carpeta de get general para eso

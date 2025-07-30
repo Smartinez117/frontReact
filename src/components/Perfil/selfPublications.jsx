@@ -4,7 +4,8 @@ import { fetchPublicacionesFiltradas } from '../../services/perfilService'; // A
 import { useNavigate } from 'react-router-dom';
 // Importo íconos solo si hace falta, por ahora quitados
 import './cselfPublications.css';
-import { eliminarPublicacion } from '../../services/perfilService';
+import { fetchMisPublicaciones, eliminarPublicacion } from '../../services/perfilService';
+
 
 const categoriasPosibles = [
   { label: "Adopción", value: "adopcion" },
@@ -52,20 +53,11 @@ const SelfPublications = () => {
     setLoading(true);
     setError(null);
 
-    // Armamos parámetros para la consulta GET    
-    const params = {};
-
-    // Si hay categorías seleccionadas, enviamos concatenadas por coma
-    if (categorias.length > 0) {
-      params.categoria = categorias.join(',');
-    }
-
-    fetchPublicacionesFiltradas(params)
+    fetchMisPublicaciones()
       .then(setPublicaciones)
       .catch((e) => setError(e.message || 'Error al obtener publicaciones'))
       .finally(() => setLoading(false));
-    
-  }, [categorias]);
+  }, []);
 
   return (
     <div className="selfPublications-container">
@@ -142,8 +134,7 @@ const SelfPublications = () => {
                     className="boton-crear boton-editar"
                     data-id={pub.id}
                     aria-label={`Editar publicación ${pub.titulo}`}
-                    onClick={() => navigate(`/editar/${pub.id}`)}
-          
+                    // Sin funcionalidad por ahora
                   >
                     Editar
                   </button>
