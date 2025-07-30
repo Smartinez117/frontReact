@@ -81,12 +81,15 @@ export default function Editar() {
   const [provinciaId, setProvinciaId] = useState('');
   const [departamentoId, setDepartamentoId] = useState('');
   const [localidadId, setLocalidadId] = useState('');
-  const [coordenadas, setCoordenadas] = useState({ lat: -34.6, lng: -58.4 });
+  const [coordenadas, setCoordenadas] = useState({ lat: 0, lng: 0 });
   const [etiquetas, setEtiquetas] = useState([]);
   const [etiquetasSeleccionadas, setEtiquetasSeleccionadas] = useState([]);
   const [imagenesSeleccionadas, setImagenesSeleccionadas] = useState([]);
   const [errores, setErrores] = useState([]);
   const { id_publicacion } = useParams();
+  const [etiquetasDesdePublicacion, setEtiquetasDesdePublicacion] = useState([]);
+  const [imagenesExistentes, setImagenesExistentes] = useState([]);
+
   const navigate = useNavigate();
 
   const validarCampos = () => {
@@ -99,7 +102,7 @@ export default function Editar() {
     if (!departamentoId) nuevosErrores.push("Departamento");
     if (!localidadId) nuevosErrores.push("Localidad");
     if (etiquetasSeleccionadas.length === 0) nuevosErrores.push("Etiquetas");
-    if (imagenesSeleccionadas.length === 0) nuevosErrores.push("Imágenes");
+    
     return nuevosErrores;
   };
 
@@ -140,10 +143,51 @@ export default function Editar() {
       .then(data => {
         const mapped = data.map(e => ({ label: e.nombre, id: e.id }));
         setEtiquetas(mapped);
-        const iniciales = mapped.filter(et => ['Perro', 'Gato'].includes(et.label));
-        setEtiquetasSeleccionadas(iniciales);
       });
   }, []);
+
+  useEffect(() => {
+    const fetchDatosPublicacion = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/publicaciones/${id_publicacion}`);
+        if (!res.ok) throw new Error("No se pudo obtener la publicación");
+        const data = await res.json();
+
+        setTitulo(data.titulo || '');
+        setDescripcion(data.descripcion || '');
+        setSeleccionado(data.categoria || '');
+        if (data.coordenadas && Array.isArray(data.coordenadas)) {
+          setCoordenadas({ lat: parseFloat(data.coordenadas[0]), lng: parseFloat(data.coordenadas[1]) });
+        }
+
+        // Guardamos los nombres de las etiquetas
+        if (Array.isArray(data.etiquetas)) {
+          setEtiquetasDesdePublicacion(data.etiquetas);
+        }
+
+        if (Array.isArray(data.imagenes)) {
+          setImagenesExistentes(data.imagenes);
+        }
+
+      } catch (err) {
+        console.error("Error al cargar datos de la publicación:", err);
+      }
+    };
+
+    if (id_publicacion) {
+      fetchDatosPublicacion();
+    }
+  }, [id_publicacion]);
+
+  useEffect(() => {
+    if (etiquetas.length > 0 && etiquetasDesdePublicacion.length > 0) {
+      const etiquetasSeleccionadasMapped = etiquetas.filter(et =>
+        etiquetasDesdePublicacion.includes(et.label)
+      );
+      setEtiquetasSeleccionadas(etiquetasSeleccionadasMapped);
+    }
+  }, [etiquetas, etiquetasDesdePublicacion]);
+
 
   const handleLocalidadChange = (id) => {
     setLocalidadId(id);
@@ -164,20 +208,25 @@ export default function Editar() {
     if (nuevosErrores.length > 0) return;
 
     try {
-      const formData = new FormData();
-      imagenesSeleccionadas.forEach((img) => {
-        formData.append("imagenes", img);
-      });
+      let urlsImagenes = [...imagenesExistentes]; // imágenes previas
 
-      const resImagenes = await fetch("http://localhost:5000/subir-imagenes", {
-        method: "POST",
-        body: formData,
-      });
+      if (imagenesSeleccionadas.length > 0) {
+        const formData = new FormData();
+        imagenesSeleccionadas.forEach((img) => {
+          formData.append("imagenes", img);
+        });
 
-      if (!resImagenes.ok) throw new Error("Error al subir imágenes");
+        const resImagenes = await fetch("http://localhost:5000/subir-imagenes", {
+          method: "POST",
+          body: formData,
+        });
 
-      const dataImagenes = await resImagenes.json();
-      const urlsImagenes = dataImagenes.urls;
+        if (!resImagenes.ok) throw new Error("Error al subir imágenes");
+
+        const dataImagenes = await resImagenes.json();
+        urlsImagenes = [...urlsImagenes, ...dataImagenes.urls];
+      }
+
 
       const datos = {
         categoria: seleccionado,
@@ -351,7 +400,7 @@ export default function Editar() {
           }
           startDecorator={<SvgIcon>...</SvgIcon>}
         >
-          Subir imágenes ({imagenesSeleccionadas.length})
+          Subir nuevas imágenes ({imagenesSeleccionadas.length})
           <VisuallyHiddenInput type="file" multiple accept="image/*" onChange={handleImagenesChange} />
         </Button>
 
@@ -360,6 +409,23 @@ export default function Editar() {
             {imagenesSeleccionadas.map(file => file.name).join(', ')}
           </Typography>
         )}
+
+        {imagenesExistentes.length > 0 && (
+          <Box sx={{ mt: 2 }}>
+            <Typography level="body2" sx={{ mb: 1 }}>Imágenes previas:</Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {imagenesExistentes.map((url, i) => (
+                <img
+                  key={i}
+                  src={url}
+                  alt={`imagen-${i}`}
+                  style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: 8 }}
+                />
+              ))}
+            </Box>
+          </Box>
+        )}
+
 
         {errores.length > 0 && (
           <Alert color="danger" variant="soft" sx={{ my: 2 }}>
