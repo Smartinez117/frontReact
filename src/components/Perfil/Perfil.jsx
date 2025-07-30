@@ -1,16 +1,23 @@
 import React from 'react';
 import SelfPublications from './SelfPublications';
-import Navbar from '../Navbar';
 import Nombre from './nombre';  
+import CssBaseline from '@mui/material/CssBaseline';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
 
 const Perfil = () => {
   return (
     <>
-      <Navbar />
+      <CssBaseline />
+
       <main style={{ padding: '20px' }}>
         <Nombre/>
-        <h4>mis publicaciones</h4>
+        
+      <Container maxWidth="sm">
+        <h4>Mis publicaciones</h4>
         <SelfPublications />
+      </Container>
+        
       </main>
     </>
   );

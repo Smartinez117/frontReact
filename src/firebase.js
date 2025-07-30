@@ -2,13 +2,13 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDvpSbZR1wyJ8COTh1UgcQ6-VmORazoWz8",
-  authDomain: "redema-4b4ac.firebaseapp.com",
-  projectId: "redema-4b4ac",
-  storageBucket: "redema-4b4ac.firebasestorage.app",
-  messagingSenderId: "732085429469",
-  appId: "1:732085429469:web:4fc7fa774e18a2704a6734",
-  measurementId: "G-SPB3E7QNBL"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);

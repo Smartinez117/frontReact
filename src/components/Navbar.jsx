@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 
 const pages = ['Inicio', 'Publicar', 'Buscar', 'Mapa', 'Configuracion'];
-const settings = ['Notificaciones', 'Mi perfil', 'Dashboard', 'Cerrar sesión'];
+const settings = ['Notificaciones', 'Mi perfil', 'Configuración', 'Cerrar sesión'];
 
 const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
@@ -92,8 +92,8 @@ const Navbar = () => {
         navigate("/notificaciones");
         break;
 
-      case "Dashboard":
-        navigate("/dashboard");
+      case "Configuración":
+        navigate("/configuracion");
         break;
 
       default:

@@ -26,7 +26,7 @@ function RouterApp() {
       <Route path="/busqueda" element={<Fbusqueda />} />
       <Route path="/veterinaria" element={<Fveterinaria />} />
       <Route path="/comunidad" element={<Fcomunidad />} />
-      <Route path="/perfil" element={<Perfil/>} />
+      
 
 
       {/* Rutas que usan MainLayout */}
@@ -38,6 +38,7 @@ function RouterApp() {
         <Route path="/buscar" element={<Buscar />} />
         <Route path="/publicacion/prueba" element={<Publicacion />} />
         <Route path="/publicacion/:id" element={<Publicacion />} />
+        <Route path="/perfil" element={<Perfil/>} />
       </Route>
 
     </Routes>
