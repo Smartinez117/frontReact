@@ -18,6 +18,10 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
+import ShareIcon from "@mui/icons-material/Share";
+import DownloadIcon from "@mui/icons-material/Download";
+
+
 // Evitar error de ícono por defecto en Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -177,6 +181,49 @@ export default function Publicacion() {
     etiquetas = [],
     categoria,
   } = publicacion;
+
+  const descargarPDF = async (idPublicacion) => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:5000/pdf/${idPublicacion}`, {
+        responseType: "blob",
+      });
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `publicacion_${idPublicacion}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error("Error al descargar el PDF:", err);
+      alert("Ocurrió un error al generar el PDF");
+    }
+  };
+
+  const compartirPublicacion = (idPublicacion) => {
+    const url = `https://tusitio.com/publicacion/${idPublicacion}`;
+    const title = publicacion?.titulo || "Publicación";
+
+    if (navigator.share) {
+      navigator
+        .share({
+          title,
+          text: `Mirá esta publicación: ${title}`,
+          url,
+        })
+        .catch((error) => console.error("Error al compartir:", error));
+    } else {
+      // Fallback: Copiar al portapapeles
+      navigator.clipboard.writeText(url).then(() => {
+        alert("Enlace copiado al portapapeles");
+      });
+    }
+  };
+
+
 
   return (
     <>
@@ -380,6 +427,45 @@ export default function Publicacion() {
             </Fade>
           </Modal>
         </Box>
+
+
+        <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
+          <Button
+            variant="contained"
+            startIcon={<DownloadIcon />}
+            sx={{
+              bgcolor: "#1976d2",
+              color: "#fff",
+              '&:hover': { bgcolor: "#1565c0" },
+              textTransform: "none",
+              px: 3,
+              borderRadius: 2,
+              fontWeight: "bold",
+            }}
+            onClick={() => descargarPDF(id)}
+          >
+            Descargar PDF
+          </Button>
+
+          <Button
+            variant="outlined"
+            startIcon={<ShareIcon />}
+            sx={{
+              color: "#1976d2",
+              borderColor: "#1976d2",
+              '&:hover': { borderColor: "#1565c0", bgcolor: "#e3f2fd" },
+              textTransform: "none",
+              px: 3,
+              borderRadius: 2,
+              fontWeight: "bold",
+            }}
+            onClick={() => compartirPublicacion(id)}
+          >
+            Compartir
+          </Button>
+        </Box>
+
+
       </Container>
     </>
   );
