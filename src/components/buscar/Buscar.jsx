@@ -14,6 +14,19 @@ const categoriasPosibles = [
   { label: "Estado crítico", value: "Estado Crítico" }
 ];
 
+// Función auxiliar para obtener el nombre de la localidad
+const fetchNombreLocalidad = async (idLocacion) => {
+  try {
+    const res = await fetch(`http://127.0.0.1:5000/api/ubicacion/localidades/${idLocacion}`);
+    if (!res.ok) throw new Error("Error al obtener localidad");
+    const data = await res.json();
+    return data.nombre;
+  } catch (error) {
+    console.error(`Error obteniendo localidad para ID ${idLocacion}:`, error);
+    return "Localidad desconocida";
+  }
+};
+
 const Buscar = () => {
   const navigate = useNavigate();
   const [idPublicacion, setIdPublicacion] = useState(null);
@@ -35,17 +48,15 @@ const Buscar = () => {
 
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
-
   useEffect(() => {
     // Obtener etiquetas desde backend
     fetch('http://localhost:5000/api/etiquetas')
-    .then(res => res.json())
-    .then(data => {
-      const mapped = data.map(e => ({ label: e.nombre, id: e.id }));
-      setEtiquetasDisponibles(mapped);
-    })
-    .catch(err => console.error("Error al obtener etiquetas:", err));
-
+      .then(res => res.json())
+      .then(data => {
+        const mapped = data.map(e => ({ label: e.nombre, id: e.id }));
+        setEtiquetasDisponibles(mapped);
+      })
+      .catch(err => console.error("Error al obtener etiquetas:", err));
 
     // Obtener ubicación del navegador
     if (navigator.geolocation) {
@@ -64,7 +75,7 @@ const Buscar = () => {
     aplicarFiltros();
   }, []);
 
-  const aplicarFiltros = () => {
+  const aplicarFiltros = async () => {
     setLoading(true);
     setError(null);
 
@@ -85,13 +96,23 @@ const Buscar = () => {
       params.lon = longitud;
     }
 
-    fetchPublicacionesFiltradas(params)
-      .then(setPublicaciones)
-      .catch((e) => {
-        console.error("Error en fetch:", e);
-        setError(e.message || 'Error al obtener publicaciones');
-      })
-      .finally(() => setLoading(false));
+    try {
+      const publicacionesRaw = await fetchPublicacionesFiltradas(params);
+
+      const publicacionesConLocalidad = await Promise.all(
+        publicacionesRaw.map(async (pub) => {
+          const localidadNombre = await fetchNombreLocalidad(pub.id_locacion);
+          return { ...pub, localidadNombre };
+        })
+      );
+
+      setPublicaciones(publicacionesConLocalidad);
+    } catch (e) {
+      console.error("Error en fetch:", e);
+      setError(e.message || 'Error al obtener publicaciones');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCategoriaChange = (value) => {
@@ -110,7 +131,6 @@ const Buscar = () => {
   return (
     <div className="buscar-container">
       <div className="header-filtros">
-
         <button
           className="boton-toggle-filtros"
           onClick={() => setMostrarFiltros(prev => !prev)}
@@ -171,7 +191,7 @@ const Buscar = () => {
                     value={etiquetasSeleccionadas}
                     onChange={(event, newValue) => {
                       setEtiquetasSeleccionadas(newValue);
-                      setTagsSeleccionados(newValue.map(opt => opt.label)); // importante para aplicarFiltros
+                      setTagsSeleccionados(newValue.map(opt => opt.label));
                     }}
                     getOptionLabel={(option) => option.label}
                     renderInput={(params) => (
@@ -181,11 +201,10 @@ const Buscar = () => {
                 </FormControl>
               </div>
 
-
               <button className="boton-aplicar-filtros" onClick={aplicarFiltros}>
                 Aplicar filtros
               </button>
-            </div>  
+            </div>
           </div>
         )}
 
@@ -219,6 +238,7 @@ const Buscar = () => {
 
                 <div className="publicacion-contenido">
                   <h3 className="publicacion-titulo">{pub.titulo}</h3>
+                  <p className="publicacion-localidad">📍 {pub.localidadNombre}</p>
                   <span className="publicacion-categoria">{pub.categoria}</span>
 
                   <div className="publicacion-etiquetas">

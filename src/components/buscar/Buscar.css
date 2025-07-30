@@ -364,3 +364,9 @@ select[multiple] {
 .boton-toggle-filtros:hover {
   background-color: #d9a900;
 }
+
+.publicacion-localidad {
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 5px;
+}
