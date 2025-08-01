@@ -1,0 +1,96 @@
+.perfil-configuracion {
+  max-width: 600px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+}
+
+.perfil-configuracion h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.seccion {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  padding: 15px;
+}
+
+.seccion h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 5px;
+}
+
+.seccion p {
+  margin: 6px 0;
+  font-size: 15px;
+  color: #555;
+}
+
+.seccion strong {
+  width: 140px;
+  display: inline-block;
+  font-weight: 600;
+}
+
+button {
+  background: #1976d2;
+  color: white;
+  border: none;
+  padding: 7px 15px;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+button:hover {
+  background: #115293;
+}
+
+.formulario label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #333;
+}
+
+input[type='text'],
+input[type='email'],
+textarea {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  box-sizing: border-box;
+  margin-top: 4px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 70px;
+}
+
+.botones {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+/* Botón cancelar distinto color */
+.botones button[type='button'] {
+  background: #999;
+}
+
+.botones button[type='button']:hover {
+  background: #666;
+}

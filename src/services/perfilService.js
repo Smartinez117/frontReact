@@ -109,7 +109,55 @@ export function fetchUsuarioActual() {
   });
 }
 
-
-
 // talvez no seria lo mas profesional el usar la funcion de adopcion en este paso pero es la misma,
 //aunque talvez seria mas conveiente hacer una carpeta de get general para eso
+// Función para actualizar usuario
+// perfilService.js
+
+import { Usuario } from '../models/modeloPerfil';
+// Función para obtener usuario por id
+export async function obtenerUsuarioPorId(idUsuario) {
+  try {
+    const response = await fetch(`${BASE_URL}/usuario/${idUsuario}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error al obtener usuario');
+    }
+
+    const data = await response.json();
+    return new Usuario(data);
+  } catch (error) {
+    console.error('Error en obtenerUsuarioPorId:', error.message);
+    throw error;
+  }
+}
+
+// Función para actualizar usuario
+export async function actualizarUsuario(idUsuario, data) {
+  try {
+    const response = await fetch(`${BASE_URL}/usuario/${idUsuario}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error al actualizar usuario');
+    }
+
+    const result = await response.json();
+    return result.mensaje;
+  } catch (error) {
+    console.error('Error en actualizarUsuario:', error.message);
+    throw error;
+  }
+}

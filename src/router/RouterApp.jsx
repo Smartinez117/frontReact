@@ -15,7 +15,7 @@ import MainLayout from '../layouts/MainLayout';
 import Perfil from '../components/Perfil/Perfil';
 import Configuracion from '../components/configuracion/Configuracion.jsx';
 import Editar from '../components/Editar/editar.jsx';
-
+import ConfigPerfil from '../components/Perfil/configPerfil.jsx';
 
 function RouterApp() {
   return (
@@ -28,6 +28,7 @@ function RouterApp() {
       <Route path="/busqueda" element={<Fbusqueda />} />
       <Route path="/veterinaria" element={<Fveterinaria />} />
       <Route path="/comunidad" element={<Fcomunidad />} />
+      <Route path="/pconfig" element={<ConfigPerfil />} />
       
 
 

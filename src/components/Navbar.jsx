@@ -93,7 +93,7 @@ const Navbar = () => {
         break;
 
       case "Configuración":
-        navigate("/configuracion");
+        navigate("/pconfig");
         break;
 
       default:
