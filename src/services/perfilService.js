@@ -161,3 +161,40 @@ export async function actualizarUsuario(idUsuario, data) {
     throw error;
   }
 }
+
+//funcion para obtener los datos de un usuario con el uid
+export function configUsuarioActual() {
+  const auth = getAuth();
+
+  return new Promise((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      unsubscribe();
+
+      if (!user) {
+        reject(new Error('Usuario no autenticado'));
+        return;
+      }
+
+      try {
+        const token = await user.getIdToken();
+
+        const response = await fetch(`${BASE_URL}/api/userconfig`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Error al obtener datos del usuario: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        resolve(new Usuario(data));
+      } catch (error) {
+        reject(error);
+      }
+    });
+  });
+}
+

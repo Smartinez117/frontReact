@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { obtenerUsuarioPorId, actualizarUsuario } from '../../services/perfilService';
+import { actualizarUsuario, configUsuarioActual } from '../../services/perfilService';
 import './cperfilconfiguraciones.css';
-
-const idUsuario = 4; // Cambia este ID para probar otros usuarios
 
 export default function PerfilConfiguracion() {
   const [usuario, setUsuario] = useState(null);
@@ -13,9 +11,13 @@ export default function PerfilConfiguracion() {
     cargarUsuario();
   }, []);
 
+  // Ya no necesitamos idUsuario fijo
+  // Eliminamos const idUsuario = 3;
+
   async function cargarUsuario() {
     try {
-      const datos = await obtenerUsuarioPorId(idUsuario);
+      // Usar configUsuarioActual para traer los datos del usuario autenticado
+      const datos = await configUsuarioActual();
       setUsuario(datos);
       setSeccionEditando(null);
       setFormData({});
@@ -26,7 +28,6 @@ export default function PerfilConfiguracion() {
 
   function handleModificar(seccion) {
     setSeccionEditando(seccion);
-    // Inicializar formData con los valores actuales del usuario según sección
     if (!usuario) return;
 
     switch (seccion) {
@@ -59,7 +60,10 @@ export default function PerfilConfiguracion() {
 
   async function handleGuardar() {
     try {
-      // Para enviar solo los campos que cambiaron en la sección
+      if (!usuario) {
+        throw new Error('Usuario no cargado');
+      }
+
       let dataToSend = {};
 
       if (seccionEditando === 'personal') {
@@ -78,7 +82,8 @@ export default function PerfilConfiguracion() {
         };
       }
 
-      await actualizarUsuario(idUsuario, dataToSend);
+      // Usar el id que viene desde el usuario obtenido del token (backend)
+      await actualizarUsuario(usuario.id, dataToSend);
       await cargarUsuario();
     } catch (error) {
       alert('Error al guardar los cambios: ' + error.message);
@@ -89,6 +94,7 @@ export default function PerfilConfiguracion() {
     return <div>Cargando usuario...</div>;
   }
 
+  // Resto del render queda igual, no toqué nada de estilos ni etiquetas
   return (
     <div className="perfil-configuracion">
       <h2>Configuración del perfil</h2>
@@ -112,6 +118,7 @@ export default function PerfilConfiguracion() {
                 value={formData.nombre}
                 onChange={handleChange}
                 required
+                disabled 
               />
             </label>
             <label>
