@@ -20,6 +20,9 @@ import L from "leaflet";
 
 import ShareIcon from "@mui/icons-material/Share";
 import DownloadIcon from "@mui/icons-material/Download";
+import TextField from "@mui/material/TextField";
+import { getAuth } from "firebase/auth";
+
 
 
 // Evitar error de ícono por defecto en Leaflet
@@ -100,6 +103,11 @@ export default function Publicacion() {
   const [modalSlide, setModalSlide] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [verDescripcionCompleta, setVerDescripcionCompleta] = useState(false);
+  const [comentarios, setComentarios] = useState([]);
+  const [loadingComentarios, setLoadingComentarios] = useState(true);
+  const [nuevoComentario, setNuevoComentario] = useState("");
+  const [publicandoComentario, setPublicandoComentario] = useState(false);
+  const [errorComentario, setErrorComentario] = useState(null);
 
   // Obtener publicación
   useEffect(() => {
@@ -124,7 +132,14 @@ export default function Publicacion() {
         .catch((err) => console.error("Error al obtener el usuario:", err));
     }
   }, [publicacion]);
-
+  //Obtener comentarios de publicacion
+  useEffect(() => {
+  axios
+    .get(`http://127.0.0.1:5000/comentarios/publicacion/${id}`)
+    .then((res) => setComentarios(res.data))
+    .catch((err) => console.error("Error al obtener comentarios:", err))
+    .finally(() => setLoadingComentarios(false));
+  }, [id]);
   // Slider principal
   const [sliderRef, instanceRef] = useKeenSlider(
     {
@@ -222,6 +237,51 @@ export default function Publicacion() {
       });
     }
   };
+
+  const enviarComentario = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) {
+      alert("Debés iniciar sesión para comentar");
+      return;
+    }
+
+    try {
+      const token = await user.getIdToken();
+
+      const res = await fetch("http://127.0.0.1:5000/comentarios", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          id_publicacion: Number(id),
+          descripcion: nuevoComentario
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        console.log("Comentario creado:", data);
+        setNuevoComentario("");
+
+        // Recargar comentarios
+        const comentariosRes = await fetch(`http://127.0.0.1:5000/comentarios/publicacion/${id}`);
+        const comentariosData = await comentariosRes.json();
+        setComentarios(comentariosData);
+      } else {
+        throw new Error(data.error || "Error al enviar comentario");
+      }
+
+    } catch (error) {
+      console.error("Error al comentar:", error);
+      alert("❌ Ocurrió un error al enviar el comentario");
+    }
+  };
+
 
 
 
@@ -427,7 +487,77 @@ export default function Publicacion() {
             </Fade>
           </Modal>
         </Box>
+          <Divider sx={{ my: 4 }} />
 
+          {/* Comentarios */}
+          <Box sx={{ mb: 2 }}>
+          <Typography variant="subtitle1" sx={{ mb: 1 }}>
+            Agregar comentario
+          </Typography>
+
+          <TextField
+            multiline
+            minRows={3}
+            fullWidth
+            variant="outlined"
+            placeholder="Escribí tu comentario..."
+            value={nuevoComentario}
+            onChange={(e) => setNuevoComentario(e.target.value)}
+            sx={{ mb: 1 }}
+          />
+
+          {errorComentario && (
+            <Typography color="error" sx={{ mb: 1 }}>
+              {errorComentario}
+            </Typography>
+          )}
+
+          <Button
+            variant="contained"
+            disabled={publicandoComentario}
+            onClick={enviarComentario}
+            sx={{
+              textTransform: "none",
+              fontWeight: "bold",
+              bgcolor: "#1976d2",
+              '&:hover': { bgcolor: "#1565c0" },
+            }}
+          >
+            {publicandoComentario ? "Publicando..." : "Publicar comentario"}
+          </Button>
+        </Box>
+
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h5" gutterBottom>
+              Comentarios
+            </Typography>
+
+            {loadingComentarios ? (
+              <Typography>Cargando comentarios...</Typography>
+            ) : comentarios.length === 0 ? (
+              <Typography variant="body1">No hay comentarios aún.</Typography>
+            ) : (
+              comentarios.map((comentario) => (
+                <Box
+                  key={comentario.id}
+                  sx={{
+                    p: 2,
+                    mb: 2,
+                    border: "1px solid #ddd",
+                    borderRadius: 2,
+                    bgcolor: "#fafafa",
+                  }}
+                >
+                  <Typography variant="body1" sx={{ mb: 1 }}>
+                    {comentario.descripcion}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {new Date(comentario.fecha_creacion).toLocaleString()}
+                  </Typography>
+                </Box>
+              ))
+            )}
+          </Box>        
 
         <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
           <Button
