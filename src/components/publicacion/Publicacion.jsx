@@ -104,6 +104,7 @@ export default function Publicacion() {
   const [loaded, setLoaded] = useState(false);
   const [verDescripcionCompleta, setVerDescripcionCompleta] = useState(false);
   const [comentarios, setComentarios] = useState([]);
+  const [usuariosComentarios, setUsuariosComentarios] = useState({});
   const [loadingComentarios, setLoadingComentarios] = useState(true);
   const [nuevoComentario, setNuevoComentario] = useState("");
   const [publicandoComentario, setPublicandoComentario] = useState(false);
@@ -133,12 +134,35 @@ export default function Publicacion() {
     }
   }, [publicacion]);
   //Obtener comentarios de publicacion
-  useEffect(() => {
-  axios
-    .get(`http://127.0.0.1:5000/comentarios/publicacion/${id}`)
-    .then((res) => setComentarios(res.data))
-    .catch((err) => console.error("Error al obtener comentarios:", err))
-    .finally(() => setLoadingComentarios(false));
+    useEffect(() => {
+    if (!id) return;
+
+    axios
+      .get(`http://localhost:5000/comentarios/publicacion/${id}`)
+      .then(async (res) => {
+        const comentarios = res.data;
+        setComentarios(comentarios);
+
+        // Obtener IDs únicos de usuarios
+        const idsUnicos = [...new Set(comentarios.map(c => c.id_usuario))];
+
+        // Obtener datos de cada usuario
+        const usuariosMap = {};
+        await Promise.all(
+          idsUnicos.map(async (idUsuario) => {
+            try {
+              const res = await axios.get(`http://localhost:5000/usuario/${idUsuario}`);
+              usuariosMap[idUsuario] = res.data;
+            } catch (err) {
+              console.error(`Error al obtener usuario ${idUsuario}`, err);
+            }
+          })
+        );
+        setUsuariosComentarios(usuariosMap);
+      })
+      .catch((err) => {
+        console.error("Error al obtener comentarios:", err);
+      });
   }, [id]);
   // Slider principal
   const [sliderRef, instanceRef] = useKeenSlider(
@@ -514,7 +538,7 @@ export default function Publicacion() {
 
           <Button
             variant="contained"
-            disabled={publicandoComentario}
+            disabled={nuevoComentario.trim().length === 0}
             onClick={enviarComentario}
             sx={{
               textTransform: "none",
@@ -528,36 +552,45 @@ export default function Publicacion() {
         </Box>
 
           <Box sx={{ mt: 4 }}>
-            <Typography variant="h5" gutterBottom>
-              Comentarios
-            </Typography>
+          <Typography variant="h6" gutterBottom>Comentarios</Typography>
+          {comentarios.length === 0 ? (
+            <Typography>No hay comentarios aún.</Typography>
+          ) : (
+            comentarios.map((comentario) => {
+              const usuario = usuariosComentarios[comentario.id_usuario];
 
-            {loadingComentarios ? (
-              <Typography>Cargando comentarios...</Typography>
-            ) : comentarios.length === 0 ? (
-              <Typography variant="body1">No hay comentarios aún.</Typography>
-            ) : (
-              comentarios.map((comentario) => (
-                <Box
-                  key={comentario.id}
-                  sx={{
-                    p: 2,
-                    mb: 2,
-                    border: "1px solid #ddd",
-                    borderRadius: 2,
-                    bgcolor: "#fafafa",
-                  }}
-                >
-                  <Typography variant="body1" sx={{ mb: 1 }}>
-                    {comentario.descripcion}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {new Date(comentario.fecha_creacion).toLocaleString()}
-                  </Typography>
+              return (
+                <Box key={comentario.id} sx={{ display: "flex", alignItems: "flex-start", mb: 2 }}>
+                  <Box
+                    component="img"
+                    src={usuario?.foto_perfil_url || "/default-profile.png"}
+                    alt={usuario?.nombre || "Usuario"}
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      mr: 2,
+                    }}
+                  />
+                  <Box>
+                    <Typography variant="subtitle2">
+                      {usuario?.nombre || "Usuario desconocido"}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {new Date(comentario.fecha_creacion).toLocaleString("es-AR", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </Typography>
+                    <Typography variant="body1">{comentario.descripcion}</Typography>
+                  </Box>
                 </Box>
-              ))
-            )}
-          </Box>        
+              );
+            })
+          )}
+        </Box>
+ 
 
         <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
           <Button
