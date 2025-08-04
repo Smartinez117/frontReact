@@ -53,30 +53,39 @@ const SelfPublications = () => {
     setLoading(true);
     setError(null);
 
-    fetchMisPublicaciones()
+    const params = {};
+    if (categorias) params.categoria = categorias;
+
+    fetchMisPublicaciones(params)
       .then(setPublicaciones)
       .catch((e) => setError(e.message || 'Error al obtener publicaciones'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [categorias]);
+
 
   return (
     <div className="selfPublications-container">
       {/* Header con filtros y botón */}
       <div className="header-filtros">
         {/* Checkbox para categorías */}
+        {/* 
         <div className="categorias-filtros">
           {categoriasPosibles.map(({ label, value }) => (
             <label key={value}>
               <input
-                type="checkbox"
+                type="radio"
+                name="categoria" // todos los radio deben tener el mismo `name`
                 value={value}
-                checked={categorias.includes(value)}
-                onChange={handleCategoriaChange}
+                checked={categorias === value}
+                onChange={(e) => setCategorias(e.target.value)}
               />
               {label}
             </label>
           ))}
-        </div>
+
+          <button onClick={() => setCategorias("")}>Quitar filtro</button>  
+        </div>   
+        */}
         {/* Botón superior derecho (navega a /publicar) */}
         <button className="boton-crear" type="button" onClick={() => navigate('/publicar')}>
           Nueva publicación

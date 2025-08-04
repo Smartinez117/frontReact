@@ -23,3 +23,9 @@
   font-size: 1.5rem;     /* Aumenta o reduce el tamaño del texto */
   font-weight: bold;
 }
+
+.rol-admin {
+  color: #d32f2f;
+  font-size: 14px;
+  margin-top: 4px;
+}
