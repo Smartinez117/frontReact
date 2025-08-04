@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 
-const pages = ['Inicio', 'Publicar', 'Buscar', 'Mapa', 'Configuracion'];
+const pages = ['Inicio', 'Publicar', 'Buscar', 'Mapa'];
 const settings = ['Notificaciones', 'Mi perfil', 'Configuración', 'Cerrar sesión'];
 
 const Navbar = () => {
@@ -205,7 +205,6 @@ const Navbar = () => {
             <Button onClick={() => navigate('/publicar')} sx={{ my: 2, color: 'black' }}>Publicar</Button>
             <Button onClick={() => navigate('/buscar')} sx={{ my: 2, color: 'black' }}>Buscar</Button>
             <Button onClick={() => navigate('/mapa')} sx={{ my: 2, color: 'black' }}>Mapa</Button>
-            <Button onClick={() => navigate('/configuracion')} sx={{ my: 2, color: 'black' }}>Configuración</Button>
           </Box>
 
           <Box sx={{ flexGrow: 0 }}>

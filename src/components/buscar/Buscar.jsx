@@ -249,14 +249,14 @@ const Buscar = () => {
                     ))}
                   </div>
 
-                  <div className="publicacion-acciones">
+                  {/*<div className="publicacion-acciones">
                     <button className="boton-icono" type="button" title="Compartir" data-id={pub.id}>
                       <FaShareAlt />
                     </button>
                     <button className="boton-icono" type="button" title="QR" data-id={pub.id} onClick={handleClickQR}>
                       <FaQrcode />
                     </button>
-                  </div>
+                  </div>*/}
 
                   <button
                     type="button"
