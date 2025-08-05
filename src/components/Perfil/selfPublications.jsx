@@ -143,7 +143,7 @@ const SelfPublications = () => {
                     className="boton-crear boton-editar"
                     data-id={pub.id}
                     aria-label={`Editar publicación ${pub.titulo}`}
-                    // Sin funcionalidad por ahora
+                    onClick={() => navigate(`/editar/${pub.id}`)}
                   >
                     Editar
                   </button>
