@@ -39,16 +39,17 @@ const styleModal = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: "80vw",
-  maxHeight: "80vh",
+  width: "90vw",
+  height: "90vh",
   bgcolor: "background.paper",
   borderRadius: 2,
   outline: "none",
-  p: 2,
+  p: 0,
   display: "flex",
   flexDirection: "column",
   justifyContent: "center",
 };
+
 
 // Slider resizing
 const AdaptiveHeight = (slider) => {
@@ -59,6 +60,7 @@ const AdaptiveHeight = (slider) => {
   slider.on("created", updateHeight);
   slider.on("slideChanged", updateHeight);
 };
+
 
 // Slider arrows
 function Arrow({ left, onClick, disabled }) {
@@ -164,6 +166,7 @@ export default function Publicacion() {
         console.error("Error al obtener comentarios:", err);
       });
   }, [id]);
+
   // Slider principal
   const [sliderRef, instanceRef] = useKeenSlider(
     {
@@ -178,35 +181,23 @@ export default function Publicacion() {
     [AdaptiveHeight]
   );
 
-  // Slider modal
-  const [sliderModalRef, instanceModalRef] = useKeenSlider(
-    open
-      ? {
-          initial: currentSlide,
-          slideChanged(s) {
-            setModalSlide(s.track.details.rel);
-          },
-          created() {
-            setModalSlide(currentSlide);
-          },
-        }
-      : null,
-    [AdaptiveHeight]
-  );
-
   const handleOpen = (idx) => {
-    setCurrentSlide(idx);
     setModalSlide(idx);
     setOpen(true);
   };
-
   const handleClose = () => setOpen(false);
 
+  // Navegación con teclado en el modal
   useEffect(() => {
-    if (open && instanceModalRef?.current) {
-      instanceModalRef.current.moveToIdx(modalSlide);
-    }
-  }, [open, modalSlide, instanceModalRef]);
+    const onKey = (e) => {
+      if (!open) return;
+      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'ArrowLeft') setModalSlide((s) => Math.max(0, s - 1));
+      if (e.key === 'ArrowRight') setModalSlide((s) => Math.min(imagenes.length - 1, s + 1));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, publicacion?.imagenes?.length]);
 
   if (loading) return <Typography sx={{ p: 4 }}>Cargando publicación...</Typography>;
   if (!publicacion) return <Typography sx={{ p: 4 }}>No se encontró la publicación</Typography>;
@@ -324,11 +315,7 @@ export default function Publicacion() {
         >
           {/* Carrusel de imágenes */}
           {imagenes.length > 0 && (
-            <Box
-              ref={sliderRef}
-              className="keen-slider"
-              sx={{ overflow: "hidden", position: "relative" }}
-            >
+            <Box ref={sliderRef} className="keen-slider" sx={{ overflow: "hidden", position: "relative" }}>
               {imagenes.map((src, i) => (
                 <Box
                   key={i}
@@ -340,38 +327,66 @@ export default function Publicacion() {
                   sx={{
                     width: "100%",
                     height: 300,
-                    objectFit: "cover",
+                    objectFit: "contain",
+                    backgroundColor: "#FFFFFF",
                     borderRadius: 2,
                     userSelect: "none",
                     cursor: "pointer",
                   }}
                 />
               ))}
-
               {loaded && instanceRef.current && (
                 <>
                   <Arrow
                     left
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      instanceRef.current?.prev();
-                    }}
+                    onClick={(e) => { e.stopPropagation(); instanceRef.current?.prev(); }}
                     disabled={currentSlide === 0}
                   />
                   <Arrow
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      instanceRef.current?.next();
-                    }}
-                    disabled={
-                      currentSlide ===
-                      instanceRef.current.track.details.slides.length - 1
-                    }
+                    onClick={(e) => { e.stopPropagation(); instanceRef.current?.next(); }}
+                    disabled={currentSlide === instanceRef.current.track.details.slides.length - 1}
                   />
                 </>
               )}
             </Box>
           )}
+          {/* Modal de imágenes */}
+          <Modal
+            open={open}
+            onClose={handleClose}
+            closeAfterTransition
+            slots={{ backdrop: Backdrop }}
+            slotProps={{ backdrop: { timeout: 500 } }}
+          >
+            <Fade in={open}>
+              <Box sx={styleModal}>
+                <Box sx={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.paper' }}>
+                  <Box sx={{ position: 'absolute', left: 8, zIndex: 30 }}>
+                    <Arrow
+                      left
+                      onClick={(e) => { e.stopPropagation(); setModalSlide((s) => Math.max(0, s - 1)); }}
+                      disabled={modalSlide === 0}
+                    />
+                  </Box>
+                  <Box
+                    component="img"
+                    src={imagenes[modalSlide]}
+                    alt={`Imagen ${modalSlide + 1}`}
+                    sx={{ maxWidth: '90vw', maxHeight: '85vh', objectFit: 'contain', borderRadius: 2, userSelect: 'none', boxShadow: 3 }}
+                  />
+                  <Box sx={{ position: 'absolute', right: 8, zIndex: 30 }}>
+                    <Arrow
+                      onClick={(e) => { e.stopPropagation(); setModalSlide((s) => Math.min(imagenes.length - 1, s + 1)); }}
+                      disabled={modalSlide === imagenes.length - 1}
+                    />
+                  </Box>
+                  <Box sx={{ position: 'absolute', bottom: 12, left: 0, right: 0, textAlign: 'center', zIndex: 30, color: 'text.primary' }}>
+                    <Typography variant="body2">{modalSlide + 1} / {imagenes.length}</Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </Fade>
+          </Modal>
 
           {/* Usuario */}
           {usuario && (
@@ -449,67 +464,41 @@ export default function Publicacion() {
               </MapContainer>
             </Box>
           )}
-
-          {/* Modal de imágenes */}
-          <Modal
-            open={open}
-            onClose={handleClose}
-            closeAfterTransition
-            slots={{ backdrop: Backdrop }}
-            slotProps={{ backdrop: { timeout: 500 } }}
+        <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
+          <Button
+            variant="contained"
+            startIcon={<DownloadIcon />}
+            sx={{
+              bgcolor: "#1976d2",
+              color: "#fff",
+              '&:hover': { bgcolor: "#1565c0" },
+              textTransform: "none",
+              px: 3,
+              borderRadius: 2,
+              fontWeight: "bold",
+            }}
+            onClick={() => descargarPDF(id)}
           >
-            <Fade in={open}>
-              <Box sx={styleModal}>
-                {open && (
-                  <Box
-                    ref={sliderModalRef}
-                    className="keen-slider"
-                    sx={{ overflow: "hidden", position: "relative" }}
-                  >
-                    {imagenes.map((src, i) => (
-                      <Box
-                        key={i}
-                        className="keen-slider__slide"
-                        component="img"
-                        src={src}
-                        alt={`Slide ${i + 1}`}
-                        sx={{
-                          width: "100%",
-                          height: "60vh",
-                          objectFit: "contain",
-                          borderRadius: 2,
-                          userSelect: "none",
-                        }}
-                      />
-                    ))}
+            Descargar PDF
+          </Button>
 
-                    {loaded && instanceModalRef.current && (
-                      <>
-                        <Arrow
-                          left
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            instanceModalRef.current?.prev();
-                          }}
-                          disabled={modalSlide === 0}
-                        />
-                        <Arrow
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            instanceModalRef.current?.next();
-                          }}
-                          disabled={
-                            modalSlide ===
-                            instanceModalRef.current.track.details.slides.length - 1
-                          }
-                        />
-                      </>
-                    )}
-                  </Box>
-                )}
-              </Box>
-            </Fade>
-          </Modal>
+          <Button
+            variant="outlined"
+            startIcon={<ShareIcon />}
+            sx={{
+              color: "#1976d2",
+              borderColor: "#1976d2",
+              '&:hover': { borderColor: "#1565c0", bgcolor: "#e3f2fd" },
+              textTransform: "none",
+              px: 3,
+              borderRadius: 2,
+              fontWeight: "bold",
+            }}
+            onClick={() => compartirPublicacion(id)}
+          >
+            Compartir
+          </Button>
+        </Box>
         </Box>
           <Divider sx={{ my: 4 }} />
 
@@ -521,7 +510,7 @@ export default function Publicacion() {
 
           <TextField
             multiline
-            minRows={3}
+            minRows={1}
             fullWidth
             variant="outlined"
             placeholder="Escribí tu comentario..."
@@ -590,44 +579,6 @@ export default function Publicacion() {
             })
           )}
         </Box>
- 
-
-        <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
-          <Button
-            variant="contained"
-            startIcon={<DownloadIcon />}
-            sx={{
-              bgcolor: "#1976d2",
-              color: "#fff",
-              '&:hover': { bgcolor: "#1565c0" },
-              textTransform: "none",
-              px: 3,
-              borderRadius: 2,
-              fontWeight: "bold",
-            }}
-            onClick={() => descargarPDF(id)}
-          >
-            Descargar PDF
-          </Button>
-
-          <Button
-            variant="outlined"
-            startIcon={<ShareIcon />}
-            sx={{
-              color: "#1976d2",
-              borderColor: "#1976d2",
-              '&:hover': { borderColor: "#1565c0", bgcolor: "#e3f2fd" },
-              textTransform: "none",
-              px: 3,
-              borderRadius: 2,
-              fontWeight: "bold",
-            }}
-            onClick={() => compartirPublicacion(id)}
-          >
-            Compartir
-          </Button>
-        </Box>
-
 
       </Container>
     </>
