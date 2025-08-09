@@ -229,7 +229,7 @@ export default function Publicar() {
           value={seleccionado}
           onChange={(event, newValue) => setSeleccionado(newValue)}
           sx={{ my: 2, gap: 1, flexWrap: 'wrap' }}
-          exclusive
+          type="single"
         >
           {["Adopción", "Búsqueda", "Encuentro", "Estado Crítico"].map(opcion => (
             <Button

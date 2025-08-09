@@ -159,6 +159,15 @@ export default function Editar() {
         if (data.coordenadas && Array.isArray(data.coordenadas)) {
           setCoordenadas({ lat: parseFloat(data.coordenadas[0]), lng: parseFloat(data.coordenadas[1]) });
         }
+        if (data.id_locacion) {
+          const resLoc = await fetch(`http://localhost:5000/api/ubicacion/localidades/${data.id_locacion}`);
+          if (resLoc.ok) {
+            const localidad = await resLoc.json();
+            setProvinciaId(localidad.id_provincia.toString());
+            setDepartamentoId(localidad.id_departamento.toString());
+            setLocalidadId(localidad.id.toString());
+          }
+        }
 
         // Guardamos los nombres de las etiquetas
         if (Array.isArray(data.etiquetas)) {
