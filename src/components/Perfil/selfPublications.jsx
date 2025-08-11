@@ -5,13 +5,9 @@ import { useNavigate } from 'react-router-dom';
 // Importo íconos solo si hace falta, por ahora quitados
 import './cselfPublications.css';
 import { fetchMisPublicaciones, eliminarPublicacion } from '../../services/perfilService';
+//importaciones para el confirm
+import { confirmarAccion } from '../../utils/confirmservice';
 
-
-const categoriasPosibles = [
-  { label: "Adopción", value: "adopcion" },
-  { label: "Búsqueda", value: "busqueda" },
-  { label: "Estado crítico", value: "estado critico" }
-];
 
 const SelfPublications = () => {
   const navigate = useNavigate();
@@ -35,16 +31,16 @@ const SelfPublications = () => {
       setCategorias(prev => prev.filter(cat => cat !== value));
     }
   };
-  //handler para eliminar una publicacion
-  const handleEliminar = async (id) => {
-  try {
-    await eliminarPublicacion(id);
-    // Actualizas el estado para sacar la publicación eliminada
-    setPublicaciones(prev => prev.filter(pub => pub.id !== id));
-  } catch (error) {
-    alert(error.message);
-  }
-};
+  // Nuevo handleEliminar que usa el servicio de confirmación
+  const handleEliminar = (id) => {
+    confirmarAccion({
+      tipo: 'publicacion',
+      onConfirm: async () => {
+        await eliminarPublicacion(id);
+        setPublicaciones(prev => prev.filter(pub => pub.id !== id));
+      }
+    });
+  };
 
 
 
@@ -61,6 +57,7 @@ const SelfPublications = () => {
       .catch((e) => setError(e.message || 'Error al obtener publicaciones'))
       .finally(() => setLoading(false));
   }, [categorias]);
+  
 
 
   return (

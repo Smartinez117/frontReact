@@ -1,0 +1,61 @@
+/* confirmationStyles.css */
+
+/* Fondo con blur y color semitransparente */
+.swal2-container {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: backdrop-filter 0.3s ease;
+}
+
+/* Popup estilizado similar al diseño */
+.custom-popup {
+  border-radius: 20px !important;
+  padding: 2rem 2.5rem !important;
+  box-shadow: 0 2px 24px rgba(0, 0, 0, 0.15) !important;
+  min-width: 350px !important;
+  max-width: 400px !important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  text-align: center;
+}
+
+/* Icono (ya estamos usando html personalizado, pero si quieres estilos) */
+/* Puedes agregar estilos extra aquí para el icono si necesitas */
+
+/* Botón confirmar rojo */
+.custom-confirm-button {
+  background-color: #e74646 !important;
+  color: white !important;
+  border-radius: 8px !important;
+  padding: 0.7rem 2.5rem !important;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(231, 70, 70, 0.4);
+  transition: background-color 0.3s ease;
+}
+
+.custom-confirm-button:hover {
+  background-color: #b3261e !important;
+  opacity: 0.95;
+  border: none !important;
+}
+
+/* Botón cancelar gris */
+.custom-cancel-button {
+  background-color: #eee !important;
+  color: #333 !important;
+  border-radius: 8px !important;
+  padding: 0.7rem 2rem !important;
+  transition: background-color 0.3s ease;
+}
+
+.custom-cancel-button:hover {
+  background-color: #ccc !important;
+}
+
+/* Separación y alineación botones */
+.swal2-actions {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 1rem !important;
+  margin-top: 1rem !important;
+}
