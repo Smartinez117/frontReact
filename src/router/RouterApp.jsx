@@ -15,6 +15,7 @@ import MainLayout from '../layouts/MainLayout';
 import Perfil from '../components/Perfil/Perfil';
 import Editar from '../components/Editar/editar.jsx';
 import ConfigPerfil from '../components/Perfil/configPerfil.jsx';
+import Notificaciones from '../components/Notificaciones/notificaciones.jsx';
 
 function RouterApp() {
   return (
@@ -42,6 +43,7 @@ function RouterApp() {
         <Route path="/publicacion/:id" element={<Publicacion />} />
         <Route path="/perfil" element={<Perfil/>} />
         <Route path="/editar/:id_publicacion" element={<Editar />} />
+        <Route path="/notificaciones" element ={<Notificaciones />} />
       </Route>
 
     </Routes>
