@@ -2,6 +2,18 @@
 import Swal from 'sweetalert2';
 import './confirm.css'; // Asegúrate de importar el CSS con los estilos y blur
 
+
+
+export function mostrarAlerta({ titulo, mensaje, tipo = 'info', duracion = 2000 }) {
+  return Swal.fire({
+    icon: tipo, // info | success | error | warning
+    title: titulo,
+    text: mensaje,
+    timer: duracion,
+    showConfirmButton: false,
+  });
+}
+
 // Funciones que devuelven textos parametrizados según tipo
 const getTitle = (tipo) => {
   switch (tipo) {
