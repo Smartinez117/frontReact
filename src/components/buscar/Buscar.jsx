@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { fetchPublicacionesFiltradas } from '../../services/adopcionService';
 import { useNavigate } from 'react-router-dom';
 import QR from "../qr/fqr.jsx";
-import { FaShareAlt, FaQrcode } from 'react-icons/fa';
 import './Buscar.css';
 import { FormControl, FormLabel, TextField } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -14,26 +13,13 @@ const categoriasPosibles = [
   { label: "Estado crítico", value: "Estado Crítico" }
 ];
 
-// Función auxiliar para obtener el nombre de la localidad
-const fetchNombreLocalidad = async (idLocacion) => {
-  try {
-    const res = await fetch(`http://127.0.0.1:5000/api/ubicacion/localidades/${idLocacion}`);
-    if (!res.ok) throw new Error("Error al obtener localidad");
-    const data = await res.json();
-    return data.nombre;
-  } catch (error) {
-    console.error(`Error obteniendo localidad para ID ${idLocacion}:`, error);
-    return "Localidad desconocida";
-  }
-};
-
 const Buscar = () => {
   const navigate = useNavigate();
   const [idPublicacion, setIdPublicacion] = useState(null);
 
   const [categorias, setCategorias] = useState([]);
   const [publicaciones, setPublicaciones] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // ✅ arranca en true para mostrar "cargando"
   const [error, setError] = useState(null);
 
   const [fechaDesde, setFechaDesde] = useState('');
@@ -71,10 +57,25 @@ const Buscar = () => {
       );
     }
 
-    // Cargar publicaciones por defecto
-    aplicarFiltros();
+    // Cargar publicaciones iniciales
+    cargarPublicaciones();
   }, []);
 
+  const cargarPublicaciones = async () => {
+    try {
+      setLoading(true); // ✅ activa loading
+      const res = await fetch("http://127.0.0.1:5000/publicaciones");
+      const data = await res.json();
+      setPublicaciones(data);
+    } catch (error) {
+      console.error("Error cargando publicaciones:", error);
+      setError("Error cargando publicaciones");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔹 Endpoint de filtrado, ahora el back ya devuelve `localidad` directamente
   const aplicarFiltros = async () => {
     setLoading(true);
     setError(null);
@@ -98,17 +99,9 @@ const Buscar = () => {
 
     try {
       const publicacionesRaw = await fetchPublicacionesFiltradas(params);
-
-      const publicacionesConLocalidad = await Promise.all(
-        publicacionesRaw.map(async (pub) => {
-          const localidadNombre = await fetchNombreLocalidad(pub.id_locacion);
-          return { ...pub, localidadNombre };
-        })
-      );
-
-      setPublicaciones(publicacionesConLocalidad);
+      setPublicaciones(publicacionesRaw);
     } catch (e) {
-      console.error("Error en fetch:", e);
+      console.error("Error en fetch filtrado:", e);
       setError(e.message || 'Error al obtener publicaciones');
     } finally {
       setLoading(false);
@@ -121,11 +114,6 @@ const Buscar = () => {
     } else {
       setCategorias([value]);
     }
-  };
-
-  const handleClickQR = (e) => {
-    const id = Number(e.currentTarget.getAttribute("data-id"));
-    setIdPublicacion(id);
   };
 
   return (
@@ -141,70 +129,68 @@ const Buscar = () => {
 
         {mostrarFiltros && (
           <div className="filtros-avanzados">
-            <div className="filtros-avanzados">
-              <div className="filtro-grupo">
-                <label>Categoría:</label>
-                {categoriasPosibles.map(({ label, value }) => (
-                  <button
-                    key={value}
-                    className={`filtro-boton ${categorias.includes(value) ? 'activo' : ''}`}
-                    onClick={() => handleCategoriaChange(value)}
-                    type="button"
-                  >
-                    {label}
-                  </button>
-                ))}
-                {categorias.length > 0 && (
-                  <button
-                    className="filtro-boton limpiar"
-                    onClick={() => setCategorias([])}
-                    type="button"
-                  >
-                    Limpiar
-                  </button>
-                )}
-              </div>
-
-              <div className="filtro-grupo">
-                <label>Fecha desde:</label>
-                <input type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
-                <label>hasta:</label>
-                <input type="date" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
-              </div>
-
-              <div className="filtro-grupo">
-                <label>Radio desde tu ubicación (km):</label>
-                <input
-                  type="number"
-                  placeholder="Ej: 20"
-                  value={radioKm}
-                  onChange={e => setRadioKm(e.target.value)}
-                />
-              </div>
-
-              <div className="filtro-grupo">
-                <FormControl fullWidth sx={{ mt: 1 }}>
-                  <FormLabel>Etiquetas</FormLabel>
-                  <Autocomplete
-                    multiple
-                    options={etiquetasDisponibles}
-                    value={etiquetasSeleccionadas}
-                    onChange={(event, newValue) => {
-                      setEtiquetasSeleccionadas(newValue);
-                      setTagsSeleccionados(newValue.map(opt => opt.label));
-                    }}
-                    getOptionLabel={(option) => option.label}
-                    renderInput={(params) => (
-                      <TextField {...params} placeholder="Seleccioná etiquetas" />
-                    )}
-                  />
-                </FormControl>
-              </div>
-
-              <button className="boton-aplicar-filtros" onClick={aplicarFiltros}>
-                Aplicar filtros
-              </button>
+            <div className="filtro-grupo">
+              <label>Categoría:</label>
+              {categoriasPosibles.map(({ label, value }) => (
+                <button
+                  key={value}
+                  className={`filtro-boton ${categorias.includes(value) ? 'activo' : ''}`}
+                  onClick={() => handleCategoriaChange(value)}
+                  type="button"
+                >
+                  {label}
+                </button>
+              ))}
+              {categorias.length > 0 && (
+                <button
+                  className="filtro-boton limpiar"
+                  onClick={() => setCategorias([])}
+                  type="button"
+                >
+                  Limpiar
+                </button>
+              )}
             </div>
+
+            <div className="filtro-grupo">
+              <label>Fecha desde:</label>
+              <input type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
+              <label>hasta:</label>
+              <input type="date" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
+            </div>
+
+            <div className="filtro-grupo">
+              <label>Radio desde tu ubicación (km):</label>
+              <input
+                type="number"
+                placeholder="Ej: 20"
+                value={radioKm}
+                onChange={e => setRadioKm(e.target.value)}
+              />
+            </div>
+
+            <div className="filtro-grupo">
+              <FormControl fullWidth sx={{ mt: 1 }}>
+                <FormLabel>Etiquetas</FormLabel>
+                <Autocomplete
+                  multiple
+                  options={etiquetasDisponibles}
+                  value={etiquetasSeleccionadas}
+                  onChange={(event, newValue) => {
+                    setEtiquetasSeleccionadas(newValue);
+                    setTagsSeleccionados(newValue.map(opt => opt.label));
+                  }}
+                  getOptionLabel={(option) => option.label}
+                  renderInput={(params) => (
+                    <TextField {...params} placeholder="Seleccioná etiquetas" />
+                  )}
+                />
+              </FormControl>
+            </div>
+
+            <button className="boton-aplicar-filtros" onClick={aplicarFiltros}>
+              Aplicar filtros
+            </button>
           </div>
         )}
 
@@ -219,10 +205,16 @@ const Buscar = () => {
       {!loading && !error && (
         <ul className="lista-publicaciones">
           {publicaciones.length === 0 && (
-            <li>No hay publicaciones que coincidan con los filtros.</li>
+            <li>No hay publicaciones disponibles.</li>
           )}
           {publicaciones.map(pub => {
-            const imagenPrincipal = pub.imagenes.length > 0 ? pub.imagenes[0] : null;
+            // ✅ manejar string o array
+            let imagenPrincipal = null;
+            if (Array.isArray(pub.imagenes) && pub.imagenes.length > 0) {
+              imagenPrincipal = pub.imagenes[0];
+            } else if (typeof pub.imagenes === "string") {
+              imagenPrincipal = pub.imagenes;
+            }
 
             return (
               <li key={pub.id} className="publicacion-card">
@@ -238,7 +230,7 @@ const Buscar = () => {
 
                 <div className="publicacion-contenido">
                   <h3 className="publicacion-titulo">{pub.titulo}</h3>
-                  <p className="publicacion-localidad">📍 {pub.localidadNombre}</p>
+                  <p className="publicacion-localidad">📍 {pub.localidad}</p>
                   <span className="publicacion-categoria">{pub.categoria}</span>
 
                   <div className="publicacion-etiquetas">
@@ -249,19 +241,9 @@ const Buscar = () => {
                     ))}
                   </div>
 
-                  {/*<div className="publicacion-acciones">
-                    <button className="boton-icono" type="button" title="Compartir" data-id={pub.id}>
-                      <FaShareAlt />
-                    </button>
-                    <button className="boton-icono" type="button" title="QR" data-id={pub.id} onClick={handleClickQR}>
-                      <FaQrcode />
-                    </button>
-                  </div>*/}
-
                   <button
                     type="button"
                     className="boton-crear boton-detalle"
-                    data-id={pub.id}
                     onClick={() => navigate(`/publicacion/${pub.id}`)}
                   >
                     Ver detalle
@@ -283,3 +265,4 @@ const Buscar = () => {
 };
 
 export default Buscar;
+
