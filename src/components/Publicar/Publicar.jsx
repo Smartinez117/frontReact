@@ -26,10 +26,14 @@ import SvgIcon from '@mui/joy/SvgIcon';
 import Alert from '@mui/joy/Alert';
 import Typography from '@mui/joy/Typography';
 import { styled } from '@mui/joy';
+import CircularProgress from '@mui/material/CircularProgress';
+
 
 import { getAuth } from "firebase/auth";
 
 import { useNavigate } from 'react-router-dom';
+
+import { mostrarAlerta } from '../../utils/confirmservice.js'; 
 
 const VisuallyHiddenInput = styled('input')`
   clip: rect(0 0 0 0);
@@ -87,6 +91,7 @@ export default function Publicar() {
   const [imagenesSeleccionadas, setImagenesSeleccionadas] = useState([]);
   const [errores, setErrores] = useState([]);
   const navigate = useNavigate();
+  const [cargando, setCargando] = useState(false);
 
   const validarCampos = () => {
     const nuevosErrores = [];
@@ -162,6 +167,8 @@ export default function Publicar() {
     setErrores(nuevosErrores);
     if (nuevosErrores.length > 0) return;
 
+    setCargando(true);
+
     try {
       const formData = new FormData();
       imagenesSeleccionadas.forEach((img) => {
@@ -191,7 +198,11 @@ export default function Publicar() {
       const auth = getAuth();
       const user = auth.currentUser;
       if (!user) {
-        alert("Debés iniciar sesión para publicar");
+        mostrarAlerta({
+          titulo: '⚠️ Sesión requerida',
+          mensaje: 'Debés iniciar sesión para publicar',
+          tipo: 'warning'
+        });
         return;
       }
       const token = await user.getIdToken();
@@ -208,14 +219,22 @@ export default function Publicar() {
       const data = await res.json();
       if (res.ok) {
         console.log("Publicación creada:", data);
-        alert("✅ ¡Publicación enviada con éxito!");
+        mostrarAlerta({
+          titulo: '✅ ¡Listo!',
+          mensaje: 'Publicación enviada con éxito',
+          tipo: 'success'
+        });
         navigate(`/publicacion/${data.id_publicacion}`);
       } else {
         throw new Error(data.error || "Error en el envío");
       }
     } catch (error) {
       console.error("Error al publicar:", error);
-      alert("❌ Ocurrió un error al publicar");
+      mostrarAlerta({
+        titulo: 'Error',
+        mensaje: 'Ocurrió un error al publicar',
+        tipo: 'error'
+      });
     }
   };
 
@@ -368,11 +387,31 @@ export default function Publicar() {
         <Button
           size="lg"
           variant="solid"
-          sx={{ width: '100%', mt: 4, backgroundColor: '#F1B400', color: '#0D171C', '&:hover': { backgroundColor: '#d9a900' } }}
+          disabled={cargando}
+          sx={{
+            width: '100%',
+            mt: 4,
+            backgroundColor: '#F1B400',
+            color: '#0D171C',
+            '&:hover': { backgroundColor: '#d9a900' },
+            // un ligero estilo para cuando está deshabilitado
+            '&.JoyButton-root[disabled]': {
+              opacity: 0.7,
+              pointerEvents: 'none'
+            }
+          }}
           onClick={handlePublicar}
         >
-          Publicar
+          {cargando ? (
+            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+              <CircularProgress size={18} />
+              <span>Publicando…</span>
+            </Box>
+          ) : (
+            "Publicar"
+          )}
         </Button>
+
       </Container>
     </React.Fragment>
   );
