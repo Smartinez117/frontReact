@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { fetchPublicacionesFiltradas } from '../../services/adopcionService';
+import { fetchPublicacionesFiltradas } from '../../services/busquedaService';
 import { useNavigate } from 'react-router-dom';
-import QR from "../qr/fqr.jsx";
 import './Buscar.css';
 import { FormControl, FormLabel, TextField } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -253,12 +252,6 @@ const Buscar = () => {
             );
           })}
         </ul>
-      )}
-
-      {idPublicacion && (
-        <div className="qr-container" style={{ marginTop: '30px' }}>
-          <QR idPublicacion={idPublicacion} />
-        </div>
       )}
     </div>
   );
