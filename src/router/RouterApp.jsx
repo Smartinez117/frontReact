@@ -11,6 +11,7 @@ import Perfil from '../components/Perfil/Perfil';
 import Editar from '../components/Editar/editar.jsx';
 import ConfigPerfil from '../components/Perfil/configPerfil.jsx';
 import Notificaciones from '../components/Notificaciones/notificaciones.jsx';
+import PanelAdmin from '../components/PanelAdmin/PanelAdmin.jsx';
 
 function RouterApp() {
   return (
@@ -20,6 +21,7 @@ function RouterApp() {
       <Route path="/app" element={<App/>} />
       <Route path="/pconfig" element={<ConfigPerfil />} />
       
+      <Route path="/admin/panel" element={<PanelAdmin />} />
 
 
       {/* Rutas que usan MainLayout */}
