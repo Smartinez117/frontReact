@@ -8,40 +8,40 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+/*iconos*/
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PeopleIcon from '@mui/icons-material/People';
-import DnsRoundedIcon from '@mui/icons-material/DnsRounded';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import PermMediaOutlinedIcon from '@mui/icons-material/PhotoSizeSelectActual';
-import PublicIcon from '@mui/icons-material/Public';
-import SettingsEthernetIcon from '@mui/icons-material/SettingsEthernet';
-import SettingsInputComponentIcon from '@mui/icons-material/SettingsInputComponent';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import ArticleIcon from '@mui/icons-material/Article';
+import LabelIcon from '@mui/icons-material/Label';
+import ReportIcon from '@mui/icons-material/Report';
 import TimerIcon from '@mui/icons-material/Timer';
 import SettingsIcon from '@mui/icons-material/Settings';
 import PhonelinkSetupIcon from '@mui/icons-material/PhonelinkSetup';
 
 const categories = [
   {
-    id: 'Build',
+    id: 'Secciones',
     children: [
       {
         id: 'Usuarios',
         icon: <PeopleIcon />,
         active: true,
       },
-      { id: 'Database', icon: <DnsRoundedIcon /> },
+      { id: 'Publicaciones', icon: <ArticleIcon /> },
       { id: 'Imagenes', icon: <PermMediaOutlinedIcon /> },
-      { id: 'Hosting', icon: <PublicIcon /> },
-      { id: 'Functions', icon: <SettingsEthernetIcon /> },
+      { id: 'Comentarios', icon: <ChatBubbleOutlineIcon /> },
+      { id: 'Ubicaciones', icon: <LocationOnIcon /> },
       {
-        id: 'Machine learning',
-        icon: <SettingsInputComponentIcon />,
-      },
+        id: 'Etiquetas', icon: <LabelIcon />, },
     ],
   },
   {
-    id: 'Quality',
+    id: 'Seguimiento',
     children: [
-      { id: 'Analytics', icon: <SettingsIcon /> },
+      { id: 'Reportes', icon: <ReportIcon /> },
       { id: 'Performance', icon: <TimerIcon /> },
       { id: 'Test Lab', icon: <PhonelinkSetupIcon /> },
     ],

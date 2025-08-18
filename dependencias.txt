@@ -12,6 +12,8 @@ para MUI:
 npm install @mui/material @emotion/react @emotion/styled
 npm install @mui/icons-material
 npm install @mui/joy
+npm install @mui/x-data-grid
+
 
 para un carrusel de imagenes piola:
 npm install keen-slider react
