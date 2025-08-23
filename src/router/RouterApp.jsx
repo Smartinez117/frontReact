@@ -12,6 +12,9 @@ import Editar from '../components/Editar/editar.jsx';
 import ConfigPerfil from '../components/Perfil/configPerfil.jsx';
 import Notificaciones from '../components/Notificaciones/notificaciones.jsx';
 import PanelAdmin from '../components/PanelAdmin/PanelAdmin.jsx';
+import HomeAdmin from "../components/PanelAdmin/sections/HomeAdmin.jsx";
+import UsuariosAdmin from "../components/PanelAdmin/sections/UsuariosAdmin.jsx";
+import PublicacionesAdmin from "../components/PanelAdmin/sections/PublicacionesAdmin.jsx";
 
 function RouterApp() {
   return (
@@ -37,6 +40,15 @@ function RouterApp() {
         <Route path="/editar/:id_publicacion" element={<Editar />} />
         <Route path="/notificaciones" element ={<Notificaciones />} />
       </Route>
+
+    {/*Rutas admin */}
+      <Route path="/admin/panel" element={<PanelAdmin />}>
+        <Route index element={<HomeAdmin />} />  {/* default /admin/panel */}
+        <Route path="usuarios" element={<UsuariosAdmin />} />
+        <Route path="publicaciones" element={<PublicacionesAdmin />} />
+        {/* más secciones */}
+      </Route>
+
 
     </Routes>
   );

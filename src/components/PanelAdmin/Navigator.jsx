@@ -1,4 +1,4 @@
-/*Barra lateral*/
+/* Barra lateral */
 import * as React from 'react';
 import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
@@ -8,7 +8,9 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-/*iconos*/
+import { NavLink } from 'react-router-dom';
+
+/* iconos */
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PeopleIcon from '@mui/icons-material/People';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
@@ -18,32 +20,26 @@ import ArticleIcon from '@mui/icons-material/Article';
 import LabelIcon from '@mui/icons-material/Label';
 import ReportIcon from '@mui/icons-material/Report';
 import TimerIcon from '@mui/icons-material/Timer';
-import SettingsIcon from '@mui/icons-material/Settings';
 import PhonelinkSetupIcon from '@mui/icons-material/PhonelinkSetup';
 
 const categories = [
   {
     id: 'Secciones',
     children: [
-      {
-        id: 'Usuarios',
-        icon: <PeopleIcon />,
-        active: true,
-      },
-      { id: 'Publicaciones', icon: <ArticleIcon /> },
-      { id: 'Imagenes', icon: <PermMediaOutlinedIcon /> },
-      { id: 'Comentarios', icon: <ChatBubbleOutlineIcon /> },
-      { id: 'Ubicaciones', icon: <LocationOnIcon /> },
-      {
-        id: 'Etiquetas', icon: <LabelIcon />, },
+      { id: 'Usuarios', icon: <PeopleIcon />, route: 'usuarios' },
+      { id: 'Publicaciones', icon: <ArticleIcon />, route: 'publicaciones' },
+      { id: 'Imagenes', icon: <PermMediaOutlinedIcon />, route: 'imagenes' },
+      { id: 'Comentarios', icon: <ChatBubbleOutlineIcon />, route: 'comentarios' },
+      { id: 'Ubicaciones', icon: <LocationOnIcon />, route: 'ubicaciones' },
+      { id: 'Etiquetas', icon: <LabelIcon />, route: 'etiquetas' },
     ],
   },
   {
     id: 'Seguimiento',
     children: [
-      { id: 'Reportes', icon: <ReportIcon /> },
-      { id: 'Performance', icon: <TimerIcon /> },
-      { id: 'Test Lab', icon: <PhonelinkSetupIcon /> },
+      { id: 'Reportes', icon: <ReportIcon />, route: 'reportes' },
+      { id: 'Performance', icon: <TimerIcon />, route: 'performance' },
+      { id: 'Test Lab', icon: <PhonelinkSetupIcon />, route: 'test-lab' },
     ],
   },
 ];
@@ -83,9 +79,18 @@ export default function Navigator(props) {
             <ListItem sx={{ py: 2, px: 3 }}>
               <ListItemText sx={{ color: '#fff' }}>{id}</ListItemText>
             </ListItem>
-            {children.map(({ id: childId, icon, active }) => (
+            {children.map(({ id: childId, icon, route }) => (
               <ListItem disablePadding key={childId}>
-                <ListItemButton selected={active} sx={item}>
+                <ListItemButton
+                  component={NavLink}
+                  to={`/admin/panel/${route}`}
+                  sx={item}
+                  style={({ isActive }) =>
+                    isActive
+                      ? { color: '#4fc3f7', backgroundColor: 'rgba(255,255,255,0.08)' }
+                      : {}
+                  }
+                >
                   <ListItemIcon>{icon}</ListItemIcon>
                   <ListItemText>{childId}</ListItemText>
                 </ListItemButton>

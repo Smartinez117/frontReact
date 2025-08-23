@@ -5,8 +5,8 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
+import { Outlet, useLocation } from 'react-router-dom'; // 👈 IMPORTANTE
 import Navigator from './Navigator';
-import Content from './Content';
 import Header from './Header';
 
 function Copyright() {
@@ -166,12 +166,20 @@ theme = {
 
 const drawerWidth = 256;
 
-export default function PaperAdmin() {
+export default function PanelAdmin() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const isSmUp = useMediaQuery(theme.breakpoints.up('sm'));
+  const location = useLocation(); // 👈 para el título dinámico
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  // 👇 opcional: título dinámico según la ruta
+  const getTitle = () => {
+    if (location.pathname.includes("usuarios")) return "Usuarios";
+    if (location.pathname.includes("publicaciones")) return "Publicaciones";
+    return "Dashboard"; // default
   };
 
   return (
@@ -196,9 +204,9 @@ export default function PaperAdmin() {
           />
         </Box>
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <Header onDrawerToggle={handleDrawerToggle} />
+          <Header title={getTitle()} onDrawerToggle={handleDrawerToggle} />
           <Box component="main" sx={{ flex: 1, py: 6, px: 4, bgcolor: '#eaeff1' }}>
-            <Content />
+            <Outlet /> {/* 👈 AQUÍ se inyectan las subrutas */}
           </Box>
           <Box component="footer" sx={{ p: 2, bgcolor: '#eaeff1' }}>
             <Copyright />
