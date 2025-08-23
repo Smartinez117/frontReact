@@ -26,3 +26,5 @@ npm install leaflet react-leaflet
 
 Funcion para confirmar el delete en las publicaciones Importacion necesaria:
 npm install sweetalert2
+para los sockets:
+npm install socket.io-client
