@@ -15,26 +15,54 @@ import { DataGrid } from '@mui/x-data-grid';
 
 const columns = [
   { field: 'id', headerName: 'ID', width: 70 },
-  { field: 'firstName', headerName: 'First name', width: 130 },
-  { field: 'lastName', headerName: 'Last name', width: 130 },
+  { field: 'nombre', headerName: 'Nombre', width: 130 },
+  { field: 'email', headerName: 'Email', width: 200 },
+  { field: 'rol', headerName: 'Rol', description: 'Muestra si es admin o usuario común', width: 90 },
+  { field: 'fecha_registro', headerName: 'Fecha de registro', width: 130 },
   {
-    field: 'age',
-    headerName: 'Age',
-    type: 'number',
-    width: 90,
-  },
-  {
-    field: 'fullName',
-    headerName: 'Full name',
-    description: 'This column has a value getter and is not sortable.',
+    field: 'acciones',
+    headerName: 'Acciones',
+    width: 250,
     sortable: false,
-    width: 160,
-    valueGetter: (value, row) => `${row.firstName || ''} ${row.lastName || ''}`,
-  },
+    filterable: false,
+    renderCell: (params) => {
+      const id = params.row.id;
+      return (
+        <>
+          <Button
+            variant="outlined"
+            size="small"
+            sx={{ mr: 1 }}
+            onClick={() => console.log("Ver usuario:", id)}
+          >
+            Ver
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            sx={{ mr: 1 }}
+            onClick={() => console.log("Editar usuario:", id)}
+          >
+            Editar
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={() => console.log("Borrar usuario:", id)}
+          >
+            Borrar
+          </Button>
+        </>
+      );
+    }
+  }
 ];
 
+
 const rows = [
-  { id: 1, lastName: 'Snow', firstName: 'Jon', age: 35 },
+  { id: 500000, nombre: 'Franco Armani', email: 'pulpo.armani@gmail.com', rol: 'usuario', fecha_registro: '12-01-2018'},
   { id: 2, lastName: 'Lannister', firstName: 'Cersei', age: 42 },
   { id: 3, lastName: 'Lannister', firstName: 'Jaime', age: 45 },
   { id: 4, lastName: 'Stark', firstName: 'Arya', age: 16 },

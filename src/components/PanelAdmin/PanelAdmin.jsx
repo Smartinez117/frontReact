@@ -10,6 +10,7 @@ import Link from '@mui/material/Link';
 import { Outlet, useLocation } from 'react-router-dom'; // 👈 IMPORTANTE PARA CAMBIAR EL TITULO SEGÚN LA RUTA
 import Navigator from './Navigator';
 import Header from './Header';
+import Container from '@mui/material/Container';
 
 
 function Copyright() {
@@ -209,9 +210,9 @@ export default function PanelAdmin() {
         </Box>
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Header title={getTitle()} onDrawerToggle={handleDrawerToggle} />
-          <Box component="main" sx={{ flex: 1, py: 6, px: 4, bgcolor: '#eaeff1' }}>
-            <Outlet /> {/* 👈 AQUÍ se inyectan las subrutas */}
-          </Box>
+            <Box component="main" sx={{ flex: 1, py: 6, px: 4, bgcolor: '#eaeff1' }}>
+              <Outlet /> {/* 👈 AQUÍ se inyectan las subrutas */}
+            </Box>
           <Box component="footer" sx={{ p: 2, bgcolor: '#eaeff1' }}>
             <Copyright />
           </Box>
