@@ -15,6 +15,10 @@ import PanelAdmin from '../components/PanelAdmin/PanelAdmin.jsx';
 import HomeAdmin from "../components/PanelAdmin/sections/HomeAdmin.jsx";
 import UsuariosAdmin from "../components/PanelAdmin/sections/UsuariosAdmin.jsx";
 import PublicacionesAdmin from "../components/PanelAdmin/sections/PublicacionesAdmin.jsx";
+import ImagenesAdmin from "../components/PanelAdmin/sections/ImagenesAdmin.jsx";
+import ComentariosAdmin from "../components/PanelAdmin/sections/ComentariosAdmin.jsx";
+import UbicacionesAdmin from "../components/PanelAdmin/sections/UbicacionesAdmin.jsx";
+import EtiquetasAdmin from "../components/PanelAdmin/sections/EtiquetasAdmin.jsx";
 
 function RouterApp() {
   return (
@@ -46,6 +50,10 @@ function RouterApp() {
         <Route index element={<HomeAdmin />} />  {/* default /admin/panel */}
         <Route path="usuarios" element={<UsuariosAdmin />} />
         <Route path="publicaciones" element={<PublicacionesAdmin />} />
+        <Route path="imagenes" element={<ImagenesAdmin />} />
+        <Route path="comentarios" element={<ComentariosAdmin />} />
+        <Route path="ubicaciones" element={<UbicacionesAdmin />} />
+        <Route path="etiquetas" element={<EtiquetasAdmin />} />
         {/* más secciones */}
       </Route>
 

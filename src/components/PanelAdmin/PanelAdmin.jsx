@@ -2,12 +2,15 @@ import * as React from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import CssBaseline from '@mui/material/CssBaseline';
+import { CssVarsProvider } from '@mui/joy/styles';
+import JoyCssBaseline from '@mui/joy/CssBaseline';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
-import { Outlet, useLocation } from 'react-router-dom'; // 👈 IMPORTANTE
+import { Outlet, useLocation } from 'react-router-dom'; // 👈 IMPORTANTE PARA CAMBIAR EL TITULO SEGÚN LA RUTA
 import Navigator from './Navigator';
 import Header from './Header';
+
 
 function Copyright() {
   return (
@@ -179,7 +182,8 @@ export default function PanelAdmin() {
   const getTitle = () => {
     if (location.pathname.includes("usuarios")) return "Usuarios";
     if (location.pathname.includes("publicaciones")) return "Publicaciones";
-    return "Dashboard"; // default
+    if (location.pathname.includes("imagenes")) return "Imagenes";
+    return "Inicio"; // default
   };
 
   return (

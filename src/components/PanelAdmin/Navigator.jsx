@@ -21,11 +21,13 @@ import LabelIcon from '@mui/icons-material/Label';
 import ReportIcon from '@mui/icons-material/Report';
 import TimerIcon from '@mui/icons-material/Timer';
 import PhonelinkSetupIcon from '@mui/icons-material/PhonelinkSetup';
+import HomeMaxIcon from '@mui/icons-material/HomeMax';
 
 const categories = [
   {
     id: 'Secciones',
     children: [
+      { id: 'Inicio', icon: <HomeMaxIcon />, route: '' },
       { id: 'Usuarios', icon: <PeopleIcon />, route: 'usuarios' },
       { id: 'Publicaciones', icon: <ArticleIcon />, route: 'publicaciones' },
       { id: 'Imagenes', icon: <PermMediaOutlinedIcon />, route: 'imagenes' },
