@@ -12,13 +12,45 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 
 const lightColor = 'rgba(255, 255, 255, 0.7)';
 
 function Header({ onDrawerToggle, title }) {
+  const auth = getAuth();
+  const navigate = useNavigate();
+  const [userName, setUserName] = useState('');
+  const [userPhoto, setUserPhoto] = useState('');
+
+  useEffect(() => {
+    const auth = getAuth();
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const name = localStorage.getItem("userName");
+        const photo = localStorage.getItem("userPhoto");
+
+        if (name) setUserName(name);
+        if (photo) setUserPhoto(photo);
+      } else {
+        setUserName('');
+        setUserPhoto('');
+        localStorage.removeItem("userName");
+        localStorage.removeItem("userPhoto");
+        navigate("/login");
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
+  const lightColor = 'rgba(255, 255, 255, 0.7)';
+
   return (
     <React.Fragment>
-      {/* Barra superior con menú, docs, notificaciones y avatar */}
+      {/* Barra superior */}
       <AppBar color="primary" position="sticky" elevation={0}>
         <Toolbar>
           <Grid container spacing={1} sx={{ alignItems: 'center' }}>
@@ -40,9 +72,7 @@ function Header({ onDrawerToggle, title }) {
                 sx={{
                   textDecoration: 'none',
                   color: lightColor,
-                  '&:hover': {
-                    color: 'common.white',
-                  },
+                  '&:hover': { color: 'common.white' },
                 }}
                 rel="noopener noreferrer"
                 target="_blank"
@@ -59,14 +89,18 @@ function Header({ onDrawerToggle, title }) {
             </Grid>
             <Grid item>
               <IconButton color="inherit" sx={{ p: 0.5 }}>
-                <Avatar src="/static/images/avatar/1.jpg" alt="My Avatar" />
+                {userPhoto ? (
+                  <Avatar alt={userName || "User"} src={userPhoto} />
+                ) : (
+                  <Avatar alt="User" src="/default-profile.png" />
+                )}
               </IconButton>
             </Grid>
           </Grid>
         </Toolbar>
       </AppBar>
 
-      {/* Barra secundaria con el título dinámico */}
+      {/* Barra secundaria con título */}
       <AppBar
         component="div"
         color="primary"
@@ -80,23 +114,6 @@ function Header({ onDrawerToggle, title }) {
               <Typography color="inherit" variant="h5" component="h1">
                 {title}
               </Typography>
-            </Grid>
-            <Grid item>
-              <Button
-                sx={{ borderColor: lightColor }}
-                variant="outlined"
-                color="inherit"
-                size="small"
-              >
-                Web setup
-              </Button>
-            </Grid>
-            <Grid item>
-              <Tooltip title="Help">
-                <IconButton color="inherit">
-                  <HelpIcon />
-                </IconButton>
-              </Tooltip>
             </Grid>
           </Grid>
         </Toolbar>

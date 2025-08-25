@@ -92,7 +92,7 @@ export default function UsuariosAdmin() {
             <Grid item xs>
               <TextField
                 fullWidth
-                placeholder="Search by email address, phone number, or user UID"
+                placeholder="Buscar por Nombre o Email"
                 InputProps={{
                   disableUnderline: true,
                   sx: { fontSize: 'default' },
@@ -118,7 +118,6 @@ export default function UsuariosAdmin() {
         columns={columns}
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[5, 10]}
-        checkboxSelection
         sx={{ border: 0 }}
       />
     </Paper>
