@@ -19,6 +19,7 @@ import ImagenesAdmin from "../components/PanelAdmin/sections/ImagenesAdmin.jsx";
 import ComentariosAdmin from "../components/PanelAdmin/sections/ComentariosAdmin.jsx";
 import UbicacionesAdmin from "../components/PanelAdmin/sections/UbicacionesAdmin.jsx";
 import EtiquetasAdmin from "../components/PanelAdmin/sections/EtiquetasAdmin.jsx";
+import ReportesAdmin from "../components/PanelAdmin/sections/ReportesAdmin.jsx";
 
 function RouterApp() {
   return (
@@ -54,6 +55,7 @@ function RouterApp() {
         <Route path="comentarios" element={<ComentariosAdmin />} />
         <Route path="ubicaciones" element={<UbicacionesAdmin />} />
         <Route path="etiquetas" element={<EtiquetasAdmin />} />
+        <Route path="reportes" element={<ReportesAdmin/>} />
         {/* más secciones */}
       </Route>
 
