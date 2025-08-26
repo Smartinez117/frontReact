@@ -22,6 +22,7 @@ import ShareIcon from "@mui/icons-material/Share";
 import DownloadIcon from "@mui/icons-material/Download";
 import TextField from "@mui/material/TextField";
 import { getAuth } from "firebase/auth";
+import ReporteForm from "../Reportes/Reportes.jsx";
 
 
 
@@ -111,6 +112,8 @@ export default function Publicacion() {
   const [nuevoComentario, setNuevoComentario] = useState("");
   const [publicandoComentario, setPublicandoComentario] = useState(false);
   const [errorComentario, setErrorComentario] = useState(null);
+  const [mostrarReporte, setMostrarReporte] = useState(false);
+  const [mostrarModal, setMostrarModal] = useState(false);
 
   // Obtener publicación
   useEffect(() => {
@@ -498,10 +501,32 @@ export default function Publicacion() {
           >
             Compartir
           </Button>
+           
+          
         </Box>
+        
         </Box>
-          <Divider sx={{ my: 4 }} />
+        <Divider sx={{ my: 2 }} />
+        {/* Reportar */}
+          <div className="reportar-container">
+            <button 
+              className="reportar-btn" 
+              onClick={() => setMostrarModal(true)}
+            >
+              🚩 Reportar
+            </button>
 
+            {mostrarModal && (
+              <ReporteForm
+                idPublicacion={id}
+                idUsuario={publicacion.id_usuario}
+                onClose={() => setMostrarModal(false)}
+              />
+            )}
+          </div>
+
+          <Divider sx={{ my: 4 }} />
+          
           {/* Comentarios */}
           <Box sx={{ mb: 2 }}>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
