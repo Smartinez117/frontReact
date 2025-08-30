@@ -2,15 +2,11 @@ import * as React from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import CssBaseline from '@mui/material/CssBaseline';
-import { CssVarsProvider } from '@mui/joy/styles';
-import JoyCssBaseline from '@mui/joy/CssBaseline';
 import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Link from '@mui/material/Link';
+import Paper from '@mui/material/Paper';
 import { Outlet, useLocation } from 'react-router-dom'; // 👈 IMPORTANTE PARA CAMBIAR EL TITULO SEGÚN LA RUTA
 import Navigator from './Navigator';
 import Header from './Header';
-import Container from '@mui/material/Container';
 import { useEffect, useState } from 'react';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 
@@ -227,9 +223,33 @@ export default function PanelAdmin() {
         </Box>
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <Header title={getTitle()} onDrawerToggle={handleDrawerToggle} userName={userName} userPhoto={userPhoto} />
-            <Box component="main" sx={{ flex: 1, py: 6, px: 4, bgcolor: '#eaeff1' }}>
-              <Outlet /> {/* 👈 AQUÍ se inyectan las subrutas */}
-            </Box>
+          <Box
+            component="main"
+            sx={{
+              flex: 1,
+              py: 6,
+              px: 4,
+              bgcolor: '#eaeff1',
+              maxWidth: '100vw',       // 👈 evita que se estire más que la pantalla
+              overflow: 'hidden',      // 👈 corta desbordes globales
+            }}
+          >
+            <Paper
+              sx={{
+                width: '100%',
+                p: 2,
+                borderRadius: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
+              }}
+            >
+              {/* 👇 SOLO acá permito el scroll horizontal */}
+              <Box sx={{ width: '100%', overflowX: 'auto' }}>
+                <Outlet />
+              </Box>
+            </Paper>
+          </Box>
           <Box component="footer" sx={{ p: 2, bgcolor: '#eaeff1' }}>
             
           </Box>

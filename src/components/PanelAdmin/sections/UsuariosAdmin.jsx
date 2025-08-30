@@ -1,8 +1,7 @@
 import * as React from 'react';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
+import Box from '@mui/material/Box';
 import Grid from '@mui/material/GridLegacy';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -77,49 +76,46 @@ const paginationModel = { page: 0, pageSize: 5 };
 
 export default function UsuariosAdmin() {
   return (
-    <Paper sx={{ maxWidth: 936, margin: 'auto', overflow: 'hidden' }}>
-      <AppBar
-        position="static"
-        color="default"
-        elevation={0}
-        sx={{ borderBottom: '1px solid rgba(0, 0, 0, 0.12)' }}
-      >
-        <Toolbar>
-          <Grid container spacing={2} sx={{ alignItems: 'center' }}>
-            <Grid item>
-              <SearchIcon color="inherit" sx={{ display: 'block' }} />
-            </Grid>
-            <Grid item xs>
-              <TextField
-                fullWidth
-                placeholder="Buscar por Nombre o Email"
-                InputProps={{
-                  disableUnderline: true,
-                  sx: { fontSize: 'default' },
-                }}
-                variant="standard"
-              />
-            </Grid>
-            <Grid item>
-              <Button variant="contained" sx={{ mr: 1 }}>
-                Agregar usuario
-              </Button>
-              <Tooltip title="Reload">
-                <IconButton>
-                  <RefreshIcon color="inherit" sx={{ display: 'block' }} />
-                </IconButton>
-              </Tooltip>
-            </Grid>
+    <Box sx={{ minWidth: 600 }}> {/* 👈 asegura scroll si hay menos espacio */}
+      {/* Filtros y acciones */}
+      <Toolbar disableGutters sx={{ mb: 2 }}>
+        <Grid container spacing={2} sx={{ alignItems: 'center' }}>
+          <Grid item>
+            <SearchIcon color="action" />
           </Grid>
-        </Toolbar>
-      </AppBar>
+          <Grid item xs>
+            <TextField
+              fullWidth
+              placeholder="Buscar por Nombre o Email"
+              InputProps={{
+                disableUnderline: true,
+                sx: { fontSize: 'default' },
+              }}
+              variant="standard"
+            />
+          </Grid>
+          <Grid item>
+            <Button variant="contained" sx={{ mr: 1 }}>
+              Agregar usuario
+            </Button>
+            <Tooltip title="Reload">
+              <IconButton>
+                <RefreshIcon color="action" />
+              </IconButton>
+            </Tooltip>
+          </Grid>
+        </Grid>
+      </Toolbar>
+
+      {/* Tabla */}
       <DataGrid
         rows={rows}
         columns={columns}
         initialState={{ pagination: { paginationModel } }}
         pageSizeOptions={[5, 10]}
+        autoHeight
         sx={{ border: 0 }}
       />
-    </Paper>
+    </Box>
   );
 }

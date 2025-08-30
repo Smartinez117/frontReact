@@ -28,7 +28,7 @@ const categories = [
   {
     id: 'Secciones',
     children: [
-      { id: 'Inicio', icon: <HomeMaxIcon />, route: '' },
+      { id: 'Inicio', icon: <HomeMaxIcon />, route: 'inicio' },
       { id: 'Usuarios', icon: <PeopleIcon />, route: 'usuarios' },
       { id: 'Publicaciones', icon: <ArticleIcon />, route: 'publicaciones' },
       { id: 'Imagenes', icon: <PermMediaOutlinedIcon />, route: 'imagenes' },
@@ -87,23 +87,30 @@ export default function Navigator(props) {
             <ListItem sx={{ py: 2, px: 3 }}>
               <ListItemText sx={{ color: '#fff' }}>{id}</ListItemText>
             </ListItem>
-            {children.map(({ id: childId, icon, route }) => (
-              <ListItem disablePadding key={childId}>
-                <ListItemButton
-                  component={NavLink}
-                  to={`/admin/panel/${route}`}
-                  sx={item}
-                  style={({ isActive }) =>
-                    isActive
-                      ? { color: '#4fc3f7', backgroundColor: 'rgba(255,255,255,0.08)' }
-                      : {}
-                  }
-                >
-                  <ListItemIcon>{icon}</ListItemIcon>
-                  <ListItemText>{childId}</ListItemText>
-                </ListItemButton>
-              </ListItem>
-            ))}
+            {children.map(({ id: childId, icon, route }) => {
+              const path = route === 'inicio' 
+                ? '/admin/panel' 
+                : `/admin/panel/${route}`;
+
+              return (
+                <ListItem disablePadding key={childId}>
+                  <ListItemButton
+                    component={NavLink}
+                    to={path}
+                    end={route === 'inicio'}
+                    sx={item}
+                    style={({ isActive }) =>
+                      isActive
+                        ? { color: '#4fc3f7', backgroundColor: 'rgba(255,255,255,0.08)' }
+                        : {}
+                    }
+                  >
+                    <ListItemIcon>{icon}</ListItemIcon>
+                    <ListItemText>{childId}</ListItemText>
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
             <Divider sx={{ mt: 2 }} />
           </Box>
         ))}
