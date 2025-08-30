@@ -197,6 +197,11 @@ export default function PanelAdmin() {
     if (location.pathname.includes("usuarios")) return "Usuarios";
     if (location.pathname.includes("publicaciones")) return "Publicaciones";
     if (location.pathname.includes("imagenes")) return "Imagenes";
+    if (location.pathname.includes("comentarios")) return "Comentarios";
+    if (location.pathname.includes("ubicaciones")) return "Ubicaciones";
+    if (location.pathname.includes("etiquetas")) return "Etiquetas";
+    if (location.pathname.includes("reportes")) return "Reportes";
+    if (location.pathname.includes("actividad")) return "Actividad";
     return "Inicio"; // default
   };
 

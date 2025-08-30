@@ -1,8 +1,7 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
-import AppBar from "@mui/material/AppBar";
+import Box from '@mui/material/Box';
 import Toolbar from "@mui/material/Toolbar";
-import Paper from "@mui/material/Paper";
 import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
@@ -15,13 +14,13 @@ import { DataGrid } from "@mui/x-data-grid";
 // URL del backend Flask
 const API_URL = "http://localhost:5000";
 
-// Definimos las columnas de la tabla de reportes
+// Columnas de la tabla
 const columns = (handleEliminar) => [
   { field: "id", headerName: "ID", width: 70 },
   { field: "id_publicacion", headerName: "ID Publicación", width: 130 },
   { field: "usuario", headerName: "Usuario", width: 150 },
   { field: "tipo", headerName: "Tipo", width: 160 },
-  { field: "descripcion", headerName: "Descripción", width: 250 },
+  { field: "descripcion", headerName: "Descripción", width: 250, flex: 1 },
   { field: "fecha", headerName: "Fecha", width: 160 },
   {
     field: "acciones",
@@ -32,11 +31,10 @@ const columns = (handleEliminar) => [
     renderCell: (params) => {
       const id = params.row.id;
       return (
-        <>
+        <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
             variant="outlined"
             size="small"
-            sx={{ mr: 1 }}
             onClick={() => console.log("Ver reporte:", id)}
           >
             Ver
@@ -45,7 +43,6 @@ const columns = (handleEliminar) => [
             variant="contained"
             color="success"
             size="small"
-            sx={{ mr: 1 }}
             onClick={() => console.log("Marcar resuelto:", id)}
           >
             Resuelto
@@ -58,7 +55,7 @@ const columns = (handleEliminar) => [
           >
             Eliminar
           </Button>
-        </>
+        </Box>
       );
     },
   },
@@ -70,18 +67,17 @@ export default function ReportesAdmin() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔹 Obtener todos los reportes del backend
+  // Obtener reportes
   const fetchReportes = async () => {
     try {
       setLoading(true);
       const res = await fetch(`${API_URL}/reportes`);
       const data = await res.json();
 
-      // Mapear los datos si es necesario (depende de tu backend)
       const formateados = data.map((r) => ({
         id: r.id,
         id_publicacion: r.id_publicacion,
-        usuario: r.usuario || `Usuario ${r.id_usuario}`, // si no mandás nombre, al menos mostrar ID
+        usuario: r.usuario || `Usuario ${r.id_usuario}`,
         tipo: r.tipo,
         descripcion: r.descripcion,
         fecha: r.fecha || "N/A",
@@ -95,7 +91,7 @@ export default function ReportesAdmin() {
     }
   };
 
-  // 🔹 Eliminar un reporte
+  // Eliminar reporte
   const handleEliminar = async (id) => {
     try {
       await fetch(`${API_URL}/reportes/${id}`, {
@@ -107,54 +103,63 @@ export default function ReportesAdmin() {
     }
   };
 
-  // Ejecutar fetch al montar el componente
   useEffect(() => {
     fetchReportes();
   }, []);
 
   return (
-    <Paper sx={{ maxWidth: 1200, margin: "auto", overflow: "hidden" }}>
-      <AppBar
-        position="static"
-        color="default"
-        elevation={0}
-        sx={{ borderBottom: "1px solid rgba(0, 0, 0, 0.12)" }}
-      >
-        <Toolbar>
-          <Grid container spacing={2} sx={{ alignItems: "center" }}>
-            <Grid item>
-              <SearchIcon color="inherit" sx={{ display: "block" }} />
-            </Grid>
-            <Grid item xs>
-              <TextField
-                fullWidth
-                placeholder="Buscar por usuario, tipo o publicación"
-                InputProps={{
-                  disableUnderline: true,
-                  sx: { fontSize: "default" },
-                }}
-                variant="standard"
-              />
-            </Grid>
-            <Grid item>
-              <Tooltip title="Recargar">
-                <IconButton onClick={fetchReportes}>
-                  <RefreshIcon color="inherit" sx={{ display: "block" }} />
-                </IconButton>
-              </Tooltip>
-            </Grid>
+    <Box sx={{ width: '100%' }}>
+      {/* Filtros y acciones */}
+      <Toolbar disableGutters sx={{ mb: 2 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item>
+            <SearchIcon color="action" />
           </Grid>
-        </Toolbar>
-      </AppBar>
+          <Grid item xs>
+            <TextField
+              fullWidth
+              placeholder="Buscar por usuario o descripción"
+              variant="standard"
+            />
+          </Grid>
+          <Grid item>
+            <Button variant="contained" sx={{ mr: 1 }}>
+              Buscar reporte
+            </Button>
+            <Tooltip title="Reload">
+              <IconButton onClick={fetchReportes}>
+                <RefreshIcon color="action" />
+              </IconButton>
+            </Tooltip>
+          </Grid>
+        </Grid>
+      </Toolbar>
 
-      <DataGrid
-        rows={rows}
-        columns={columns(handleEliminar)}
-        initialState={{ pagination: { paginationModel } }}
-        pageSizeOptions={[5, 10]}
-        loading={loading}
-        sx={{ border: 0, height: 500 }}
-      />
-    </Paper>
+      {/* Tabla responsive */}
+      <Box sx={{ width: '100%', overflowX: 'auto' }}>
+        <DataGrid
+          rows={rows}
+          columns={columns(handleEliminar)}
+          pageSizeOptions={[5, 10]}
+          paginationModel={paginationModel}
+          autoHeight
+          density="comfortable"
+          loading={loading}
+          sx={{
+            border: 0,
+            '& .MuiDataGrid-cell': {
+              whiteSpace: 'normal',
+              lineHeight: '1.4 !important',
+              maxHeight: 'none !important',
+              display: 'flex',
+              alignItems: 'center',
+            },
+            '& .MuiDataGrid-columnHeader': {
+              backgroundColor: '#f5f5f5',
+            },
+          }}
+        />
+      </Box>
+    </Box>
   );
 }
