@@ -23,6 +23,7 @@ import TimerIcon from '@mui/icons-material/Timer';
 import PhonelinkSetupIcon from '@mui/icons-material/PhonelinkSetup';
 import HomeMaxIcon from '@mui/icons-material/HomeMax';
 import DvrIcon from '@mui/icons-material/Dvr';
+import LogoutIcon from '@mui/icons-material/Logout';
 const categories = [
   {
     id: 'Secciones',
@@ -40,10 +41,15 @@ const categories = [
     id: 'Seguimiento',
     children: [
       { id: 'Reportes', icon: <ReportIcon />, route: 'reportes' },
-      { id: 'Actividad', icon: <DvrIcon />, route: 'performance' },
-      { id: 'Test Lab', icon: <PhonelinkSetupIcon />, route: 'test-lab' },
+      { id: 'Actividad', icon: <DvrIcon />, route: 'performance' }
     ],
   },
+  { 
+    id: 'Admin',
+    children:[
+    { id: 'Cerrar sesión', icon: <LogoutIcon />, route: 'test-lab' }
+    ]
+  }
 ];
 
 const item = {

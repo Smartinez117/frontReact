@@ -11,19 +11,11 @@ import { Outlet, useLocation } from 'react-router-dom'; // 👈 IMPORTANTE PARA 
 import Navigator from './Navigator';
 import Header from './Header';
 import Container from '@mui/material/Container';
+import { useEffect, useState } from 'react';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 
 
-function Copyright() {
-  return (
-    <Typography variant="body2" align="center" sx={{ color: 'text.secondary' }}>
-      {'Copyright © '}
-      <Link color="inherit" href="https://mui.com/">
-        Your Website
-      </Link>{' '}
-      {new Date().getFullYear()}.
-    </Typography>
-  );
-}
+
 
 let theme = createTheme({
   palette: {
@@ -179,6 +171,31 @@ export default function PanelAdmin() {
     setMobileOpen(!mobileOpen);
   };
 
+
+  //Datos del usuario:
+    const [userName, setUserName] = useState('');
+    const [userPhoto, setUserPhoto] = useState('');
+  
+    useEffect(() => {
+      const auth = getAuth();
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+          setUserName(user.displayName);
+          setUserPhoto(user.photoURL);
+          localStorage.setItem("userName", user.displayName);
+          localStorage.setItem("userPhoto", user.photoURL);
+        } else {
+          setUserName('');
+          setUserPhoto('');
+          localStorage.removeItem("userName");
+          localStorage.removeItem("userPhoto");
+        }
+      });
+  
+      return () => unsubscribe();
+    }, []);
+
+
   // 👇 opcional: título dinámico según la ruta
   const getTitle = () => {
     if (location.pathname.includes("usuarios")) return "Usuarios";
@@ -209,12 +226,12 @@ export default function PanelAdmin() {
           />
         </Box>
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <Header title={getTitle()} onDrawerToggle={handleDrawerToggle} />
+          <Header title={getTitle()} onDrawerToggle={handleDrawerToggle} userName={userName} userPhoto={userPhoto} />
             <Box component="main" sx={{ flex: 1, py: 6, px: 4, bgcolor: '#eaeff1' }}>
               <Outlet /> {/* 👈 AQUÍ se inyectan las subrutas */}
             </Box>
           <Box component="footer" sx={{ p: 2, bgcolor: '#eaeff1' }}>
-            <Copyright />
+            
           </Box>
         </Box>
       </Box>

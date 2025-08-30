@@ -12,39 +12,12 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import Toolbar from '@mui/material/Toolbar';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+
 
 const lightColor = 'rgba(255, 255, 255, 0.7)';
 
-function Header({ onDrawerToggle, title }) {
-  const auth = getAuth();
-  const navigate = useNavigate();
-  const [userName, setUserName] = useState('');
-  const [userPhoto, setUserPhoto] = useState('');
-
-  useEffect(() => {
-    const auth = getAuth();
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const name = localStorage.getItem("userName");
-        const photo = localStorage.getItem("userPhoto");
-
-        if (name) setUserName(name);
-        if (photo) setUserPhoto(photo);
-      } else {
-        setUserName('');
-        setUserPhoto('');
-        localStorage.removeItem("userName");
-        localStorage.removeItem("userPhoto");
-        navigate("/login");
-      }
-    });
-
-    return () => unsubscribe();
-  }, [navigate]);
+function Header({ userName, userPhoto, onDrawerToggle, title }) {
 
   const lightColor = 'rgba(255, 255, 255, 0.7)';
 
@@ -77,7 +50,7 @@ function Header({ onDrawerToggle, title }) {
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                Go to docs
+                Volver al home
               </Link>
             </Grid>
             <Grid item>
