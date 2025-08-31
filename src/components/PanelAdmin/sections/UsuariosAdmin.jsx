@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Toolbar from '@mui/material/Toolbar';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/GridLegacy';
@@ -10,6 +11,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { DataGrid } from '@mui/x-data-grid';
 
+const API_URL = import.meta.env.VITE_API_URL;
 
 const columns = [
   { field: 'id', headerName: 'ID', width: 70 },
@@ -20,7 +22,7 @@ const columns = [
   {
     field: 'acciones',
     headerName: 'Acciones',
-    width: 250,
+    width: 350,
     sortable: false,
     filterable: false,
     renderCell: (params) => {
@@ -46,6 +48,15 @@ const columns = [
           </Button>
           <Button
             variant="contained"
+            color="secondary"
+            size="small"
+            sx={{ mr: 1 }}
+            onClick={() => console.log("Suspender usuario:", id)}
+          >
+            Suspender
+          </Button>
+          <Button
+            variant="contained"
             color="error"
             size="small"
             onClick={() => console.log("Borrar usuario:", id)}
@@ -58,24 +69,42 @@ const columns = [
   }
 ];
 
-
-const rows = [
-  { id: 500000, nombre: 'Franco Armani', email: 'pulpo.armani@gmail.com', rol: 'usuario', fecha_registro: '12-01-2018'},
-  { id: 2, lastName: 'Lannister', firstName: 'Cersei', age: 42 },
-  { id: 3, lastName: 'Lannister', firstName: 'Jaime', age: 45 },
-  { id: 4, lastName: 'Stark', firstName: 'Arya', age: 16 },
-  { id: 5, lastName: 'Targaryen', firstName: 'Daenerys', age: null },
-  { id: 6, lastName: 'Melisandre', firstName: null, age: 150 },
-  { id: 7, lastName: 'Clifford', firstName: 'Ferrara', age: 44 },
-  { id: 8, lastName: 'Frances', firstName: 'Rossini', age: 36 },
-  { id: 9, lastName: 'Roxie', firstName: 'Harvey', age: 65 },
-];
-
-const paginationModel = { page: 0, pageSize: 5 };
-
 export default function UsuariosAdmin() {
+  const [rows, setRows] = useState([]);
+  const [rowCount, setRowCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0); // DataGrid usa 0-based
+  const [pageSize, setPageSize] = useState(10);
+
+  const fetchUsuarios = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${API_URL}/api/usuarios?page=${page + 1}&per_page=${pageSize}&search=${encodeURIComponent(search)}`
+      );
+      const data = await response.json();
+      setRows(data.usuarios);
+      setRowCount(data.total);
+    } catch (error) {
+      console.error("Error cargando usuarios:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, pageSize, search]);
+
+  // Ejecutar fetch con debounce cuando cambia la búsqueda
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setPage(0); // reset página al cambiar búsqueda
+      fetchUsuarios();
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [search, page, pageSize, fetchUsuarios]);
+
   return (
-    <Box sx={{ minWidth: 600 }}> {/* 👈 asegura scroll si hay menos espacio */}
+    <Box sx={{ minWidth: 600 }}>
       {/* Filtros y acciones */}
       <Toolbar disableGutters sx={{ mb: 2 }}>
         <Grid container spacing={2} sx={{ alignItems: 'center' }}>
@@ -86,6 +115,8 @@ export default function UsuariosAdmin() {
             <TextField
               fullWidth
               placeholder="Buscar por Nombre o Email"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               InputProps={{
                 disableUnderline: true,
                 sx: { fontSize: 'default' },
@@ -98,7 +129,7 @@ export default function UsuariosAdmin() {
               Agregar usuario
             </Button>
             <Tooltip title="Reload">
-              <IconButton>
+              <IconButton onClick={() => fetchUsuarios()}>
                 <RefreshIcon color="action" />
               </IconButton>
             </Tooltip>
@@ -110,9 +141,16 @@ export default function UsuariosAdmin() {
       <DataGrid
         rows={rows}
         columns={columns}
-        initialState={{ pagination: { paginationModel } }}
-        pageSizeOptions={[5, 10]}
+        pagination
+        paginationMode="server"
+        rowCount={rowCount} // total de registros
+        page={page}
+        pageSize={pageSize}
+        onPageChange={(newPage) => setPage(newPage)}
+        onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
+        pageSizeOptions={[5, 10, 20]}
         autoHeight
+        loading={loading}
         sx={{ border: 0 }}
       />
     </Box>
