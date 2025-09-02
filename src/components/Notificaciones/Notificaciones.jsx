@@ -1,98 +1,73 @@
-import React, { useEffect, useState } from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import React from 'react';
 
-export default function Notificaciones({ soloNoLeidas = false }) {
-  const [idUsuario, setIdUsuario] = useState(null);
-  const [notificaciones, setNotificaciones] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const toastStyle = {
+  maxWidth: '400px',
+  width: '100%',
+  backgroundColor: 'white',
+  boxShadow: '0 10px 15px rgba(0, 0, 0, 0.1)',
+  borderRadius: '12px',
+  pointerEvents: 'auto',
+  display: 'flex',
+  border: '1px solid rgba(0,0,0,0.05)',
+  animation: 'fadeIn 0.3s ease-out',
+};
 
-  // Obtener usuario Firebase
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setIdUsuario(user.uid);
-      } else {
-        setError("No hay usuario autenticado");
-        setLoading(false);
-      }
-    });
+const contentStyle = {
+  flex: 1,
+  padding: '16px',
+  display: 'flex',
+  flexDirection: 'column',
+};
 
-    return () => unsubscribe();
-  }, []);
+const titleStyle = {
+  fontSize: '14px',
+  fontWeight: '500',
+  color: '#1a202c', // gris oscuro
+  margin: 0,
+};
 
-  // Cargar notificaciones cuando se tenga idUsuario
-  useEffect(() => {
-    if (!idUsuario) return;
+const messageStyle = {
+  marginTop: '8px',
+  fontSize: '12px',
+  color: '#718096', // gris medio
+  margin: 0,
+};
 
-    const fetchNotificaciones = async () => {
-      try {
-        setLoading(true);
+const buttonContainerStyle = {
+  borderLeft: '1px solid #e2e8f0', // borde gris
+  display: 'flex',
+  alignItems: 'center',
+  padding: '8px',
+};
 
-        const auth = getAuth();
-        const currentUser = auth.currentUser;
+const buttonStyle = {
+  border: 'none',
+  backgroundColor: 'transparent',
+  color: '#4c51bf', // índigo-600
+  cursor: 'pointer',
+  fontSize: '12px',
+  fontWeight: '500',
+  padding: '8px 12px',
+  borderRadius: '8px',
+  outline: 'none',
+};
 
-        if (!currentUser) {
-          throw new Error("Usuario no autenticado");
-        }
-
-        const token = await currentUser.getIdToken();
-
-        const response = await fetch(
-          `http://localhost:5000/notificaciones/usuario`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Error al obtener notificaciones");
-        }
-
-        const data = await response.json();
-        setNotificaciones(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNotificaciones();
-  }, [idUsuario, soloNoLeidas]);
-
-  if (loading) return <p>Cargando notificaciones...</p>;
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
-  if (notificaciones.length === 0) return <p>No hay notificaciones.</p>;
-
+export default function notificationComent({ t, toast }) {
   return (
-    <div>
-      <h2>Notificaciones</h2>
-      <ul style={{ listStyle: "none", padding: 0 }}>
-        {notificaciones.map((n) => (
-          <li
-            key={n.id}
-            style={{
-              fontWeight: n.leido ? "normal" : "bold",
-              backgroundColor: n.leido ? "#f5f5f5" : "#e3f2fd",
-              padding: "12px",
-              marginBottom: "6px",
-              borderRadius: "5px",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-            }}
-          >
-            <strong>{n.titulo}</strong>
-            <p>{n.descripcion}</p>
-            <small>
-              {new Date(n.fecha_creacion).toLocaleString()} — {n.tiempo_pasado}
-            </small>
-          </li>
-        ))}
-      </ul>
+    <div style={toastStyle}>
+      <div style={contentStyle}>
+        <p style={titleStyle}>{t.title || 'Título'}</p>
+        <p style={messageStyle}>{t.message || 'Mensaje de la notificación'}</p>
+      </div>
+      <div style={buttonContainerStyle}>
+        <button
+          style={buttonStyle}
+          onClick={() => toast.dismiss(t.id)}
+          aria-label="Cerrar notificación"
+        >
+          ver
+        </button>
+      </div>
     </div>
   );
 }
-

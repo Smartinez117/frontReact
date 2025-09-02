@@ -8,7 +8,7 @@ import PostAddIcon from '@mui/icons-material/PostAdd';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 import { Link } from 'react-router-dom';
-import socket from '../../utils/socket'; 
+
 
 const cards = [
   {
@@ -36,18 +36,6 @@ const cards = [
 
 const Home = () => {
   const [selectedCard, setSelectedCard] = React.useState(null);
-  //
-   const [notificaciones, setNotificaciones] = React.useState([]);
-    React.useEffect(() => {
-    socket.on("nueva_notificacion", (data) => {
-      alert(`Nueva notificación: ${data.mensaje}`);
-      setNotificaciones((prev) => [...prev, data.mensaje]);
-    });
-
-    return () => {
-      socket.off("nueva_notificacion");
-    };
-  }, []);
 
   return (
     <Box sx={{ padding: 4 }}>

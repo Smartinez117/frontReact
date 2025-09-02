@@ -31,3 +31,6 @@ Funcion para confirmar el delete en las publicaciones Importacion necesaria:
 npm install sweetalert2
 para los sockets:
 npm install socket.io-client
+
+algun muerto se olvido instalar esta libreria
+npm install @mui/x-charts

@@ -14,6 +14,9 @@ import MenuItem from '@mui/material/MenuItem';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+import {socketconnection,socketnotificationlisten} from '../utils/socket';
+import {Notificacion} from '../utils/toastUtil'
+import { Toaster } from 'react-hot-toast';
 
 const pages = ['Inicio', 'Publicar', 'Buscar', 'Mapa'];
 const settings = ['Notificaciones', 'Mi perfil', 'Configuración', 'Cerrar sesión'];
@@ -44,13 +47,18 @@ const Navbar = () => {
 
   useEffect(() => {
     const auth = getAuth();
+    
+
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         //console.log("🟢 Usuario logueado:", user.email);
-
+        console.log('Usuario logueado con uid:', user.uid);
         const name = localStorage.getItem("userName");
         const photo = localStorage.getItem("userPhoto");
+
+        socketconnection()  //<-- aca hace el llamado al back para registrarse como user conectado
+        socketnotificationlisten(user.uid)//<-- aca hace uso de la funcion que escucah las notficaciones que envia el back al front
 
         if (name) setUserName(name);
         if (photo) setUserPhoto(photo);
@@ -105,6 +113,11 @@ const Navbar = () => {
 
 
   return (
+    <>
+    <Toaster 
+    position="top-right"
+    reverseOrder={false}
+    />
     <AppBar position="static" sx={{ backgroundColor: '#edece1ff' }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
@@ -235,6 +248,8 @@ const Navbar = () => {
         </Toolbar>
       </Container>
     </AppBar>
+
+ </>
   );
 };
 
