@@ -12,7 +12,7 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import { DataGrid } from "@mui/x-data-grid";
 
 // URL del backend Flask
-const API_URL = "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL;
 
 // Columnas de la tabla
 const columns = (handleEliminar) => [

@@ -8,6 +8,7 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import Collapse from '@mui/material/Collapse';
 import { NavLink } from 'react-router-dom';
 
 /* iconos */
@@ -19,11 +20,15 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ArticleIcon from '@mui/icons-material/Article';
 import LabelIcon from '@mui/icons-material/Label';
 import ReportIcon from '@mui/icons-material/Report';
-import TimerIcon from '@mui/icons-material/Timer';
-import PhonelinkSetupIcon from '@mui/icons-material/PhonelinkSetup';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HomeMaxIcon from '@mui/icons-material/HomeMax';
 import DvrIcon from '@mui/icons-material/Dvr';
 import LogoutIcon from '@mui/icons-material/Logout';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+
+const APP_URL = import.meta.env.VITE_FRONTEND_URL;
+
 const categories = [
   {
     id: 'Secciones',
@@ -41,13 +46,14 @@ const categories = [
     id: 'Seguimiento',
     children: [
       { id: 'Reportes', icon: <ReportIcon />, route: 'reportes' },
-      { id: 'Actividad', icon: <DvrIcon />, route: 'performance' }
+      { id: 'Actividad', icon: <DvrIcon />, route: 'performance' },
     ],
   },
   { 
     id: 'Admin',
     children:[
-    { id: 'Cerrar sesión', icon: <LogoutIcon />, route: 'test-lab' }
+      { id: 'Volver al sitio', icon: <ArrowBackIcon />, route: 'APP_URL' },
+      { id: 'Cerrar sesión', icon: <LogoutIcon />, route: 'logout' }
     ]
   }
 ];
@@ -69,6 +75,11 @@ const itemCategory = {
 
 export default function Navigator(props) {
   const { ...other } = props;
+  const [openAdmin, setOpenAdmin] = React.useState(false);
+
+  const handleToggleAdmin = () => {
+    setOpenAdmin(!openAdmin);
+  };
 
   return (
     <Drawer variant="permanent" {...other}>
@@ -82,35 +93,76 @@ export default function Navigator(props) {
           </ListItemIcon>
           <ListItemText>Panel administrativo</ListItemText>
         </ListItem>
+
         {categories.map(({ id, children }) => (
           <Box key={id} sx={{ bgcolor: '#101F33' }}>
-            <ListItem sx={{ py: 2, px: 3 }}>
+            <ListItemButton onClick={id === "Admin" ? handleToggleAdmin : undefined}>
               <ListItemText sx={{ color: '#fff' }}>{id}</ListItemText>
-            </ListItem>
-            {children.map(({ id: childId, icon, route }) => {
-              const path = route === 'inicio' 
-                ? '/admin/panel' 
-                : `/admin/panel/${route}`;
+              {id === "Admin" && (openAdmin ? <ExpandLess /> : <ExpandMore />)}
+            </ListItemButton>
 
-              return (
-                <ListItem disablePadding key={childId}>
-                  <ListItemButton
-                    component={NavLink}
-                    to={path}
-                    end={route === 'inicio'}
-                    sx={item}
-                    style={({ isActive }) =>
-                      isActive
-                        ? { color: '#4fc3f7', backgroundColor: 'rgba(255,255,255,0.08)' }
-                        : {}
+            {id !== "Admin" ? (
+              <>
+                {children.map(({ id: childId, icon, route }) => {
+                  const path =
+                    route === 'inicio'
+                      ? '/admin/panel'
+                      : `/admin/panel/${route}`;
+
+                  return (
+                    <ListItem disablePadding key={childId}>
+                      <ListItemButton
+                        component={NavLink}
+                        to={path}
+                        end={route === 'inicio'}
+                        sx={item}
+                        style={({ isActive }) =>
+                          isActive
+                            ? { color: '#4fc3f7', backgroundColor: 'rgba(255,255,255,0.08)' }
+                            : {}
+                        }
+                      >
+                        <ListItemIcon>{icon}</ListItemIcon>
+                        <ListItemText>{childId}</ListItemText>
+                      </ListItemButton>
+                    </ListItem>
+                  );
+                })}
+              </>
+            ) : (
+              <Collapse in={openAdmin} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  {children.map(({ id: childId, icon, route }) => {
+                    if (route === "APP_URL") {
+                      return (
+                        <ListItem disablePadding key={childId}>
+                          <ListItemButton
+                            sx={item}
+                            onClick={() => window.location.href = APP_URL}
+                          >
+                            <ListItemIcon>{icon}</ListItemIcon>
+                            <ListItemText>{childId}</ListItemText>
+                          </ListItemButton>
+                        </ListItem>
+                      );
                     }
-                  >
-                    <ListItemIcon>{icon}</ListItemIcon>
-                    <ListItemText>{childId}</ListItemText>
-                  </ListItemButton>
-                </ListItem>
-              );
-            })}
+
+                    if (route === "logout") {
+                      return (
+                        <ListItem disablePadding key={childId}>
+                          <ListItemButton sx={item} onClick={() => console.log("Cerrar sesión")}>
+                            <ListItemIcon>{icon}</ListItemIcon>
+                            <ListItemText>{childId}</ListItemText>
+                          </ListItemButton>
+                        </ListItem>
+                      );
+                    }
+
+                    return null;
+                  })}
+                </List>
+              </Collapse>
+            )}
             <Divider sx={{ mt: 2 }} />
           </Box>
         ))}
