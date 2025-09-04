@@ -41,7 +41,7 @@ function RouterApp() {
         <Route path="/buscar" element={<Buscar />} />
         <Route path="/publicacion/prueba" element={<Publicacion />} />
         <Route path="/publicacion/:id" element={<Publicacion />} />
-        <Route path="/perfil" element={<Perfil/>} />
+        <Route path="/perfil/:id" element={<Perfil/>} />
         <Route path="/editar/:id_publicacion" element={<Editar />} />
         <Route path="/notificaciones" element ={<Notificaciones />} />
       </Route>

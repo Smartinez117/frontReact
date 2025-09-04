@@ -1,7 +1,8 @@
 import Publicacion from '../models/publicacion';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 
 // Función para obtener publicaciones filtradas desde el backend
 export async function fetchPublicacionesFiltradas(params) {
@@ -198,3 +199,27 @@ export function configUsuarioActual() {
   });
 }
 
+// perfilService.js
+
+export async function fetchPublicacionesPorUsuario(idUsuario) {
+  try {
+    const response = await fetch(`${BASE_URL}/usuarios/${idUsuario}/publicaciones`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error al obtener publicaciones del usuario');
+    }
+
+    const data = await response.json();
+    // Igual que en fetchMisPublicaciones, devolvemos instancias de Publicacion
+    return data.map(pub => new Publicacion(pub));
+  } catch (error) {
+    console.error('Error en fetchPublicacionesPorUsuario:', error.message);
+    throw error;
+  }
+}

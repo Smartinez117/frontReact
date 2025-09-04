@@ -1,107 +1,84 @@
 // SelfPublications.jsx
 import React, { useState, useEffect } from 'react';
-import { fetchPublicacionesFiltradas } from '../../services/perfilService'; // Ajusta ruta si hace falta
 import { useNavigate } from 'react-router-dom';
-// Importo íconos solo si hace falta, por ahora quitados
-import './cselfPublications.css';
-import { fetchMisPublicaciones, eliminarPublicacion } from '../../services/perfilService';
-//importaciones para el confirm
+import './cuserPublications.css';
+import { fetchMisPublicaciones, fetchPublicacionesFiltradas, eliminarPublicacion } from '../../services/perfilService';
 import { confirmarAccion } from '../../utils/confirmservice';
 
-
-const SelfPublications = () => {
+const SelfPublications = ({ userId, isOwner }) => {
   const navigate = useNavigate();
 
-  // Estado para categorías seleccionadas en filtros (checkboxes)
   const [categorias, setCategorias] = useState([]);
-
-  // Lista de publicaciones obtenidas
   const [publicaciones, setPublicaciones] = useState([]);
-
-  // Estado carga y error
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Controla cambio en selección de checkbox de categorías
+  // Maneja filtros
   const handleCategoriaChange = (e) => {
     const value = e.target.value;
     if (e.target.checked) {
-      setCategorias(prev => [...prev, value]);
+      setCategorias((prev) => [...prev, value]);
     } else {
-      setCategorias(prev => prev.filter(cat => cat !== value));
+      setCategorias((prev) => prev.filter((cat) => cat !== value));
     }
   };
-  // Nuevo handleEliminar que usa el servicio de confirmación
+
+  // Eliminar con confirmación
   const handleEliminar = (id) => {
     confirmarAccion({
       tipo: 'publicacion',
       onConfirm: async () => {
         await eliminarPublicacion(id);
-        setPublicaciones(prev => prev.filter(pub => pub.id !== id));
-      }
+        setPublicaciones((prev) => prev.filter((pub) => pub.id !== id));
+      },
     });
   };
 
-
-
-  // Efecto para llamar al backend cada vez que cambian las categorías
+  // Efecto: cargar publicaciones según dueño y filtros
   useEffect(() => {
     setLoading(true);
     setError(null);
 
     const params = {};
-    if (categorias) params.categoria = categorias;
+    if (categorias.length > 0) params.categoria = categorias;
 
-    fetchMisPublicaciones(params)
+    const fetchFn = isOwner ? fetchMisPublicaciones : fetchPublicacionesFiltradas;
+
+    fetchFn(userId, params)
       .then(setPublicaciones)
       .catch((e) => setError(e.message || 'Error al obtener publicaciones'))
       .finally(() => setLoading(false));
-  }, [categorias]);
-  
-
+  }, [categorias, userId, isOwner]);
 
   return (
     <div className="selfPublications-container">
-      {/* Header con filtros y botón */}
-      <div className="header-filtros">
-        {/* Checkbox para categorías */}
-        {/* 
-        <div className="categorias-filtros">
-          {categoriasPosibles.map(({ label, value }) => (
-            <label key={value}>
-              <input
-                type="radio"
-                name="categoria" // todos los radio deben tener el mismo `name`
-                value={value}
-                checked={categorias === value}
-                onChange={(e) => setCategorias(e.target.value)}
-              />
-              {label}
-            </label>
-          ))}
+      {/* Header solo para el dueño */}
+      {isOwner && (
+        <div className="header-filtros">
+          <button
+            className="boton-crear"
+            type="button"
+            onClick={() => navigate('/publicar')}
+          >
+            Nueva publicación
+          </button>
+        </div>
+      )}
 
-          <button onClick={() => setCategorias("")}>Quitar filtro</button>  
-        </div>   
-        */}
-        {/* Botón superior derecho (navega a /publicar) */}
-        <button className="boton-crear" type="button" onClick={() => navigate('/publicar')}>
-          Nueva publicación
-        </button>
-      </div>
-
-      {/* Estados de carga y error */}
+      {/* Estados */}
       {loading && <p>Cargando publicaciones...</p>}
       {error && <p style={{ color: 'red' }}>Error: {error}</p>}
 
-      {/* Lista de publicaciones */}
+      {/* Lista */}
       {!loading && !error && (
         <ul className="lista-publicaciones-vertical">
           {publicaciones.length === 0 && (
             <li>No hay publicaciones que coincidan con los filtros.</li>
           )}
-          {publicaciones.map(pub => {
-            // Tomamos solo la primera imagen para mostrar
-            const imagenPrincipal = pub.imagenes.length > 0 ? pub.imagenes[0] : null;
+          {publicaciones.map((pub) => {
+            const imagenPrincipal =
+              pub.imagenes.length > 0 ? pub.imagenes[0] : null;
+
             return (
               <li key={pub.id} className="publicacion-card-vertical">
                 {imagenPrincipal && (
@@ -115,7 +92,6 @@ const SelfPublications = () => {
                 <div className="publicacion-contenido-vertical">
                   <h3 className="publicacion-titulo">{pub.titulo}</h3>
                   <span className="publicacion-categoria">{pub.categoria}</span>
-                  {/* Etiquetas como chips */}
                   <div className="publicacion-etiquetas">
                     {pub.etiquetas.map((etiqueta, idx) => (
                       <span key={idx} className="etiqueta-chip">
@@ -129,30 +105,30 @@ const SelfPublications = () => {
                   <button
                     type="button"
                     className="boton-crear boton-detalle"
-                    data-id={pub.id}
-                    aria-label={`Detalle publicación ${pub.titulo}`}
                     onClick={() => navigate(`/publicacion/${pub.id}`)}
                   >
                     Ver detalle
                   </button>
-                  <button
-                    type="button"
-                    className="boton-crear boton-editar"
-                    data-id={pub.id}
-                    aria-label={`Editar publicación ${pub.titulo}`}
-                    onClick={() => navigate(`/editar/${pub.id}`)}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    className="boton-eliminar"
-                    data-id={pub.id}
-                    aria-label={`Eliminar publicación ${pub.titulo}`}
-                    onClick={() => handleEliminar(pub.id)}
-                  >
-                    Eliminar
-                  </button>
+
+                  {/* Botones extra solo si es dueño */}
+                  {isOwner && (
+                    <>
+                      <button
+                        type="button"
+                        className="boton-crear boton-editar"
+                        onClick={() => navigate(`/editar/${pub.id}`)}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        className="boton-eliminar"
+                        onClick={() => handleEliminar(pub.id)}
+                      >
+                        Eliminar
+                      </button>
+                    </>
+                  )}
                 </div>
               </li>
             );

@@ -17,11 +17,13 @@ const MainLayout = () => {
         setUserPhoto(user.photoURL);
         localStorage.setItem("userName", user.displayName);
         localStorage.setItem("userPhoto", user.photoURL);
+        localStorage.setItem("userId", user.uid);
       } else {
         setUserName('');
         setUserPhoto('');
         localStorage.removeItem("userName");
         localStorage.removeItem("userPhoto");
+        localStorage.removeItem("userId"); 
       }
     });
 
