@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import './cbanner.css';  // tu CSS para estilos
 import { obtenerUsuarioPorId } from '../../services/perfilService'
+import OutlinedFlagIcon from '@mui/icons-material/OutlinedFlag';
+import MailIcon from '@mui/icons-material/Mail';
 
 const publicBanner = ({ userId }) => {
   const [user, setUser] = useState(null);
@@ -30,14 +32,24 @@ const publicBanner = ({ userId }) => {
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
   return (
+    <>
     <div className="nombre-container">
       <img
         src={user?.foto_perfil_url || "/default-profile.png"}
         alt={user?.nombre || "Usuario"}
         className="nombre-foto"
       />
-      <span className="nombre-text">{user?.nombre || "Usuario"}</span>
+
+      <div className="nombre-info">
+        <span className="nombre-text">{user?.nombre || "Usuario"}</span>
+        <div className="nombre-icons">
+          <MailIcon />
+          <OutlinedFlagIcon />
+        </div>
+      </div>
     </div>
+
+    </>
   );
 };
 

@@ -19,11 +19,23 @@
   border: 2px solid #ccc;   /* Opcional: borde estético */
 }
 
-.nombre-text {
-  font-size: 1.5rem;     /* Aumenta o reduce el tamaño del texto */
-  font-weight: bold;
+.nombre-info {
+  display: flex;
+  flex-direction: column; /* apila nombre e íconos */
+  align-items: flex-start;
 }
 
+.nombre-text {
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-size: 1.5rem;     /* Aumenta o reduce el tamaño del texto */
+
+}
+
+.nombre-icons {
+  display: flex;
+  gap: 8px; /* espacio entre íconos */
+}
 .rol-admin {
   color: #d32f2f;
   font-size: 14px;
