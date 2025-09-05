@@ -163,7 +163,7 @@ export async function actualizarUsuario(idUsuario, data) {
   }
 }
 
-//funcion para obtener los datos de un usuario con el uid
+//funcion para obtener los datos de un usuario con el uid, pero del usuario autenticado
 export function configUsuarioActual() {
   const auth = getAuth();
 

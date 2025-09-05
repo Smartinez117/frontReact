@@ -1,27 +1,42 @@
 // publicBanner.jsx es la portada que vemos de un perfil público
 import React, { useEffect, useState } from 'react';
 import './cbanner.css';  // tu CSS para estilos
+import { obtenerUsuarioPorId } from '../../services/perfilService'
 
-const publicBanner = () => {
-  const [userName, setUserName] = useState('');
-  const [userPhoto, setUserPhoto] = useState('');
+const publicBanner = ({ userId }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Aquí replicamos la lógica del Navbar para obtener datos de localStorage
-    const name = localStorage.getItem('userName') || '';
-    const photo = localStorage.getItem('userPhoto') || '';
-    setUserName(name);
-    setUserPhoto(photo);
-  }, []);
+    if (!userId) return;
+
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        const data = await obtenerUsuarioPorId(userId);
+        setUser(data);
+      } catch (err) {
+        setError(err.message || 'Error al cargar el usuario');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [userId]);
+
+  if (loading) return <p>Cargando perfil...</p>;
+  if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
   return (
     <div className="nombre-container">
       <img
-        src={userPhoto || "/default-profile.png"}
-        alt={userName || "Usuario"}
+        src={user?.foto_perfil_url || "/default-profile.png"}
+        alt={user?.nombre || "Usuario"}
         className="nombre-foto"
       />
-      <span className="nombre-text">{userName || "Usuario"}</span>
+      <span className="nombre-text">{user?.nombre || "Usuario"}</span>
     </div>
   );
 };
