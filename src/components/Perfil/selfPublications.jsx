@@ -1,27 +1,15 @@
-// SelfPublications.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './cuserPublications.css';
-import { fetchMisPublicaciones, fetchPublicacionesFiltradas, eliminarPublicacion } from '../../services/perfilService';
+import { fetchMisPublicaciones, fetchPublicacionesPorUsuario, eliminarPublicacion } from '../../services/perfilService';
 import { confirmarAccion } from '../../utils/confirmservice';
 
 const SelfPublications = ({ userId, isOwner }) => {
   const navigate = useNavigate();
 
-  const [categorias, setCategorias] = useState([]);
   const [publicaciones, setPublicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Maneja filtros
-  const handleCategoriaChange = (e) => {
-    const value = e.target.value;
-    if (e.target.checked) {
-      setCategorias((prev) => [...prev, value]);
-    } else {
-      setCategorias((prev) => prev.filter((cat) => cat !== value));
-    }
-  };
 
   // Eliminar con confirmación
   const handleEliminar = (id) => {
@@ -34,21 +22,18 @@ const SelfPublications = ({ userId, isOwner }) => {
     });
   };
 
-  // Efecto: cargar publicaciones según dueño y filtros
+  // Cargar publicaciones
   useEffect(() => {
     setLoading(true);
     setError(null);
 
-    const params = {};
-    if (categorias.length > 0) params.categoria = categorias;
+    const fetchFn = isOwner ? fetchMisPublicaciones : fetchPublicacionesPorUsuario;
 
-    const fetchFn = isOwner ? fetchMisPublicaciones : fetchPublicacionesFiltradas;
-
-    fetchFn(userId, params)
+    fetchFn(userId)
       .then(setPublicaciones)
       .catch((e) => setError(e.message || 'Error al obtener publicaciones'))
       .finally(() => setLoading(false));
-  }, [categorias, userId, isOwner]);
+  }, [userId, isOwner]);
 
   return (
     <div className="selfPublications-container">
@@ -73,7 +58,7 @@ const SelfPublications = ({ userId, isOwner }) => {
       {!loading && !error && (
         <ul className="lista-publicaciones-vertical">
           {publicaciones.length === 0 && (
-            <li>No hay publicaciones que coincidan con los filtros.</li>
+            <li>No hay publicaciones todavía.</li>
           )}
           {publicaciones.map((pub) => {
             const imagenPrincipal =

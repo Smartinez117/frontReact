@@ -1,8 +1,8 @@
-// Nombre.jsx
+// publicBanner.jsx es la portada que vemos de un perfil público
 import React, { useEffect, useState } from 'react';
-import './cnombre.css';  // tu CSS para estilos
+import './cbanner.css';  // tu CSS para estilos
 
-const Nombre = () => {
+const publicBanner = () => {
   const [userName, setUserName] = useState('');
   const [userPhoto, setUserPhoto] = useState('');
 
@@ -26,4 +26,4 @@ const Nombre = () => {
   );
 };
 
-export default Nombre;
+export default publicBanner;

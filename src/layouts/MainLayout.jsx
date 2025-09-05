@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const MainLayout = () => {
   const [userName, setUserName] = useState('');
@@ -11,13 +12,28 @@ const MainLayout = () => {
 
   useEffect(() => {
     const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserName(user.displayName);
         setUserPhoto(user.photoURL);
         localStorage.setItem("userName", user.displayName);
         localStorage.setItem("userPhoto", user.photoURL);
-        localStorage.setItem("userId", user.uid);
+
+        try {
+          // 🔹 Llamamos al backend para traer el usuario con su id interno
+          const token = await user.getIdToken();
+          const res = await fetch(`${BASE_URL}/api/userconfig`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const data = await res.json();
+
+          // Guardamos el id real de la DB
+          localStorage.setItem("userId", data.id);
+        } catch (err) {
+          console.error("Error obteniendo usuario:", err);
+        }
       } else {
         setUserName('');
         setUserPhoto('');
@@ -29,6 +45,7 @@ const MainLayout = () => {
 
     return () => unsubscribe();
   }, []);
+
 
   return (
     <>
