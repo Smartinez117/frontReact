@@ -31,6 +31,10 @@ import { getAuth } from "firebase/auth";
 
 import { useNavigate, useParams} from 'react-router-dom';
 
+import CircularProgress from '@mui/material/CircularProgress';
+
+import { mostrarAlerta } from '../../utils/confirmservice.js'; 
+
 const VisuallyHiddenInput = styled('input')`
   clip: rect(0 0 0 0);
   clip-path: inset(50%);
@@ -89,6 +93,7 @@ export default function Editar() {
   const { id_publicacion } = useParams();
   const [etiquetasDesdePublicacion, setEtiquetasDesdePublicacion] = useState([]);
   const [imagenesExistentes, setImagenesExistentes] = useState([]);
+  const [cargando, setCargando] = useState(false);
 
   const navigate = useNavigate();
 
@@ -215,6 +220,7 @@ export default function Editar() {
     const nuevosErrores = validarCampos();
     setErrores(nuevosErrores);
     if (nuevosErrores.length > 0) return;
+    setCargando(true);
 
     try {
       let urlsImagenes = [...imagenesExistentes]; // imágenes previas
@@ -252,6 +258,7 @@ export default function Editar() {
       const user = auth.currentUser;
       if (!user) {
         alert("Debés iniciar sesión para publicar");
+        setCargando(false);
         return;
       }
       const token = await user.getIdToken();
@@ -268,14 +275,24 @@ export default function Editar() {
       const data = await res.json();
       if (res.ok) {
         console.log("Publicación modificada:", data);
-        alert("✅ ¡Publicación modificada con éxito!");
+        mostrarAlerta({
+          titulo: '¡Listo!',
+          mensaje: 'Publicación modificada con éxito',
+          tipo: 'success'
+        });
         navigate(`/publicacion/${id_publicacion}`);
       } else {
         throw new Error(data.error || "Error en el envío");
       }
     } catch (error) {
       console.error("Error al publicar:", error);
-      alert("❌ Ocurrió un error al publicar");
+      mostrarAlerta({
+        titulo: 'Error',
+        mensaje: 'Ocurrió un error al publicar',
+        tipo: 'error'
+      }); 
+    }finally {
+      setCargando(false); // 🔹 siempre reactivar al terminar
     }
   };
 
@@ -445,10 +462,28 @@ export default function Editar() {
         <Button
           size="lg"
           variant="solid"
-          sx={{ width: '100%', mt: 4, backgroundColor: '#F1B400', color: '#0D171C', '&:hover': { backgroundColor: '#d9a900' } }}
+          disabled={cargando} // 🔹 se inhabilita
+          sx={{
+            width: '100%',
+            mt: 4,
+            backgroundColor: '#F1B400',
+            color: '#0D171C',
+            '&:hover': { backgroundColor: '#d9a900' },
+            '&.JoyButton-root[disabled]': {
+              opacity: 0.7,
+              pointerEvents: 'none'
+            }
+          }}
           onClick={handlePublicar}
         >
-          Guardar Cambios
+          {cargando ? (
+            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+              <CircularProgress size={18} />
+              <span>Guardando cambios…</span>
+            </Box>
+          ) : (
+            "Guardar cambios"
+          )}
         </Button>
       </Container>
     </React.Fragment>
