@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const MainLayout = () => {
@@ -18,6 +19,7 @@ const MainLayout = () => {
         setUserPhoto(user.photoURL);
         localStorage.setItem("userName", user.displayName);
         localStorage.setItem("userPhoto", user.photoURL);
+        localStorage.setItem("userSlug", user.slug);
 
         try {
           // 🔹 Llamamos al backend para traer el usuario con su id interno
@@ -31,6 +33,7 @@ const MainLayout = () => {
 
           // Guardamos el id real de la DB
           localStorage.setItem("userId", data.id);
+          localStorage.setItem("userSlug", data.slug);
         } catch (err) {
           console.error("Error obteniendo usuario:", err);
         }

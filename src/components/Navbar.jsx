@@ -93,8 +93,9 @@ const Navbar = () => {
         break;
 
       case "Mi perfil":
-        const userIdLocal = localStorage.getItem("userIdLocal");
-        navigate(`/perfil/${userIdLocal}`);
+        const userSlug = localStorage.getItem("userSlug");
+        navigate(`/perfil/${userSlug}`);
+
         break;
 
       case "Notificaciones":
