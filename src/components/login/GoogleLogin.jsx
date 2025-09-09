@@ -30,6 +30,8 @@ function Login() {
       });
 
       if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem("userIdLocal", data.idLocal); // guardar id de la BD
         navigate('/home');
       } else {
         alert("Error en autenticación con backend");
