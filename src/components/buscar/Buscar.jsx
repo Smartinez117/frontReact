@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import './Buscar.css';
 import { FormControl, FormLabel, TextField } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
+import { useLocation } from "react-router-dom";
 
 const categoriasPosibles = [
   { label: "Adopción", value: "Adopción" },
@@ -32,6 +33,8 @@ const Buscar = () => {
   const [etiquetasSeleccionadas, setEtiquetasSeleccionadas] = useState([]);
 
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
+
+  const location = useLocation();
 
   useEffect(() => {
     // Obtener etiquetas desde backend
@@ -74,7 +77,7 @@ const Buscar = () => {
     }
   };
 
-  // 🔹 Endpoint de filtrado, ahora el back ya devuelve `localidad` directamente
+  // Endpoint de filtrado, ahora el back ya devuelve `localidad` directamente
   const aplicarFiltros = async () => {
     setLoading(true);
     setError(null);
@@ -114,6 +117,28 @@ const Buscar = () => {
       setCategorias([value]);
     }
   };
+
+    // Para que aplique directamente el filtro cuando se seleccione una etiqueta.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const etiquetaInicial = params.get("etiqueta");
+
+    if (etiquetaInicial) {
+      // Buscar si esa etiqueta existe en las opciones
+      const encontrada = etiquetasDisponibles.find(opt => opt.label === etiquetaInicial);
+      if (encontrada) {
+        setEtiquetasSeleccionadas([encontrada]);
+        setTagsSeleccionados([etiquetaInicial]);
+        setMostrarFiltros(true);
+      }
+    }
+  }, [location.search, etiquetasDisponibles]);
+
+  useEffect(() => {
+    if (tagsSeleccionados.length > 0) {
+      aplicarFiltros();
+    }
+  }, [tagsSeleccionados]);
 
   return (
     <div className="buscar-container">

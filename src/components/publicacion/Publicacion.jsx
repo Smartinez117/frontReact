@@ -24,6 +24,8 @@ import TextField from "@mui/material/TextField";
 import { getAuth } from "firebase/auth";
 import ReporteForm from "../Reportes/Reportes.jsx";
 
+import { useNavigate } from "react-router-dom";
+
 
 
 // Evitar error de ícono por defecto en Leaflet
@@ -114,6 +116,8 @@ export default function Publicacion() {
   const [errorComentario, setErrorComentario] = useState(null);
   const [mostrarReporte, setMostrarReporte] = useState(false);
   const [mostrarModal, setMostrarModal] = useState(false);
+  const navigate = useNavigate();
+
 
   // Obtener publicación
   useEffect(() => {
@@ -404,9 +408,18 @@ export default function Publicacion() {
                   borderRadius: "50%",
                   objectFit: "cover",
                   mr: 2,
+                  cursor: "pointer", // para que se note que es clickeable
                 }}
+                onClick={() => navigate(`/perfil/${usuario.id}`)}
               />
-              <Typography variant="subtitle1">Publicado por {usuario.nombre}</Typography>
+              {/* Nombre */}
+              <Typography
+                variant="subtitle1"
+                sx={{ cursor: "pointer" }}
+                onClick={() => navigate(`/perfil/${usuario.id}`)}
+              >
+                Publicado por {usuario.nombre}
+              </Typography>
             </Box>
           )}
 
@@ -426,7 +439,14 @@ export default function Publicacion() {
           {etiquetas.length > 0 && (
             <Box sx={{ mb: 2 }}>
               {etiquetas.map((tag, i) => (
-                <Chip key={i} label={tag} color="primary" variant="outlined" sx={{ mr: 1, mb: 1 }} />
+                <Chip
+                  key={i}
+                  label={tag}
+                  color="primary"
+                  variant="outlined"
+                  sx={{ mr: 1, mb: 1, cursor: "pointer" }}
+                  onClick={() => navigate(`/buscar?etiqueta=${encodeURIComponent(tag)}`)}
+                />
               ))}
             </Box>
           )}
