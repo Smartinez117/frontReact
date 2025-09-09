@@ -416,7 +416,7 @@ export default function Publicacion() {
               <Typography
                 variant="subtitle1"
                 sx={{ cursor: "pointer" }}
-                onClick={() => navigate(`/perfil/${usuario.id}`)}
+                onClick={() => navigate(`/perfil/${usuario.slug}`)}
               >
                 Publicado por {usuario.nombre}
               </Typography>
