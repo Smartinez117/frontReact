@@ -52,8 +52,6 @@ const Navbar = () => {
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        //console.log("🟢 Usuario logueado:", user.email);
-        console.log('Usuario logueado con uid:', user.uid);
         const name = localStorage.getItem("userName");
         const photo = localStorage.getItem("userPhoto");
 

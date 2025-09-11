@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Link } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import Toolbar from '@mui/material/Toolbar';
 import Box from '@mui/material/Box';
@@ -27,13 +28,16 @@ const columns = [
     filterable: false,
     renderCell: (params) => {
       const id = params.row.id;
+      const slug = params.row.slug;
       return (
         <>
           <Button
+            component={Link}
             variant="outlined"
             size="small"
             sx={{ mr: 1 }}
-            onClick={() => console.log("Ver usuario:", id)}
+            target="_blank"
+            to={`/perfil/${slug}`}
           >
             Ver
           </Button>
