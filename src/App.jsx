@@ -1,56 +1,77 @@
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { React, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './styles/global.css';
+import React, { useEffect, useState } from "react"
+import { getAuth, onAuthStateChanged } from "firebase/auth"
+import { useNavigate } from "react-router-dom"
+
+import "./global.css"
+import defaultProfilePicture from "/assets/images/default-profile.png?url"
 
 function App() {
-  const navigate = useNavigate();
-  const [userName, setUserName] = useState('');
-  const [userPhoto, setUserPhoto] = useState('');
+  const navigate = useNavigate()
+  const [userName, setUserName] = useState("")
+  const [userPhoto, setUserPhoto] = useState("")
 
   useEffect(() => {
-    const auth = getAuth();
+    const auth = getAuth()
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // Si hay usuario logueado, guardar sus datos
-        setUserName(user.displayName);
-        setUserPhoto(user.photoURL);
-        localStorage.setItem("userName", user.displayName);
-        localStorage.setItem("userPhoto", user.photoURL);
+        setUserName(user.displayName ?? "")
+        setUserPhoto(user.photoURL ?? "")
+        localStorage.setItem("userName", user.displayName ?? "")
+        localStorage.setItem("userPhoto", user.photoURL ?? "")
       } else {
-        // Si no hay usuario, redirigir o limpiar datos
-        setUserName('');
-        setUserPhoto('');
-        localStorage.removeItem("userName");
-        localStorage.removeItem("userPhoto");
+        setUserName("")
+        setUserPhoto("")
+        localStorage.removeItem("userName")
+        localStorage.removeItem("userPhoto")
       }
-    });
+    })
 
-    return () => unsubscribe();
-  }, []);
+    return () => unsubscribe()
+  }, [])
 
   return (
     <div className="main-container">
       <header className="header">
         <h1 className="logo-redema">REDEMA</h1>
         <div className="user-info">
-          <img src={userPhoto} alt="Perfil" />
+          <img
+            src={userPhoto || defaultProfilePicture}
+            alt="Perfil"
+            className="user-photo"
+          />
           Hola, {userName}!
         </div>
       </header>
+
       <h2>Conectando corazones con patas</h2>
+
       <div className="container">
         <div className="menu-grid">
-          <button className="menu-btn" onClick={() => navigate('/adopcion')}><span>🐶</span><span>Adoptar Mascota</span></button>
-          <button className="menu-btn" onClick={() => navigate('/perdida')}><span>🆘</span><span>Reportar Mascota Perdida</span></button>
-          <button className="menu-btn" onClick={() => navigate('/busqueda')}><span>📍</span><span>Encontré una Mascota</span></button>
-          <button className="menu-btn" onClick={() => navigate('/veterinaria')}><span>💊</span><span>Asistencia Veterinaria</span></button>
-          <button className="menu-btn" onClick={() => navigate('/comunidad')}><span>👥</span><span>Historias y Comunidad</span></button>
+          <button className="menu-btn" onClick={() => navigate("/adopcion")}>
+            <span>🐶</span>
+            <span>Adoptar Mascota</span>
+          </button>
+          <button className="menu-btn" onClick={() => navigate("/perdida")}>
+            <span>🆘</span>
+            <span>Reportar Mascota Perdida</span>
+          </button>
+          <button className="menu-btn" onClick={() => navigate("/busqueda")}>
+            <span>📍</span>
+            <span>Encontré una Mascota</span>
+          </button>
+          <button className="menu-btn" onClick={() => navigate("/veterinaria")}>
+            <span>💊</span>
+            <span>Asistencia Veterinaria</span>
+          </button>
+          <button className="menu-btn" onClick={() => navigate("/comunidad")}>
+            <span>👥</span>
+            <span>Historias y Comunidad</span>
+          </button>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

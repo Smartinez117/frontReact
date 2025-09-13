@@ -1,0 +1,47 @@
+.nombre-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background-color: #fef2dc;
+  padding: 1.25rem;
+  border-radius: 0.625rem;
+  max-width: 50rem;
+  margin: 0 auto 1.875rem auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.nombre-foto {
+  width: 5rem;
+  height: 5rem;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.nombre-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.nombre-text {
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+  font-size: 1.5rem;
+  color: #333;
+  letter-spacing: 0.5px;
+}
+
+.nombre-icons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.rol-admin {
+  color: #d32f2f;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
