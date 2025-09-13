@@ -15,9 +15,9 @@ redema-front/
 │       └── admin/                      // páginas para el rol administrador
 │           └── ...
 │   └── main/                           // páginas que usan el MainLayout
-│       ├── MainLayout.tsx              // implementa las barras de navegación lateral y superior
+│       ├── MainLayout.jsx              // implementa las barras de navegación lateral y superior
 │       └── pages/
-│           ├── Home.tsx                // página inicial
+│           ├── Home.jsx                // página inicial
 │           ├── Post.jsx                // página para crear publicación
 │           ├── Profile.jsx             // página para ver perfil
 │           ├── Settings.jsx            // página para configuraciones

@@ -115,7 +115,7 @@ export function fetchUsuarioActual() {
 // Función para actualizar usuario
 // perfilService.js
 
-import { Usuario } from '../models/modeloPerfil';
+import { Usuario } from '../models/UserModel';
 // Función para obtener usuario por id
 export async function obtenerUsuarioPorId(idUsuario) {
   try {

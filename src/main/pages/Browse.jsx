@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { fetchPublicacionesFiltradas } from "../../services/busquedaService"
+import { fetchPublicacionesFiltradas } from "../../services/browseService"
 import { useNavigate, useLocation } from "react-router-dom"
 import "../../global.css"
 import { FormControl, FormLabel, TextField } from "@mui/material"

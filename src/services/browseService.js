@@ -1,6 +1,6 @@
-import Publicacion from '../models/publicacion';
+import Publicacion from "../models/publicacion";
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = "http://localhost:5000";
 
 // Función para obtener publicaciones filtradas desde el backend
 export async function fetchPublicacionesFiltradas(params) {
