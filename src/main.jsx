@@ -1,7 +1,6 @@
 import React from "react"
 import ReactDOM from "react-dom/client"
 import { Routes, Route } from "react-router-dom"
-import App from "./App.jsx"
 import Login from "./else/GoogleLogin.jsx"
 import Home from "./main/pages/Home.jsx"
 import Post from "./main/pages/Post.jsx"
@@ -31,7 +30,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/app" element={<App />} />
       <Route path="/pconfig" element={<ConfigPerfil />} />
 
       {/* Rutas que usan MainLayout */}
