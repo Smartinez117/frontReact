@@ -20,7 +20,6 @@ import UbicacionesAdmin from "./else/admin/sections/UbicacionesAdmin.jsx"
 import EtiquetasAdmin from "./else/admin/sections/EtiquetasAdmin.jsx"
 import ReportesAdmin from "./else/admin/sections/ReportesAdmin.jsx"
 import { BrowserRouter } from "react-router-dom"
-import { getAuth } from "firebase/auth"
 
 import "./global.css"
 import "bootstrap/dist/css/bootstrap.min.css"
@@ -58,13 +57,3 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </Routes>
   </BrowserRouter>
 )
-
-window.getToken = async () => {
-  const user = getAuth().currentUser
-  if (user) {
-    const token = await user.getIdToken()
-    console.log("TOKEN:", token)
-  } else {
-    console.log("No hay usuario logueado")
-  }
-}

@@ -1,37 +1,59 @@
 import * as React from 'react';
-import { styled } from '@mui/material/styles';
-import Divider, { dividerClasses } from '@mui/material/Divider';
-import Menu from '@mui/material/Menu';
-import MuiMenuItem from '@mui/material/MenuItem';
+import { Box } from '@mui/material';
 import { paperClasses } from '@mui/material/Paper';
 import { listClasses } from '@mui/material/List';
+import Divider, { dividerClasses } from '@mui/material/Divider';
+import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
+import Typography from '@mui/material/Typography';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon, { listItemIconClasses } from '@mui/material/ListItemIcon';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import MenuButton from './MenuButton';
+import { handleLogout, handleNotifications, handleProfile, handleSettings } from '../../utils/GoogleAuth';
 
-const MenuItem = styled(MuiMenuItem)({
-  margin: '2px 0',
-});
-
-export default function OptionsMenu() {
+export function ProfileMenu() {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
+
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
+
   const handleClose = () => {
     setAnchorEl(null);
   };
+
   return (
-    <React.Fragment>
+    <Stack
+      direction="row"
+      sx={{
+        p: 2,
+        gap: 1,
+        alignItems: 'center',
+      }}
+    >
+      <Box sx={{ mr: 'auto' }}>
+        <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: '16px' }}>
+          {localStorage.getItem("userName")}
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+          {localStorage.getItem("userEmail")}
+        </Typography>
+      </Box>
       <MenuButton
         aria-label="Open menu"
         onClick={handleClick}
         sx={{ borderColor: 'transparent' }}
       >
-        <MoreVertRoundedIcon />
+        <Avatar
+          sizes="small"
+          alt={localStorage.getItem("userName")}
+          src={localStorage.getItem("userPhoto")}
+          sx={{ width: 36, height: 36 }}
+        />
       </MenuButton>
       <Menu
         anchorEl={anchorEl}
@@ -53,14 +75,14 @@ export default function OptionsMenu() {
           },
         }}
       >
-        <MenuItem onClick={handleClose}>Profile</MenuItem>
-        <MenuItem onClick={handleClose}>My account</MenuItem>
         <Divider />
-        <MenuItem onClick={handleClose}>Add another account</MenuItem>
-        <MenuItem onClick={handleClose}>Settings</MenuItem>
+        <MenuItem onClick={handleProfile}>Perfil</MenuItem>
+        <MenuItem onClick={handleNotifications}>Notificaciones</MenuItem>
+        <Divider />
+        <MenuItem onClick={handleSettings}>Configuración</MenuItem>
         <Divider />
         <MenuItem
-          onClick={handleClose}
+          onClick={handleLogout}
           sx={{
             [`& .${listItemIconClasses.root}`]: {
               ml: 'auto',
@@ -68,12 +90,12 @@ export default function OptionsMenu() {
             },
           }}
         >
-          <ListItemText>Logout</ListItemText>
+          <ListItemText>Cerrar sesión</ListItemText>
           <ListItemIcon>
             <LogoutRoundedIcon fontSize="small" />
           </ListItemIcon>
         </MenuItem>
       </Menu>
-    </React.Fragment>
-  );
+    </Stack>
+  )
 }

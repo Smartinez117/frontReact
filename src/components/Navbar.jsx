@@ -93,7 +93,7 @@ const Navbar = () => {
   return (
     <>
       <Toaster position="top-right" reverseOrder={false} />
-      <AppBar position="static" sx={{ backgroundColor: "#edece1ff" }}>
+      <AppBar position="static" sx={{ backgroundColor: "#edece1ff", display: { xs: "block", md: "none" } }}>
         <Container maxWidth="xl">
           <Toolbar disableGutters>
             <Box

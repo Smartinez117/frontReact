@@ -9,9 +9,9 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
-import AppTheme from '../components/shared/AppTheme';
-import ColorModeSelect from '../components/shared/ColorModeSelect';
-import { GoogleIcon, RedemaIcon } from '../components/shared/CustomIcons';
+import AppTheme from '../shared-theme/AppTheme';
+import ColorModeSelect from '../shared-theme/ColorModeSelect';
+import { GoogleIcon, RedemaIcon } from '../shared-theme/CustomIcons';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -118,7 +118,7 @@ export default function Login(props) {
               onClick={handleLogin}
               startIcon={<GoogleIcon />}
             >
-              Continuar con Google
+              Iniciar sesión con Google
             </Button>
           </Box>
         </Card>

@@ -1,271 +1,475 @@
-import React, { useState, useEffect } from "react"
-import { fetchPublicacionesFiltradas } from "../../services/browseService"
-import { useNavigate, useLocation } from "react-router-dom"
-import "../../global.css"
-import { FormControl, FormLabel, TextField } from "@mui/material"
-import Autocomplete from "@mui/material/Autocomplete"
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+  FormControl,
+  FormLabel,
+  TextField,
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  CardMedia,
+  Typography,
+  Chip,
+  IconButton,
+  InputAdornment,
+  OutlinedInput,
+  Avatar,
+  AvatarGroup,
+  styled
+} from "@mui/material";
+import Autocomplete from "@mui/material/Autocomplete";
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import { fetchPublicacionesFiltradas } from "../../services/browseService";
+import "../../global.css";
 
-const categoriasPosibles = [
+const CATEGORIAS_OPCIONES = [
   { label: "Adopción", value: "Adopción" },
   { label: "Búsqueda", value: "Búsqueda" },
   { label: "Encuentro", value: "Encuentro" },
   { label: "Estado crítico", value: "Estado Crítico" }
-]
+];
+
+const StyledCard = styled(Card)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  padding: 0,
+  height: '100%',
+  backgroundColor: (theme.vars || theme).palette.background.paper,
+  '&:hover': {
+    backgroundColor: 'transparent',
+    cursor: 'pointer',
+  },
+  '&:focus-visible': {
+    outline: '3px solid',
+    outlineColor: 'hsla(210, 98%, 48%, 0.5)',
+    outlineOffset: '2px',
+  },
+}));
+
+const StyledCardContent = styled(CardContent)({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 4,
+  padding: 16,
+  flexGrow: 1,
+  '&:last-child': {
+    paddingBottom: 16,
+  },
+});
+
+const StyledTypography = styled(Typography)({
+  display: '-webkit-box',
+  WebkitBoxOrient: 'vertical',
+  WebkitLineClamp: 2,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+});
 
 const Browse = () => {
-  const navigate = useNavigate()
-  const [idPublicacion, setIdPublicacion] = useState(null)
-  const [categorias, setCategorias] = useState([])
-  const [publicaciones, setPublicaciones] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [fechaDesde, setFechaDesde] = useState("")
-  const [fechaHasta, setFechaHasta] = useState("")
-  const [radioKm, setRadioKm] = useState("")
-  const [tagsSeleccionados, setTagsSeleccionados] = useState([])
-  const [latitud, setLatitud] = useState(null)
-  const [longitud, setLongitud] = useState(null)
-  const [etiquetasDisponibles, setEtiquetasDisponibles] = useState([])
-  const [etiquetasSeleccionadas, setEtiquetasSeleccionadas] = useState([])
-  const [mostrarFiltros, setMostrarFiltros] = useState(false)
-  const location = useLocation()
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [publicaciones, setPublicaciones] = useState([]);
+  const [etiquetasDisponibles, setEtiquetasDisponibles] = useState([]);
+  const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState([]);
+  const [etiquetasSeleccionadas, setEtiquetasSeleccionadas] = useState([]);
+  const [filtroFechaDesde, setFiltroFechaDesde] = useState("");
+  const [filtroFechaHasta, setFiltroFechaHasta] = useState("");
+  const [filtroRadioKm, setFiltroRadioKm] = useState("");
+  const [ubicacion, setUbicacion] = useState({ latitud: null, longitud: null });
+  const [focusedCardIndex, setFocusedCardIndex] = useState(null);
+  const [estado, setEstado] = useState({
+    cargando: true,
+    error: null,
+    mostrarFiltros: false
+  });
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/etiquetas")
-      .then(res => res.json())
-      .then(data => {
-        const mapped = data.map(e => ({ label: e.nombre, id: e.id }))
-        setEtiquetasDisponibles(mapped)
-      })
-      .catch(err => console.error("Error al obtener etiquetas:", err))
+    obtenerEtiquetas();
+    obtenerUbicacion();
+    cargarPublicaciones();
+  }, []);
 
+  useEffect(() => {
+    const parametrosBusqueda = new URLSearchParams(location.search);
+    const etiquetaInicial = parametrosBusqueda.get("etiqueta");
+
+    if (etiquetaInicial) {
+      const etiquetaEncontrada = etiquetasDisponibles.find(
+        opcion => opcion.label === etiquetaInicial
+      );
+
+      if (etiquetaEncontrada) {
+        setEtiquetasSeleccionadas([etiquetaEncontrada]);
+        setEstado(prev => ({ ...prev, mostrarFiltros: true }));
+      }
+    }
+  }, [location.search, etiquetasDisponibles]);
+
+  const obtenerEtiquetas = async () => {
+    try {
+      const respuesta = await fetch("http://localhost:5000/api/etiquetas");
+      const datos = await respuesta.json();
+      const etiquetasMapeadas = datos.map(etiqueta => ({
+        label: etiqueta.nombre,
+        id: etiqueta.id
+      }));
+      setEtiquetasDisponibles(etiquetasMapeadas);
+    } catch (error) {
+      console.error("Error al obtener etiquetas:", error);
+    }
+  };
+
+  const obtenerUbicacion = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        position => {
-          setLatitud(position.coords.latitude)
-          setLongitud(position.coords.longitude)
+        posicion => {
+          setUbicacion({
+            latitud: posicion.coords.latitude,
+            longitud: posicion.coords.longitude
+          });
         },
-        err => {
-          console.warn("Ubicación no disponible:", err.message)
+        error => {
+          console.warn("Ubicación no disponible:", error.message);
         }
-      )
+      );
     }
-
-    cargarPublicaciones()
-  }, [])
+  };
 
   const cargarPublicaciones = async () => {
     try {
-      setLoading(true)
-      const res = await fetch("http://127.0.0.1:5000/publicaciones")
-      const data = await res.json()
-      setPublicaciones(data)
+      setEstado(prev => ({ ...prev, cargando: true }));
+      const respuesta = await fetch("http://127.0.0.1:5000/publicaciones");
+      const datos = await respuesta.json();
+      setPublicaciones(datos);
     } catch (error) {
-      console.error("Error cargando publicaciones:", error)
-      setError("Error cargando publicaciones")
+      console.error("Error cargando publicaciones:", error);
+      setEstado(prev => ({ ...prev, error: "Error cargando publicaciones" }));
     } finally {
-      setLoading(false)
+      setEstado(prev => ({ ...prev, cargando: false }));
     }
-  }
+  };
 
   const aplicarFiltros = async () => {
-    setLoading(true)
-    setError(null)
-    const params = {}
+    setEstado(prev => ({ ...prev, cargando: true, error: null }));
 
-    if (categorias.length > 0) params.categoria = categorias[0]
-    if (fechaDesde) params.fecha_min = fechaDesde
-    if (fechaHasta) params.fecha_max = fechaHasta
+    const parametros = {};
+    if (categoriasSeleccionadas.length > 0) {
+      parametros.categoria = categoriasSeleccionadas[0];
+    }
+    if (filtroFechaDesde) parametros.fecha_min = filtroFechaDesde;
+    if (filtroFechaHasta) parametros.fecha_max = filtroFechaHasta;
 
-    const radio = parseFloat(radioKm)
-    if (!isNaN(radio)) params.radio = radio
+    const radio = parseFloat(filtroRadioKm);
+    if (!isNaN(radio)) parametros.radio = radio;
 
-    if (tagsSeleccionados.length > 0)
-      params.etiquetas = tagsSeleccionados.join(",")
+    if (etiquetasSeleccionadas.length > 0) {
+      parametros.etiquetas = etiquetasSeleccionadas.map(etiqueta => etiqueta.label).join(",");
+    }
 
-    if (latitud && longitud) {
-      params.lat = latitud
-      params.lon = longitud
+    if (ubicacion.latitud && ubicacion.longitud) {
+      parametros.lat = ubicacion.latitud;
+      parametros.lon = ubicacion.longitud;
     }
 
     try {
-      const publicacionesRaw = await fetchPublicacionesFiltradas(params)
-      setPublicaciones(publicacionesRaw)
-    } catch (e) {
-      console.error("Error en fetch filtrado:", e)
-      setError(e.message || "Error al obtener publicaciones")
+      const publicacionesFiltradas = await fetchPublicacionesFiltradas(parametros);
+      setPublicaciones(publicacionesFiltradas);
+    } catch (error) {
+      console.error("Error en fetch filtrado:", error);
+      setEstado(prev => ({
+        ...prev,
+        error: error.message || "Error al obtener publicaciones"
+      }));
     } finally {
-      setLoading(false)
+      setEstado(prev => ({ ...prev, cargando: false }));
     }
-  }
+  };
 
-  const handleCategoriaChange = value => {
-    if (categorias.includes(value)) {
-      setCategorias(categorias.filter(cat => cat !== value))
+  const manejarCambioCategoria = valor => {
+    if (categoriasSeleccionadas.includes(valor)) {
+      setCategoriasSeleccionadas(
+        categoriasSeleccionadas.filter(categoria => categoria !== valor)
+      );
     } else {
-      setCategorias([value])
+      setCategoriasSeleccionadas([valor]);
     }
-  }
+  };
 
-  useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    const etiquetaInicial = params.get("etiqueta")
+  const toggleFiltros = () => {
+    setEstado(prev => ({
+      ...prev,
+      mostrarFiltros: !prev.mostrarFiltros
+    }));
+  };
 
-    if (etiquetaInicial) {
-      const encontrada = etiquetasDisponibles.find(opt => opt.label === etiquetaInicial)
-      if (encontrada) {
-        setEtiquetasSeleccionadas([encontrada])
-        setTagsSeleccionados([etiquetaInicial])
-        setMostrarFiltros(true)
-      }
+  const navegarADetalle = idPublicacion => {
+    navigate(`/publicacion/${idPublicacion}`);
+  };
+
+  const obtenerImagenPrincipal = publicacion => {
+    if (Array.isArray(publicacion.imagenes) && publicacion.imagenes.length > 0) {
+      return publicacion.imagenes[0];
     }
-  }, [location.search, etiquetasDisponibles])
-
-  useEffect(() => {
-    if (tagsSeleccionados.length > 0) {
-      aplicarFiltros()
+    if (typeof publicacion.imagenes === "string") {
+      return publicacion.imagenes;
     }
-  }, [tagsSeleccionados])
+    return null;
+  };
+
+  const handleFocus = (index) => {
+    setFocusedCardIndex(index);
+  };
+
+  const handleBlur = () => {
+    setFocusedCardIndex(null);
+  };
+
+  const Search = () => (
+    <FormControl sx={{ width: { xs: '100%', md: '25ch' } }} variant="outlined">
+      <OutlinedInput
+        size="small"
+        id="search"
+        placeholder="Buscar…"
+        sx={{ flexGrow: 1 }}
+        startAdornment={
+          <InputAdornment position="start" sx={{ color: 'text.primary' }}>
+            <SearchRoundedIcon fontSize="small" />
+          </InputAdornment>
+        }
+        inputProps={{
+          'aria-label': 'search',
+        }}
+      />
+    </FormControl>
+  );
+
+  const renderChipsCategorias = () => (
+    <Box
+      sx={{
+        display: 'inline-flex',
+        flexDirection: 'row',
+        gap: 1,
+        overflow: 'auto',
+        pb: 1,
+      }}
+    >
+      <Chip
+        onClick={() => {
+          setCategoriasSeleccionadas([]);
+          aplicarFiltros();
+        }}
+        size="medium"
+        label="Todas las categorías"
+        variant={categoriasSeleccionadas.length === 0 ? "filled" : "outlined"}
+      />
+      {CATEGORIAS_OPCIONES.map(opcion => (
+        <Chip
+          key={opcion.value}
+          onClick={() => {
+            manejarCambioCategoria(opcion.value);
+            aplicarFiltros();
+          }}
+          size="medium"
+          label={opcion.label}
+          variant={categoriasSeleccionadas.includes(opcion.value) ? "filled" : "outlined"}
+        />
+      ))}
+    </Box>
+  );
+
+  const renderPublicaciones = () => {
+    if (estado.cargando) {
+      return <Typography>Cargando publicaciones...</Typography>;
+    }
+
+    if (estado.error) {
+      return <Typography color="error">Error: {estado.error}</Typography>;
+    }
+
+    if (publicaciones.length === 0) {
+      return <Typography>No hay publicaciones disponibles.</Typography>;
+    }
+
+    return (
+      <Grid container spacing={2}>
+        {publicaciones.map((publicacion, index) => {
+          const imagenPrincipal = obtenerImagenPrincipal(publicacion);
+
+          return (
+            <Grid item xs={12} md={4} key={publicacion.id}>
+              <StyledCard
+                variant="outlined"
+                onFocus={() => handleFocus(index)}
+                onBlur={handleBlur}
+                tabIndex={0}
+                className={focusedCardIndex === index ? 'Mui-focused' : ''}
+                sx={{ height: '100%' }}
+                onClick={() => navegarADetalle(publicacion.id)}
+              >
+                {imagenPrincipal && (
+                  <CardMedia
+                    component="img"
+                    image={imagenPrincipal}
+                    sx={{
+                      height: { sm: 'auto', md: 200 },
+                      aspectRatio: '16/9',
+                      objectFit: 'cover'
+                    }}
+                  />
+                )}
+                <StyledCardContent sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  height: '100%',
+                }}>
+                  <Typography gutterBottom variant="caption" component="div">
+                    {publicacion.categoria}
+                  </Typography>
+                  <Typography gutterBottom variant="h6" component="div">
+                    {publicacion.titulo}
+                  </Typography>
+                  <StyledTypography variant="body2" color="text.secondary" gutterBottom>
+                    {publicacion.descripcion || "Sin descripción"}
+                  </StyledTypography>
+                  <Box sx={{ mt: 1 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      📍 {publicacion.localidad}
+                    </Typography>
+                  </Box>
+                </StyledCardContent>
+              </StyledCard>
+            </Grid>
+          );
+        })}
+      </Grid>
+    );
+  };
 
   return (
-    <div className="buscar-container">
-      <div className="header-filtros">
-        <button
-          className="boton-toggle-filtros"
-          onClick={() => setMostrarFiltros(prev => !prev)}
-          style={{ marginBottom: "1rem" }}
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: 2 }}>
+      {/* Barra de búsqueda móvil */}
+      <Box
+        sx={{
+          display: { xs: 'flex', sm: 'none' },
+          flexDirection: 'row',
+          gap: 1,
+          width: '100%',
+        }}
+      >
+        <Search />
+        <IconButton size="small" aria-label="Filtros" onClick={toggleFiltros}>
+          <FilterAltIcon />
+        </IconButton>
+      </Box>
+
+      {/* Encabezado con categorías y búsqueda */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          justifyContent: 'space-between',
+          alignItems: { xs: 'stretch', md: 'center' },
+          gap: 2,
+        }}
+      >
+        {renderChipsCategorias()}
+
+        <Box
+          sx={{
+            display: { xs: 'none', sm: 'flex' },
+            flexDirection: 'row',
+            gap: 1,
+          }}
         >
-          {mostrarFiltros ? "Ocultar filtros" : "Mostrar filtros"}
-        </button>
+          <Search />
+          <IconButton size="small" aria-label="Filtros" onClick={toggleFiltros}>
+            <FilterAltIcon />
+          </IconButton>
+        </Box>
+      </Box>
 
-        {mostrarFiltros && (
-          <div className="filtros-avanzados">
-            <div className="filtro-grupo">
-              <label>Categoría:</label>
-              {categoriasPosibles.map(({ label, value }) => (
-                <button
-                  key={value}
-                  className={`filtro-boton ${categorias.includes(value) ? "activo" : ""}`}
-                  onClick={() => handleCategoriaChange(value)}
-                  type="button"
-                >
-                  {label}
-                </button>
-              ))}
-              {categorias.length > 0 && (
-                <button
-                  className="filtro-boton limpiar"
-                  onClick={() => setCategorias([])}
-                  type="button"
-                >
-                  Limpiar
-                </button>
-              )}
-            </div>
-
-            <div className="filtro-grupo">
-              <label>Fecha desde:</label>
-              <input type="date" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
-              <label>hasta:</label>
-              <input type="date" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
-            </div>
-
-            <div className="filtro-grupo">
-              <label>Radio desde tu ubicación (km):</label>
-              <input
+      {/* Filtros avanzados */}
+      {estado.mostrarFiltros && (
+        <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+          <Typography variant="h6" gutterBottom>
+            Filtros avanzados
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <TextField
+                label="Fecha desde"
+                type="date"
+                value={filtroFechaDesde}
+                onChange={e => setFiltroFechaDesde(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="Fecha hasta"
+                type="date"
+                value={filtroFechaHasta}
+                onChange={e => setFiltroFechaHasta(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="Radio (km)"
                 type="number"
                 placeholder="Ej: 20"
-                value={radioKm}
-                onChange={e => setRadioKm(e.target.value)}
+                value={filtroRadioKm}
+                onChange={e => setFiltroRadioKm(e.target.value)}
               />
-            </div>
+            </Box>
 
-            <div className="filtro-grupo">
-              <FormControl fullWidth sx={{ mt: 1 }}>
-                <FormLabel>Etiquetas</FormLabel>
-                <Autocomplete
-                  multiple
-                  options={etiquetasDisponibles}
-                  value={etiquetasSeleccionadas}
-                  onChange={(event, newValue) => {
-                    setEtiquetasSeleccionadas(newValue)
-                    setTagsSeleccionados(newValue.map(opt => opt.label))
-                  }}
-                  getOptionLabel={option => option.label}
-                  renderInput={params => (
-                    <TextField {...params} placeholder="Seleccioná etiquetas" />
-                  )}
-                />
-              </FormControl>
-            </div>
-
-            <button className="boton-aplicar-filtros" onClick={aplicarFiltros}>
-              Aplicar filtros
-            </button>
-          </div>
-        )}
-
-        <button className="boton-crear" type="button" onClick={() => navigate("/publicar")}>
-          Nueva publicación
-        </button>
-      </div>
-
-      {loading && <p>Cargando publicaciones...</p>}
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
-
-      {!loading && !error && (
-        <ul className="lista-publicaciones">
-          {publicaciones.length === 0 && (
-            <li>No hay publicaciones disponibles.</li>
-          )}
-          {publicaciones.map(pub => {
-            let imagenPrincipal = null
-            if (Array.isArray(pub.imagenes) && pub.imagenes.length > 0) {
-              imagenPrincipal = pub.imagenes[0]
-            } else if (typeof pub.imagenes === "string") {
-              imagenPrincipal = pub.imagenes
-            }
-
-            return (
-              <li key={pub.id} className="publicacion-card">
-                {imagenPrincipal && (
-                  <div className="publicacion-imagen-container">
-                    <img
-                      src={imagenPrincipal}
-                      alt={`Imagen de ${pub.titulo}`}
-                      className="publicacion-imagen"
-                    />
-                  </div>
+            <FormControl fullWidth>
+              <FormLabel>Etiquetas</FormLabel>
+              <Autocomplete
+                multiple
+                options={etiquetasDisponibles}
+                value={etiquetasSeleccionadas}
+                onChange={(event, nuevasEtiquetas) => {
+                  setEtiquetasSeleccionadas(nuevasEtiquetas);
+                }}
+                getOptionLabel={opcion => opcion.label}
+                renderInput={parametros => (
+                  <TextField
+                    {...parametros}
+                    placeholder="Seleccioná etiquetas"
+                  />
                 )}
+              />
+            </FormControl>
 
-                <div className="publicacion-contenido">
-                  <h3 className="publicacion-titulo">{pub.titulo}</h3>
-                  <p className="publicacion-localidad">📍 {pub.localidad}</p>
-                  <span className="publicacion-categoria">{pub.categoria}</span>
-
-                  <div className="publicacion-etiquetas">
-                    {pub.etiquetas.map((etiqueta, idx) => (
-                      <span key={idx} className="etiqueta-chip">
-                        {etiqueta}
-                      </span>
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    className="boton-crear boton-detalle"
-                    onClick={() => navigate(`/publicacion/${pub.id}`)}
-                  >
-                    Ver detalle
-                  </button>
-                </div>
-              </li>
-            )
-          })}
-        </ul>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <IconButton
+                onClick={aplicarFiltros}
+                variant="contained"
+                color="primary"
+              >
+                Aplicar filtros
+              </IconButton>
+              <IconButton
+                onClick={() => {
+                  setFiltroFechaDesde("");
+                  setFiltroFechaHasta("");
+                  setFiltroRadioKm("");
+                  setEtiquetasSeleccionadas([]);
+                }}
+                color="secondary"
+              >
+                Limpiar
+              </IconButton>
+            </Box>
+          </Box>
+        </Box>
       )}
-    </div>
-  )
-}
 
-export default Browse
+      {/* Publicaciones */}
+      {renderPublicaciones()}
+    </Box>
+  );
+};
+
+export default Browse;

@@ -32,5 +32,3 @@ export async function fetchPublicacionPorId(id) {
   const data = await response.json();
   return new Publicacion(data);
 }
-
-
