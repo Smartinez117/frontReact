@@ -1,34 +1,67 @@
-import Publicacion from "../models/publicacion";
+import Publicacion from "../models/Publicacion";
+import { BASE_URL } from "../utils/constants";
 
-const BASE_URL = "http://localhost:5000";
+// Función genérica para manejar requests HTTP
+async function handleRequest(url, options = {}) {
+  try {
+    const response = await fetch(url, options);
 
-// Función para obtener publicaciones filtradas desde el backend
-export async function fetchPublicacionesFiltradas(params) {
-  // Convertimos los parámetros de filtro en query string
-  const query = new URLSearchParams(params).toString();
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
 
-  // Hacemos la petición GET a la URL completa con filtros
-  const response = await fetch(`${BASE_URL}/publicaciones/filtrar?${query}`);
-
-  if (!response.ok) {
-    throw new Error(`Error al obtener publicaciones: ${response.statusText}`);
+    return await response.json();
+  } catch (error) {
+    console.error(`Error en request a ${url}:`, error);
+    throw new Error(`Error de conexión: ${error.message}`);
   }
+}
 
-  // Obtenemos el JSON con la lista de publicaciones
-  const data = await response.json();
-
-  // Convertimos cada objeto recibido en una instancia de Publicacion
+// Función para obtener todas las publicaciones
+export async function fetchTodasLasPublicaciones() {
+  const data = await handleRequest(`${BASE_URL}/publicaciones`);
   return data.map(pub => new Publicacion(pub));
 }
 
-// Opcional: función para obtener una publicación por ID si la necesitas
+// Función para obtener publicaciones filtradas
+export async function fetchPublicacionesFiltradas(params = {}) {
+  const queryParams = new URLSearchParams(params).toString();
+  const url = `${BASE_URL}/publicaciones/filtrar?${queryParams}`;
+
+  const data = await handleRequest(url);
+  return data.map(pub => new Publicacion(pub));
+}
+
+// Función para obtener una publicación por ID
 export async function fetchPublicacionPorId(id) {
-  const response = await fetch(`${BASE_URL}/publicaciones/${id}`);
-
-  if (!response.ok) {
-    throw new Error(`Error al obtener la publicación: ${response.statusText}`);
-  }
-
-  const data = await response.json();
+  const data = await handleRequest(`${BASE_URL}/publicaciones/${id}`);
   return new Publicacion(data);
+}
+
+// Función para obtener todas las etiquetas
+export async function fetchTodasLasEtiquetas() {
+  const data = await handleRequest(`${BASE_URL}/api/etiquetas`);
+  return data.map(etiqueta => ({
+    label: etiqueta.nombre,
+    id: etiqueta.id
+  }));
+}
+
+// Función para obtener la ubicación del usuario
+export async function obtenerUbicacionUsuario() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Geolocalización no soportada por el navegador"));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      position => resolve({
+        latitud: position.coords.latitude,
+        longitud: position.coords.longitude
+      }),
+      error => reject(new Error(`No se pudo obtener la ubicación: ${error.message}`)),
+      { timeout: 10000 }
+    );
+  });
 }

@@ -21,7 +21,6 @@ import EtiquetasAdmin from "./else/admin/sections/EtiquetasAdmin.jsx"
 import ReportesAdmin from "./else/admin/sections/ReportesAdmin.jsx"
 import { BrowserRouter } from "react-router-dom"
 
-import "./global.css"
 import "bootstrap/dist/css/bootstrap.min.css"
 import "bootstrap/dist/js/bootstrap.bundle.min.js"
 

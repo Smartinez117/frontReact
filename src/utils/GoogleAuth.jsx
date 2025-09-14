@@ -1,7 +1,6 @@
 import { auth, provider } from "../firebase";
 import { signInWithPopup, signOut } from "firebase/auth";
-
-const BASE_URL = import.meta.env.VITE_API_URL
+import { BASE_URL } from "./constants";
 
 const handleLogin = async () => {
   try {

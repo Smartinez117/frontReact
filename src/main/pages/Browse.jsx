@@ -16,12 +16,17 @@ import {
   OutlinedInput,
   Avatar,
   AvatarGroup,
-  styled
+  styled,
 } from "@mui/material";
 import Autocomplete from "@mui/material/Autocomplete";
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import { fetchPublicacionesFiltradas } from "../../services/browseService";
+import {
+  fetchPublicacionesFiltradas,
+  fetchTodasLasPublicaciones,
+  fetchTodasLasEtiquetas,
+  obtenerUbicacionUsuario,
+} from "../../services/browseService";
 import "../../global.css";
 
 const CATEGORIAS_OPCIONES = [
@@ -110,43 +115,31 @@ const Browse = () => {
 
   const obtenerEtiquetas = async () => {
     try {
-      const respuesta = await fetch("http://localhost:5000/api/etiquetas");
-      const datos = await respuesta.json();
-      const etiquetasMapeadas = datos.map(etiqueta => ({
-        label: etiqueta.nombre,
-        id: etiqueta.id
-      }));
+      const etiquetasMapeadas = await fetchTodasLasEtiquetas();
       setEtiquetasDisponibles(etiquetasMapeadas);
     } catch (error) {
       console.error("Error al obtener etiquetas:", error);
+      setEstado(prev => ({ ...prev, error: error.message }));
     }
   };
 
-  const obtenerUbicacion = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        posicion => {
-          setUbicacion({
-            latitud: posicion.coords.latitude,
-            longitud: posicion.coords.longitude
-          });
-        },
-        error => {
-          console.warn("Ubicación no disponible:", error.message);
-        }
-      );
+  const obtenerUbicacion = async () => {
+    try {
+      const coords = await obtenerUbicacionUsuario();
+      setUbicacion(coords);
+    } catch (error) {
+      console.warn("Ubicación no disponible:", error.message);
     }
   };
 
   const cargarPublicaciones = async () => {
     try {
       setEstado(prev => ({ ...prev, cargando: true }));
-      const respuesta = await fetch("http://127.0.0.1:5000/publicaciones");
-      const datos = await respuesta.json();
+      const datos = await fetchTodasLasPublicaciones();
       setPublicaciones(datos);
     } catch (error) {
       console.error("Error cargando publicaciones:", error);
-      setEstado(prev => ({ ...prev, error: "Error cargando publicaciones" }));
+      setEstado(prev => ({ ...prev, error: error.message }));
     } finally {
       setEstado(prev => ({ ...prev, cargando: false }));
     }
