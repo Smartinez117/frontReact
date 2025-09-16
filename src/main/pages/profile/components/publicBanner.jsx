@@ -1,7 +1,7 @@
 // publicBanner.jsx es la portada que vemos de un perfil público
 import React, { useEffect, useState } from "react";
 import "./cbanner.css"; // tu CSS para estilos
-import { obtenerUsuarioPorId } from "../../services/perfilService";
+import { obtenerUsuarioPorId } from "../../../../services/perfilService";
 import OutlinedFlagIcon from "@mui/icons-material/OutlinedFlag";
 import MailIcon from "@mui/icons-material/Mail";
 

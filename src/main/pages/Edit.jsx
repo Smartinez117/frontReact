@@ -33,7 +33,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import CircularProgress from "@mui/material/CircularProgress";
 
-import { mostrarAlerta } from "../utils/confirmservice.js";
+import { mostrarAlerta } from "../../utils/confirmservice.js";
 
 const VisuallyHiddenInput = styled("input")`
   clip: rect(0 0 0 0);
@@ -92,7 +92,7 @@ export default function Editar() {
   const [errores, setErrores] = useState([]);
   const { id_publicacion } = useParams();
   const [etiquetasDesdePublicacion, setEtiquetasDesdePublicacion] = useState(
-    [],
+    []
   );
   const [imagenesExistentes, setImagenesExistentes] = useState([]);
   const [cargando, setCargando] = useState(false);
@@ -125,7 +125,7 @@ export default function Editar() {
   useEffect(() => {
     if (provinciaId) {
       fetch(
-        `http://localhost:5000/api/ubicacion/departamentos?provincia_id=${provinciaId}`,
+        `http://localhost:5000/api/ubicacion/departamentos?provincia_id=${provinciaId}`
       )
         .then((res) => res.json())
         .then(setDepartamentos);
@@ -138,7 +138,7 @@ export default function Editar() {
   useEffect(() => {
     if (departamentoId) {
       fetch(
-        `http://localhost:5000/api/ubicacion/localidades?departamento_id=${departamentoId}`,
+        `http://localhost:5000/api/ubicacion/localidades?departamento_id=${departamentoId}`
       )
         .then((res) => res.json())
         .then(setLocalidades);
@@ -161,7 +161,7 @@ export default function Editar() {
     const fetchDatosPublicacion = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5000/publicaciones/${id_publicacion}`,
+          `http://localhost:5000/publicaciones/${id_publicacion}`
         );
         if (!res.ok) throw new Error("No se pudo obtener la publicación");
         const data = await res.json();
@@ -177,7 +177,7 @@ export default function Editar() {
         }
         if (data.id_locacion) {
           const resLoc = await fetch(
-            `http://localhost:5000/api/ubicacion/localidades/${data.id_locacion}`,
+            `http://localhost:5000/api/ubicacion/localidades/${data.id_locacion}`
           );
           if (resLoc.ok) {
             const localidad = await resLoc.json();
@@ -207,7 +207,7 @@ export default function Editar() {
   useEffect(() => {
     if (etiquetas.length > 0 && etiquetasDesdePublicacion.length > 0) {
       const etiquetasSeleccionadasMapped = etiquetas.filter((et) =>
-        etiquetasDesdePublicacion.includes(et.label),
+        etiquetasDesdePublicacion.includes(et.label)
       );
       setEtiquetasSeleccionadas(etiquetasSeleccionadasMapped);
     }
@@ -249,7 +249,7 @@ export default function Editar() {
           {
             method: "POST",
             body: formData,
-          },
+          }
         );
 
         if (!resImagenes.ok) throw new Error("Error al subir imágenes");
@@ -286,7 +286,7 @@ export default function Editar() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(datos),
-        },
+        }
       );
 
       const data = await res.json();
@@ -342,7 +342,7 @@ export default function Editar() {
               >
                 {opcion}
               </Button>
-            ),
+            )
           )}
         </ToggleButtonGroup>
 

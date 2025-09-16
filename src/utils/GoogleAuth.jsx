@@ -45,23 +45,4 @@ const handleLogout = async () => {
   }
 };
 
-const handleProfile = async () => {
-  //const userSlug = localStorage.getItem("userSlug")
-  //navigate(`/perfil/${userSlug}`)
-};
-
-const handleNotifications = async () => {
-  //navigate("/notificaciones")
-};
-
-const handleSettings = async () => {
-  //navigate("/pconfig")
-};
-
-export {
-  handleLogin,
-  handleLogout,
-  handleProfile,
-  handleNotifications,
-  handleSettings,
-};
+export { handleLogin, handleLogout };

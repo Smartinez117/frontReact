@@ -15,12 +15,7 @@ import ListItemIcon, { listItemIconClasses } from "@mui/material/ListItemIcon";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import AddIcon from "@mui/icons-material/Add";
 import MenuButton from "./MenuButton";
-import {
-  handleLogout,
-  handleNotifications,
-  handleProfile,
-  handleSettings,
-} from "../../utils/GoogleAuth";
+import { handleLogout } from "../../utils/GoogleAuth";
 
 export function ProfileMenu() {
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -90,10 +85,19 @@ export function ProfileMenu() {
         }}
       >
         <Divider />
-        <MenuItem onClick={handleProfile}>Perfil</MenuItem>
-        <MenuItem onClick={handleNotifications}>Notificaciones</MenuItem>
+        <MenuItem
+          component={Link}
+          to={`/perfil/${localStorage.getItem("userSlug")}`}
+        >
+          Perfil
+        </MenuItem>
+        <MenuItem component={Link} to="/notificaciones">
+          Notificaciones
+        </MenuItem>
         <Divider />
-        <MenuItem onClick={handleSettings}>Configuración</MenuItem>
+        <MenuItem component={Link} to="/pconfig">
+          Configuración
+        </MenuItem>
         <Divider />
         <MenuItem
           onClick={handleLogout}

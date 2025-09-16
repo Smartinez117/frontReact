@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import SelfPublications from "../../components/profile/selfPublications";
-import UserPublications from "../../components/profile/userPublications";
-import MyBanner from "../../components/profile/myBanner";
-import PublicBanner from "../../components/profile/publicBanner";
+import SelfPublications from "./components/selfPublications";
+import UserPublications from "./components/userPublications";
+import MyBanner from "./components/myBanner";
+import PublicBanner from "./components/publicBanner";
 import CssBaseline from "@mui/material/CssBaseline";
 import Container from "@mui/material/Container";
 

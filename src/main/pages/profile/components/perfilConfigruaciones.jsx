@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   actualizarUsuario,
   configUsuarioActual,
-} from "../../services/perfilService";
+} from "../../../../services/perfilService";
 import "./cperfilconfiguraciones.css";
 
 export default function PerfilConfiguracion() {

@@ -19,12 +19,12 @@ import {
   enviarComentario as enviarComentarioService,
   descargarPDF as descargarPDFService,
   compartirPublicacion as compartirPublicacionService,
-} from "../../services/publicacionService";
+} from "../../../services/publicacionService";
 import ImageSlider from "./components/ImageSlider";
 import ImageModal from "./components/ImageModal";
 import MapaUbicacion from "./components/MapaUbicacion";
 import ComentariosSection from "./components/ComentariosSection";
-import Report from "../../components/Report";
+import Report from "./components/Report";
 import UsuarioInfo from "./components/UsuarioInfo";
 import AccionesPublicacion from "./components/AccionesPublicacion";
 import "keen-slider/keen-slider.min.css";

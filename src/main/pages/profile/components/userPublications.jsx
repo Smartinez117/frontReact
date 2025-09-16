@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchPublicacionesPorUsuario } from "../../services/perfilService"; // 🔹 nuevo servicio
+import { fetchPublicacionesPorUsuario } from "../../../../services/perfilService"; // 🔹 nuevo servicio
 import "./cuserPublications.css";
 
 const UserPublications = ({ userId }) => {

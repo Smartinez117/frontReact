@@ -5,8 +5,8 @@ import {
   fetchMisPublicaciones,
   fetchPublicacionesPorUsuario,
   eliminarPublicacion,
-} from "../../services/perfilService";
-import { confirmarAccion } from "../../utils/confirmservice";
+} from "../../../../services/perfilService";
+import { confirmarAccion } from "../../../../utils/confirmservice";
 
 const SelfPublications = ({ userId, isOwner }) => {
   const navigate = useNavigate();

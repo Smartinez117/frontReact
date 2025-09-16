@@ -5,11 +5,11 @@ import Login from "./else/GoogleLogin.jsx";
 import Home from "./main/pages/Home.jsx";
 import Post from "./main/pages/Post.jsx";
 import Browse from "./main/pages/Browse.jsx";
-import View from "./main/pages/View.jsx";
+import View from "./main/pages/view/View.jsx";
 import MainLayout from "./main/MainLayout.jsx";
-import Perfil from "./main/pages/Profile.jsx";
-import Editar from "./components/Edit.jsx";
-import ConfigPerfil from "./components/profile/configPerfil.jsx";
+import Perfil from "./main/pages/profile/Profile.jsx";
+import Editar from "./main/pages/Edit.jsx";
+import ConfigPerfil from "./main/pages/profile/components/configPerfil.jsx";
 import PanelAdmin from "./else/admin/PanelAdmin.jsx";
 import HomeAdmin from "./else/admin/sections/HomeAdmin.jsx";
 import UsuariosAdmin from "./else/admin/sections/UsuariosAdmin.jsx";
@@ -54,5 +54,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="reportes" element={<ReportesAdmin />} />
       </Route>
     </Routes>
-  </BrowserRouter>,
+  </BrowserRouter>
 );
