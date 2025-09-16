@@ -1,4 +1,4 @@
-import Publicacion from '../models/publicacion';
+import Publicacion from '../models/Publicacion';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -115,7 +115,7 @@ export function fetchUsuarioActual() {
 // Función para actualizar usuario
 // perfilService.js
 
-import { Usuario } from '../models/modeloPerfil';
+import { Usuario } from '../models/UserModel';
 // Función para obtener usuario por id
 export async function obtenerUsuarioPorId(idUsuario) {
   try {
