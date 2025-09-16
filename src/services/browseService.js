@@ -20,7 +20,7 @@ async function handleRequest(url, options = {}) {
 // Función para obtener todas las publicaciones
 export async function fetchTodasLasPublicaciones() {
   const data = await handleRequest(`${BASE_URL}/publicaciones`);
-  return data.map(pub => new Publicacion(pub));
+  return data.map((pub) => new Publicacion(pub));
 }
 
 // Función para obtener publicaciones filtradas
@@ -29,7 +29,7 @@ export async function fetchPublicacionesFiltradas(params = {}) {
   const url = `${BASE_URL}/publicaciones/filtrar?${queryParams}`;
 
   const data = await handleRequest(url);
-  return data.map(pub => new Publicacion(pub));
+  return data.map((pub) => new Publicacion(pub));
 }
 
 // Función para obtener una publicación por ID
@@ -41,9 +41,9 @@ export async function fetchPublicacionPorId(id) {
 // Función para obtener todas las etiquetas
 export async function fetchTodasLasEtiquetas() {
   const data = await handleRequest(`${BASE_URL}/api/etiquetas`);
-  return data.map(etiqueta => ({
+  return data.map((etiqueta) => ({
     label: etiqueta.nombre,
-    id: etiqueta.id
+    id: etiqueta.id,
   }));
 }
 
@@ -56,12 +56,14 @@ export async function obtenerUbicacionUsuario() {
     }
 
     navigator.geolocation.getCurrentPosition(
-      position => resolve({
-        latitud: position.coords.latitude,
-        longitud: position.coords.longitude
-      }),
-      error => reject(new Error(`No se pudo obtener la ubicación: ${error.message}`)),
-      { timeout: 10000 }
+      (position) =>
+        resolve({
+          latitud: position.coords.latitude,
+          longitud: position.coords.longitude,
+        }),
+      (error) =>
+        reject(new Error(`No se pudo obtener la ubicación: ${error.message}`)),
+      { timeout: 10000 },
     );
   });
 }

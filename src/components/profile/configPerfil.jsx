@@ -1,6 +1,6 @@
-import React from "react"
-import PerfilConfiguracion from "./perfilConfigruaciones"
-import Navbar from "../Navbar"
+import React from "react";
+import PerfilConfiguracion from "./perfilConfigruaciones";
+import Navbar from "../Navbar";
 
 const ConfigPerfil = () => (
   <>
@@ -9,6 +9,6 @@ const ConfigPerfil = () => (
       <PerfilConfiguracion />
     </main>
   </>
-)
+);
 
-export default ConfigPerfil
+export default ConfigPerfil;

@@ -1,31 +1,31 @@
-import React, { useState } from "react"
-import { getAuth } from "firebase/auth"
+import React, { useState } from "react";
+import { getAuth } from "firebase/auth";
 
 export default function ReportForm({ idPublicacion, idUsuario, onClose }) {
-  const [tipo, setTipo] = useState("")
-  const [descripcion, setDescripcion] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [mensaje, setMensaje] = useState(null)
+  const [tipo, setTipo] = useState("");
+  const [descripcion, setDescripcion] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [mensaje, setMensaje] = useState(null);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    const auth = getAuth()
-    const user = auth.currentUser
+    e.preventDefault();
+    const auth = getAuth();
+    const user = auth.currentUser;
 
     if (!user) {
-      setMensaje("Debes iniciar sesión para reportar contenido.")
-      return
+      setMensaje("Debes iniciar sesión para reportar contenido.");
+      return;
     }
     if (!tipo) {
-      setMensaje("Selecciona un tipo de reporte.")
-      return
+      setMensaje("Selecciona un tipo de reporte.");
+      return;
     }
 
-    setLoading(true)
-    setMensaje(null)
+    setLoading(true);
+    setMensaje(null);
 
     try {
-      const token = await user.getIdToken()
+      const token = await user.getIdToken();
 
       const response = await fetch("http://127.0.0.1:5000/reportes", {
         method: "POST",
@@ -39,26 +39,28 @@ export default function ReportForm({ idPublicacion, idUsuario, onClose }) {
           descripcion,
           tipo,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Error al enviar reporte")
+        throw new Error("Error al enviar reporte");
       }
 
-      setMensaje("✅ Reporte enviado con éxito.")
-      setDescripcion("")
-      setTipo("")
+      setMensaje("✅ Reporte enviado con éxito.");
+      setDescripcion("");
+      setTipo("");
     } catch (err) {
-      setMensaje("❌ " + err.message)
+      setMensaje("❌ " + err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <button className="modal-close" onClick={onClose}>✖</button>
+        <button className="modal-close" onClick={onClose}>
+          ✖
+        </button>
         <h3>Denunciar</h3>
         <p>Selecciona el motivo del reporte:</p>
         <form onSubmit={handleSubmit}>
@@ -111,11 +113,7 @@ export default function ReportForm({ idPublicacion, idUsuario, onClose }) {
             <button className="boton-enviar" disabled={loading || !tipo}>
               {loading ? "Enviando..." : "Denunciar"}
             </button>
-            <button
-              type="button"
-              className="boton-cancelar"
-              onClick={onClose}
-            >
+            <button type="button" className="boton-cancelar" onClick={onClose}>
               Cancelar
             </button>
           </div>
@@ -123,5 +121,5 @@ export default function ReportForm({ idPublicacion, idUsuario, onClose }) {
         {mensaje && <p>{mensaje}</p>}
       </div>
     </div>
-  )
+  );
 }

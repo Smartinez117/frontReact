@@ -18,7 +18,11 @@ const ImageSlider = ({ imagenes, onImageClick }) => {
   });
 
   return (
-    <Box ref={sliderRef} className="keen-slider" sx={{ overflow: "hidden", position: "relative" }}>
+    <Box
+      ref={sliderRef}
+      className="keen-slider"
+      sx={{ overflow: "hidden", position: "relative" }}
+    >
       {imagenes.map((src, index) => (
         <Box
           key={index}
@@ -43,12 +47,21 @@ const ImageSlider = ({ imagenes, onImageClick }) => {
         <>
           <Arrow
             left
-            onClick={(e) => { e.stopPropagation(); instanceRef.current?.prev(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              instanceRef.current?.prev();
+            }}
             disabled={currentSlide === 0}
           />
           <Arrow
-            onClick={(e) => { e.stopPropagation(); instanceRef.current?.next(); }}
-            disabled={currentSlide === instanceRef.current.track.details.slides.length - 1}
+            onClick={(e) => {
+              e.stopPropagation();
+              instanceRef.current?.next();
+            }}
+            disabled={
+              currentSlide ===
+              instanceRef.current.track.details.slides.length - 1
+            }
           />
         </>
       )}

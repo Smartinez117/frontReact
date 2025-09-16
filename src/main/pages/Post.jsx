@@ -24,7 +24,7 @@ import {
   Stack,
   Chip,
   TextField,
-  Box
+  Box,
 } from "@mui/material";
 import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -41,7 +41,7 @@ import {
   fetchLocalities,
   fetchTags,
   uploadImages,
-  createPublication
+  createPublication,
 } from "../../services/postService";
 
 // Configuración de iconos para Leaflet
@@ -81,7 +81,9 @@ function InteractiveMap({ position, onPositionChange }) {
     },
   });
 
-  return <Marker position={[position.lat, position.lng]} icon={markerIconLocal} />;
+  return (
+    <Marker position={[position.lat, position.lng]} icon={markerIconLocal} />
+  );
 }
 
 export default function PostCreation() {
@@ -93,20 +95,20 @@ export default function PostCreation() {
     departmentId: "",
     locationId: "",
     coordinates: { lat: -34.6, lng: -58.4 },
-    images: []
+    images: [],
   });
 
   const [options, setOptions] = useState({
     provinces: [],
     departments: [],
     locations: [],
-    allTags: []
+    allTags: [],
   });
 
   const [uiState, setUiState] = useState({
     isLoading: false,
     errors: [],
-    selectedTags: []
+    selectedTags: [],
   });
 
   const navigate = useNavigate();
@@ -117,14 +119,15 @@ export default function PostCreation() {
     if (!formData.category) newErrors.push("Categoría");
     if (!formData.title.trim()) newErrors.push("Título");
     if (!formData.description.trim()) newErrors.push("Descripción");
-    if (formData.description.length > 500) newErrors.push("Descripción excede 500 caracteres");
+    if (formData.description.length > 500)
+      newErrors.push("Descripción excede 500 caracteres");
     if (!formData.provinceId) newErrors.push("Provincia");
     if (!formData.departmentId) newErrors.push("Departamento");
     if (!formData.locationId) newErrors.push("Localidad");
     if (uiState.selectedTags.length === 0) newErrors.push("Etiquetas");
     if (formData.images.length === 0) newErrors.push("Imágenes");
 
-    setUiState(prev => ({ ...prev, errors: newErrors }));
+    setUiState((prev) => ({ ...prev, errors: newErrors }));
     return newErrors;
   };
 
@@ -133,7 +136,7 @@ export default function PostCreation() {
     const loadProvinces = async () => {
       try {
         const provinces = await fetchProvinces();
-        setOptions(prev => ({ ...prev, provinces }));
+        setOptions((prev) => ({ ...prev, provinces }));
       } catch (error) {
         console.error("Error al cargar provincias:", error);
       }
@@ -146,13 +149,13 @@ export default function PostCreation() {
       if (formData.provinceId) {
         try {
           const departments = await fetchDepartments(formData.provinceId);
-          setOptions(prev => ({ ...prev, departments }));
+          setOptions((prev) => ({ ...prev, departments }));
         } catch (error) {
           console.error("Error al cargar departamentos:", error);
         }
       } else {
-        setOptions(prev => ({ ...prev, departments: [] }));
-        setFormData(prev => ({ ...prev, departmentId: "", locationId: "" }));
+        setOptions((prev) => ({ ...prev, departments: [] }));
+        setFormData((prev) => ({ ...prev, departmentId: "", locationId: "" }));
       }
     };
     loadDepartments();
@@ -163,13 +166,13 @@ export default function PostCreation() {
       if (formData.departmentId) {
         try {
           const locations = await fetchLocalities(formData.departmentId);
-          setOptions(prev => ({ ...prev, locations }));
+          setOptions((prev) => ({ ...prev, locations }));
         } catch (error) {
           console.error("Error al cargar localidades:", error);
         }
       } else {
-        setOptions(prev => ({ ...prev, locations: [] }));
-        setFormData(prev => ({ ...prev, locationId: "" }));
+        setOptions((prev) => ({ ...prev, locations: [] }));
+        setFormData((prev) => ({ ...prev, locationId: "" }));
       }
     };
     loadLocalities();
@@ -179,11 +182,16 @@ export default function PostCreation() {
     const loadTags = async () => {
       try {
         const tags = await fetchTags();
-        const formattedTags = tags.map(tag => ({ label: tag.nombre, id: tag.id }));
-        const defaultTags = formattedTags.filter(tag => ["Perro", "Gato"].includes(tag.label));
+        const formattedTags = tags.map((tag) => ({
+          label: tag.nombre,
+          id: tag.id,
+        }));
+        const defaultTags = formattedTags.filter((tag) =>
+          ["Perro", "Gato"].includes(tag.label),
+        );
 
-        setOptions(prev => ({ ...prev, allTags: formattedTags }));
-        setUiState(prev => ({ ...prev, selectedTags: defaultTags }));
+        setOptions((prev) => ({ ...prev, allTags: formattedTags }));
+        setUiState((prev) => ({ ...prev, selectedTags: defaultTags }));
       } catch (error) {
         console.error("Error al cargar etiquetas:", error);
       }
@@ -194,29 +202,31 @@ export default function PostCreation() {
   // Manejadores de eventos
   const handleLocationChange = (event) => {
     const locationId = event.target.value;
-    const location = options.locations.find(loc => loc.id.toString() === locationId);
+    const location = options.locations.find(
+      (loc) => loc.id.toString() === locationId,
+    );
     if (location) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         locationId,
         coordinates: {
           lat: parseFloat(location.latitud),
-          lng: parseFloat(location.longitud)
-        }
+          lng: parseFloat(location.longitud),
+        },
       }));
     }
   };
 
   const handleImagesChange = (event) => {
     const files = Array.from(event.target.files);
-    setFormData(prev => ({ ...prev, images: files }));
+    setFormData((prev) => ({ ...prev, images: files }));
   };
 
   const handlePublish = async () => {
     const errors = validateFields();
     if (errors.length > 0) return;
 
-    setUiState(prev => ({ ...prev, isLoading: true }));
+    setUiState((prev) => ({ ...prev, isLoading: true }));
 
     try {
       // Subir imágenes
@@ -229,7 +239,7 @@ export default function PostCreation() {
         descripcion: formData.description,
         id_locacion: formData.locationId,
         coordenadas: formData.coordinates,
-        etiquetas: uiState.selectedTags.map(tag => tag.id),
+        etiquetas: uiState.selectedTags.map((tag) => tag.id),
         imagenes: imageData.urls,
       };
 
@@ -265,7 +275,7 @@ export default function PostCreation() {
         tipo: "error",
       });
     } finally {
-      setUiState(prev => ({ ...prev, isLoading: false }));
+      setUiState((prev) => ({ ...prev, isLoading: false }));
     }
   };
 
@@ -273,24 +283,40 @@ export default function PostCreation() {
     <React.Fragment>
       <CssBaseline />
       <Container maxWidth="sm">
-        <Typography variant="h4" component="h1" sx={{ mt: 2, mb: 3, textAlign: 'center' }}>
+        <Typography
+          variant="h4"
+          component="h1"
+          sx={{ mt: 2, mb: 3, textAlign: "center" }}
+        >
           Crear publicación
         </Typography>
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
           {/* Sección de Categoría */}
           <Box>
-            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ my: 2 }}>
-              {["Adopción", "Búsqueda", "Encuentro", "Estado Crítico"].map(option => (
-                <Chip
-                  key={option}
-                  label={option}
-                  clickable
-                  color={formData.category === option ? "primary" : "default"}
-                  variant={formData.category === option ? "filled" : "outlined"}
-                  onClick={() => setFormData(prev => ({ ...prev, category: option }))}
-                />
-              ))}
+            <Stack
+              direction="row"
+              spacing={1}
+              useFlexGap
+              flexWrap="wrap"
+              sx={{ my: 2 }}
+            >
+              {["Adopción", "Búsqueda", "Encuentro", "Estado Crítico"].map(
+                (option) => (
+                  <Chip
+                    key={option}
+                    label={option}
+                    clickable
+                    color={formData.category === option ? "primary" : "default"}
+                    variant={
+                      formData.category === option ? "filled" : "outlined"
+                    }
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, category: option }))
+                    }
+                  />
+                ),
+              )}
             </Stack>
           </Box>
 
@@ -303,7 +329,9 @@ export default function PostCreation() {
               fullWidth
               placeholder="Título"
               value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, title: e.target.value }))
+              }
               error={uiState.errors.includes("Título")}
             />
           </Box>
@@ -316,8 +344,13 @@ export default function PostCreation() {
               minRows={3}
               placeholder="Descripción del caso…"
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              style={{ width: '100%', padding: '8px', fontFamily: 'inherit' }}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+              style={{ width: "100%", padding: "8px", fontFamily: "inherit" }}
             />
             <Typography variant="body2" sx={{ textAlign: "right", mt: 1 }}>
               {formData.description.length}/500 caracteres
@@ -333,11 +366,16 @@ export default function PostCreation() {
               <Select
                 fullWidth
                 value={formData.provinceId}
-                onChange={(e) => setFormData(prev => ({ ...prev, provinceId: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    provinceId: e.target.value,
+                  }))
+                }
                 displayEmpty
               >
                 <MenuItem value="">Seleccionar provincia</MenuItem>
-                {options.provinces.map(province => (
+                {options.provinces.map((province) => (
                   <MenuItem key={province.id} value={province.id.toString()}>
                     {province.nombre}
                   </MenuItem>
@@ -349,13 +387,21 @@ export default function PostCreation() {
               <Select
                 fullWidth
                 value={formData.departmentId}
-                onChange={(e) => setFormData(prev => ({ ...prev, departmentId: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    departmentId: e.target.value,
+                  }))
+                }
                 disabled={!formData.provinceId}
                 displayEmpty
               >
                 <MenuItem value="">Seleccionar departamento</MenuItem>
-                {options.departments.map(department => (
-                  <MenuItem key={department.id} value={department.id.toString()}>
+                {options.departments.map((department) => (
+                  <MenuItem
+                    key={department.id}
+                    value={department.id.toString()}
+                  >
                     {department.nombre}
                   </MenuItem>
                 ))}
@@ -371,7 +417,7 @@ export default function PostCreation() {
                 displayEmpty
               >
                 <MenuItem value="">Seleccionar localidad</MenuItem>
-                {options.locations.map(location => (
+                {options.locations.map((location) => (
                   <MenuItem key={location.id} value={location.id.toString()}>
                     {location.nombre}
                   </MenuItem>
@@ -395,13 +441,17 @@ export default function PostCreation() {
                 <InteractiveMap
                   position={formData.coordinates}
                   onPositionChange={(newPosition) =>
-                    setFormData(prev => ({ ...prev, coordinates: newPosition }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      coordinates: newPosition,
+                    }))
                   }
                 />
               </MapContainer>
             </div>
             <Typography variant="body2">
-              Latitud: {formData.coordinates.lat.toFixed(6)} | Longitud: {formData.coordinates.lng.toFixed(6)}
+              Latitud: {formData.coordinates.lat.toFixed(6)} | Longitud:{" "}
+              {formData.coordinates.lng.toFixed(6)}
             </Typography>
           </Box>
 
@@ -413,13 +463,12 @@ export default function PostCreation() {
                 multiple
                 options={options.allTags}
                 value={uiState.selectedTags}
-                onChange={(event, value) => setUiState(prev => ({ ...prev, selectedTags: value }))}
+                onChange={(event, value) =>
+                  setUiState((prev) => ({ ...prev, selectedTags: value }))
+                }
                 getOptionLabel={(option) => option.label}
                 renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    placeholder="Seleccioná etiquetas"
-                  />
+                  <TextField {...params} placeholder="Seleccioná etiquetas" />
                 )}
               />
             </FormControl>
@@ -441,8 +490,11 @@ export default function PostCreation() {
               />
             </Button>
             {formData.images.length > 0 && (
-              <Typography variant="body2" sx={{ mt: 1, color: "text.secondary" }}>
-                {formData.images.map(file => file.name).join(", ")}
+              <Typography
+                variant="body2"
+                sx={{ mt: 1, color: "text.secondary" }}
+              >
+                {formData.images.map((file) => file.name).join(", ")}
               </Typography>
             )}
           </Box>
@@ -450,7 +502,8 @@ export default function PostCreation() {
           {/* Mensajes de Error */}
           {uiState.errors.length > 0 && (
             <Alert severity="error" sx={{ my: 2 }}>
-              Faltan completar los siguientes campos: {uiState.errors.join(", ")}
+              Faltan completar los siguientes campos:{" "}
+              {uiState.errors.join(", ")}
             </Alert>
           )}
 

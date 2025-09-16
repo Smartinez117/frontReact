@@ -1,10 +1,13 @@
 // confirmationService.js
-import Swal from 'sweetalert2';
-import './confirm.css'; // Asegúrate de importar el CSS con los estilos y blur
+import Swal from "sweetalert2";
+import "./confirm.css"; // Asegúrate de importar el CSS con los estilos y blur
 
-
-
-export function mostrarAlerta({ titulo, mensaje, tipo = 'info', duracion = 2000 }) {
+export function mostrarAlerta({
+  titulo,
+  mensaje,
+  tipo = "info",
+  duracion = 2000,
+}) {
   return Swal.fire({
     icon: tipo, // info | success | error | warning
     title: titulo,
@@ -17,37 +20,37 @@ export function mostrarAlerta({ titulo, mensaje, tipo = 'info', duracion = 2000 
 // Funciones que devuelven textos parametrizados según tipo
 const getTitle = (tipo) => {
   switch (tipo) {
-    case 'publicacion':
-      return '¿Eliminar publicación?';
-    case 'usuario':
-      return '¿Eliminar usuario?';
+    case "publicacion":
+      return "¿Eliminar publicación?";
+    case "usuario":
+      return "¿Eliminar usuario?";
     default:
-      return '¿Confirmar acción?';
+      return "¿Confirmar acción?";
   }
 };
 
 const getMessage = (tipo) => {
   switch (tipo) {
-    case 'publicacion':
-      return '¿Estás seguro de que deseas eliminar esta publicación?';
-    case 'usuario':
-      return '¿Estás seguro de que deseas eliminar este usuario?';
+    case "publicacion":
+      return "¿Estás seguro de que deseas eliminar esta publicación?";
+    case "usuario":
+      return "¿Estás seguro de que deseas eliminar este usuario?";
     default:
-      return '¿Estás seguro de realizar esta acción?';
+      return "¿Estás seguro de realizar esta acción?";
   }
 };
 
 const getConfirmText = (tipo) => {
   switch (tipo) {
-    case 'publicacion':
-    case 'usuario':
-      return 'Eliminar';
+    case "publicacion":
+    case "usuario":
+      return "Eliminar";
     default:
-      return 'Confirmar';
+      return "Confirmar";
   }
 };
 
-const getCancelText = () => 'Cancelar';
+const getCancelText = () => "Cancelar";
 
 // El icono rojo cuadrado personalizado con el signo "!" más pequeño y centrado
 const iconHtml = `
@@ -81,9 +84,9 @@ export async function confirmarAccion({ tipo, onConfirm }) {
     reverseButtons: true,
     focusCancel: true,
     customClass: {
-      popup: 'custom-popup',
-      confirmButton: 'custom-confirm-button',
-      cancelButton: 'custom-cancel-button',
+      popup: "custom-popup",
+      confirmButton: "custom-confirm-button",
+      cancelButton: "custom-cancel-button",
     },
   });
 
@@ -91,16 +94,16 @@ export async function confirmarAccion({ tipo, onConfirm }) {
     try {
       await onConfirm(); // Ejecuta la acción confirmada que recibimos por parámetro
       await Swal.fire({
-        icon: 'success',
-        title: 'Operación exitosa',
+        icon: "success",
+        title: "Operación exitosa",
         timer: 1500,
         showConfirmButton: false,
       });
     } catch (error) {
       await Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.message || 'Ocurrió un error inesperado',
+        icon: "error",
+        title: "Error",
+        text: error.message || "Ocurrió un error inesperado",
       });
     }
   }

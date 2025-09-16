@@ -1,91 +1,94 @@
-import React, { useEffect, useState } from "react"
-import { actualizarUsuario, configUsuarioActual } from "../../services/perfilService"
-import "./cperfilconfiguraciones.css"
+import React, { useEffect, useState } from "react";
+import {
+  actualizarUsuario,
+  configUsuarioActual,
+} from "../../services/perfilService";
+import "./cperfilconfiguraciones.css";
 
 export default function PerfilConfiguracion() {
-  const [usuario, setUsuario] = useState(null)
-  const [seccionEditando, setSeccionEditando] = useState(null) // "personal", "contacto", "otros" o null
-  const [formData, setFormData] = useState({})
+  const [usuario, setUsuario] = useState(null);
+  const [seccionEditando, setSeccionEditando] = useState(null); // "personal", "contacto", "otros" o null
+  const [formData, setFormData] = useState({});
 
   useEffect(() => {
-    cargarUsuario()
-  }, [])
+    cargarUsuario();
+  }, []);
 
   async function cargarUsuario() {
     try {
-      const datos = await configUsuarioActual()
-      setUsuario(datos)
-      setSeccionEditando(null)
-      setFormData({})
+      const datos = await configUsuarioActual();
+      setUsuario(datos);
+      setSeccionEditando(null);
+      setFormData({});
     } catch (error) {
-      console.error("Error al cargar usuario:", error)
+      console.error("Error al cargar usuario:", error);
     }
   }
 
   function handleModificar(seccion) {
-    setSeccionEditando(seccion)
-    if (!usuario) return
+    setSeccionEditando(seccion);
+    if (!usuario) return;
 
     switch (seccion) {
       case "personal":
-        setFormData({ nombre: usuario.nombre, email: usuario.email })
-        break
+        setFormData({ nombre: usuario.nombre, email: usuario.email });
+        break;
       case "contacto":
         setFormData({
           telefono_pais: usuario.telefono_pais || "",
           telefono_numero_local: usuario.telefono_numero_local || "",
-        })
-        break
+        });
+        break;
       case "otros":
-        setFormData({ descripcion: usuario.descripcion || "" })
-        break
+        setFormData({ descripcion: usuario.descripcion || "" });
+        break;
       default:
-        setFormData({})
+        setFormData({});
     }
   }
 
   function handleCancelar() {
-    setSeccionEditando(null)
-    setFormData({})
+    setSeccionEditando(null);
+    setFormData({});
   }
 
   function handleChange(e) {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   }
 
   async function handleGuardar() {
     try {
       if (!usuario) {
-        throw new Error("Usuario no cargado")
+        throw new Error("Usuario no cargado");
       }
 
-      let dataToSend = {}
+      let dataToSend = {};
 
       if (seccionEditando === "personal") {
         dataToSend = {
           nombre: formData.nombre,
-        }
+        };
       } else if (seccionEditando === "contacto") {
         dataToSend = {
           telefono_pais: formData.telefono_pais,
           telefono_numero_local: formData.telefono_numero_local,
-        }
+        };
       } else if (seccionEditando === "otros") {
         dataToSend = {
           descripcion: formData.descripcion,
-        }
+        };
       }
 
-      await actualizarUsuario(usuario.id, dataToSend)
-      await cargarUsuario()
+      await actualizarUsuario(usuario.id, dataToSend);
+      await cargarUsuario();
     } catch (error) {
-      alert("Error al guardar los cambios: " + error.message)
+      alert("Error al guardar los cambios: " + error.message);
     }
   }
 
   if (!usuario) {
-    return <div>Cargando usuario...</div>
+    return <div>Cargando usuario...</div>;
   }
 
   return (
@@ -96,9 +99,9 @@ export default function PerfilConfiguracion() {
         <h3>Datos personales</h3>
         {seccionEditando === "personal" ? (
           <form
-            onSubmit={e => {
-              e.preventDefault()
-              handleGuardar()
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleGuardar();
             }}
             className="formulario"
           >
@@ -133,7 +136,9 @@ export default function PerfilConfiguracion() {
             <p>
               <strong>Email:</strong> {usuario.email}
             </p>
-            <button onClick={() => handleModificar("personal")}>Modificar</button>
+            <button onClick={() => handleModificar("personal")}>
+              Modificar
+            </button>
           </>
         )}
       </section>
@@ -142,9 +147,9 @@ export default function PerfilConfiguracion() {
         <h3>Datos de contacto</h3>
         {seccionEditando === "contacto" ? (
           <form
-            onSubmit={e => {
-              e.preventDefault()
-              handleGuardar()
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleGuardar();
             }}
             className="formulario"
           >
@@ -185,7 +190,9 @@ export default function PerfilConfiguracion() {
             <p>
               <strong>Teléfono local:</strong> {usuario.telefono_numero_local}
             </p>
-            <button onClick={() => handleModificar("contacto")}>Modificar</button>
+            <button onClick={() => handleModificar("contacto")}>
+              Modificar
+            </button>
           </>
         )}
       </section>
@@ -194,9 +201,9 @@ export default function PerfilConfiguracion() {
         <h3>Otros datos</h3>
         {seccionEditando === "otros" ? (
           <form
-            onSubmit={e => {
-              e.preventDefault()
-              handleGuardar()
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleGuardar();
             }}
             className="formulario"
           >
@@ -226,5 +233,5 @@ export default function PerfilConfiguracion() {
         )}
       </section>
     </div>
-  )
+  );
 }

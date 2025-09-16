@@ -1,28 +1,33 @@
-import * as React from 'react';
-import { Link } from 'react-router-dom';
-import { useState, useEffect, useCallback } from 'react';
-import Toolbar from '@mui/material/Toolbar';
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/GridLegacy';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Tooltip from '@mui/material/Tooltip';
-import IconButton from '@mui/material/IconButton';
-import SearchIcon from '@mui/icons-material/Search';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { DataGrid } from '@mui/x-data-grid';
+import * as React from "react";
+import { Link } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import Toolbar from "@mui/material/Toolbar";
+import Box from "@mui/material/Box";
+import Grid from "@mui/material/GridLegacy";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import Tooltip from "@mui/material/Tooltip";
+import IconButton from "@mui/material/IconButton";
+import SearchIcon from "@mui/icons-material/Search";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import { DataGrid } from "@mui/x-data-grid";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const columns = [
-  { field: 'id', headerName: 'ID', width: 70 },
-  { field: 'nombre', headerName: 'Nombre', width: 130 },
-  { field: 'email', headerName: 'Email', width: 200 },
-  { field: 'rol', headerName: 'Rol', description: 'Muestra si es admin o usuario común', width: 90 },
-  { field: 'fecha_registro', headerName: 'Fecha de registro', width: 130 },
+  { field: "id", headerName: "ID", width: 70 },
+  { field: "nombre", headerName: "Nombre", width: 130 },
+  { field: "email", headerName: "Email", width: 200 },
   {
-    field: 'acciones',
-    headerName: 'Acciones',
+    field: "rol",
+    headerName: "Rol",
+    description: "Muestra si es admin o usuario común",
+    width: 90,
+  },
+  { field: "fecha_registro", headerName: "Fecha de registro", width: 130 },
+  {
+    field: "acciones",
+    headerName: "Acciones",
     width: 350,
     sortable: false,
     filterable: false,
@@ -69,8 +74,8 @@ const columns = [
           </Button>
         </>
       );
-    }
-  }
+    },
+  },
 ];
 
 export default function UsuariosAdmin() {
@@ -85,7 +90,7 @@ export default function UsuariosAdmin() {
     setLoading(true);
     try {
       const response = await fetch(
-        `${API_URL}/api/usuarios?page=${page + 1}&per_page=${pageSize}&search=${encodeURIComponent(search)}`
+        `${API_URL}/api/usuarios?page=${page + 1}&per_page=${pageSize}&search=${encodeURIComponent(search)}`,
       );
       const data = await response.json();
       setRows(data.usuarios);
@@ -111,7 +116,7 @@ export default function UsuariosAdmin() {
     <Box sx={{ minWidth: 600 }}>
       {/* Filtros y acciones */}
       <Toolbar disableGutters sx={{ mb: 2 }}>
-        <Grid container spacing={2} sx={{ alignItems: 'center' }}>
+        <Grid container spacing={2} sx={{ alignItems: "center" }}>
           <Grid item>
             <SearchIcon color="action" />
           </Grid>
@@ -123,7 +128,7 @@ export default function UsuariosAdmin() {
               onChange={(e) => setSearch(e.target.value)}
               InputProps={{
                 disableUnderline: true,
-                sx: { fontSize: 'default' },
+                sx: { fontSize: "default" },
               }}
               variant="standard"
             />

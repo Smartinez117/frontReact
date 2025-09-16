@@ -1,99 +1,105 @@
-import React from "react"
-import AppBar from "@mui/material/AppBar"
-import Box from "@mui/material/Box"
-import Toolbar from "@mui/material/Toolbar"
-import IconButton from "@mui/material/IconButton"
-import Typography from "@mui/material/Typography"
-import Menu from "@mui/material/Menu"
-import MenuIcon from "@mui/icons-material/Menu"
-import Container from "@mui/material/Container"
-import Avatar from "@mui/material/Avatar"
-import Button from "@mui/material/Button"
-import Tooltip from "@mui/material/Tooltip"
-import MenuItem from "@mui/material/MenuItem"
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth"
-import { socketconnection, socketnotificationlisten } from "../utils/socket"
-import { Toaster } from "react-hot-toast"
+import React from "react";
+import AppBar from "@mui/material/AppBar";
+import Box from "@mui/material/Box";
+import Toolbar from "@mui/material/Toolbar";
+import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
+import Menu from "@mui/material/Menu";
+import MenuIcon from "@mui/icons-material/Menu";
+import Container from "@mui/material/Container";
+import Avatar from "@mui/material/Avatar";
+import Button from "@mui/material/Button";
+import Tooltip from "@mui/material/Tooltip";
+import MenuItem from "@mui/material/MenuItem";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { socketconnection, socketnotificationlisten } from "../utils/socket";
+import { Toaster } from "react-hot-toast";
 
-const pages = ["Inicio", "Publicar", "Buscar", "Mapa"]
+const pages = ["Inicio", "Publicar", "Buscar", "Mapa"];
 const settings = [
   "Notificaciones",
   "Mi perfil",
   "Configuración",
   "Cerrar sesión",
-]
+];
 
 const Navbar = () => {
-  const [anchorElNav, setAnchorElNav] = React.useState(null)
-  const [anchorElUser, setAnchorElUser] = React.useState(null)
-  const [userName, setUserName] = useState("")
-  const [userPhoto, setUserPhoto] = useState("")
-  const navigate = useNavigate()
+  const [anchorElNav, setAnchorElNav] = React.useState(null);
+  const [anchorElUser, setAnchorElUser] = React.useState(null);
+  const [userName, setUserName] = useState("");
+  const [userPhoto, setUserPhoto] = useState("");
+  const navigate = useNavigate();
 
-  const handleOpenNavMenu = event => setAnchorElNav(event.currentTarget)
-  const handleOpenUserMenu = event => setAnchorElUser(event.currentTarget)
-  const handleCloseNavMenu = () => setAnchorElNav(null)
-  const handleCloseUserMenu = () => setAnchorElUser(null)
+  const handleOpenNavMenu = (event) => setAnchorElNav(event.currentTarget);
+  const handleOpenUserMenu = (event) => setAnchorElUser(event.currentTarget);
+  const handleCloseNavMenu = () => setAnchorElNav(null);
+  const handleCloseUserMenu = () => setAnchorElUser(null);
 
   useEffect(() => {
-    const auth = getAuth()
-    const unsubscribe = onAuthStateChanged(auth, user => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        const name = localStorage.getItem("userName")
-        const photo = localStorage.getItem("userPhoto")
-        socketconnection()
-        socketnotificationlisten(user.uid)
-        if (name) setUserName(name)
-        if (photo) setUserPhoto(photo)
+        const name = localStorage.getItem("userName");
+        const photo = localStorage.getItem("userPhoto");
+        socketconnection();
+        socketnotificationlisten(user.uid);
+        if (name) setUserName(name);
+        if (photo) setUserPhoto(photo);
       } else {
-        setUserName("")
-        setUserPhoto("")
-        localStorage.removeItem("userName")
-        localStorage.removeItem("userPhoto")
-        navigate("/login")
+        setUserName("");
+        setUserPhoto("");
+        localStorage.removeItem("userName");
+        localStorage.removeItem("userPhoto");
+        navigate("/login");
       }
-    })
-    return () => unsubscribe()
-  }, [navigate])
+    });
+    return () => unsubscribe();
+  }, [navigate]);
 
-  const handleUserMenuClick = setting => {
-    const auth = getAuth()
+  const handleUserMenuClick = (setting) => {
+    const auth = getAuth();
     switch (setting) {
       case "Cerrar sesión":
         signOut(auth)
           .then(() => {
-            localStorage.removeItem("userName")
-            localStorage.removeItem("userPhoto")
-            console.log("🔒 Sesión cerrada")
-            navigate("/login")
+            localStorage.removeItem("userName");
+            localStorage.removeItem("userPhoto");
+            console.log("🔒 Sesión cerrada");
+            navigate("/login");
           })
-          .catch(error => {
-            console.error("Error al cerrar sesión:", error)
-          })
-        break
+          .catch((error) => {
+            console.error("Error al cerrar sesión:", error);
+          });
+        break;
       case "Mi perfil": {
-        const userSlug = localStorage.getItem("userSlug")
-        navigate(`/perfil/${userSlug}`)
-        break
+        const userSlug = localStorage.getItem("userSlug");
+        navigate(`/perfil/${userSlug}`);
+        break;
       }
       case "Notificaciones":
-        navigate("/notificaciones")
-        break
+        navigate("/notificaciones");
+        break;
       case "Configuración":
-        navigate("/pconfig")
-        break
+        navigate("/pconfig");
+        break;
       default:
-        console.log(`Opción no reconocida: ${setting}`)
+        console.log(`Opción no reconocida: ${setting}`);
     }
-    handleCloseUserMenu()
-  }
+    handleCloseUserMenu();
+  };
 
   return (
     <>
       <Toaster position="top-right" reverseOrder={false} />
-      <AppBar position="static" sx={{ backgroundColor: "#edece1ff", display: { xs: "block", md: "none" } }}>
+      <AppBar
+        position="static"
+        sx={{
+          backgroundColor: "#edece1ff",
+          display: { xs: "block", md: "none" },
+        }}
+      >
         <Container maxWidth="xl">
           <Toolbar disableGutters>
             <Box
@@ -141,16 +147,16 @@ const Navbar = () => {
                 transformOrigin={{ vertical: "top", horizontal: "left" }}
                 sx={{ display: { xs: "block", md: "none" } }}
               >
-                {pages.map(page => (
+                {pages.map((page) => (
                   <MenuItem
                     key={page}
                     onClick={() => {
-                      handleCloseNavMenu()
+                      handleCloseNavMenu();
                       const ruta =
                         page.toLowerCase() === "inicio"
                           ? "/home"
-                          : `/${page.toLowerCase()}`
-                      navigate(ruta)
+                          : `/${page.toLowerCase()}`;
+                      navigate(ruta);
                     }}
                   >
                     <Typography textAlign="center">{page}</Typography>
@@ -225,7 +231,10 @@ const Navbar = () => {
                   {userPhoto ? (
                     <Avatar alt="User" src={userPhoto} />
                   ) : (
-                    <Avatar alt="User" src="assets/images/default-profile.png" />
+                    <Avatar
+                      alt="User"
+                      src="assets/images/default-profile.png"
+                    />
                   )}
                 </IconButton>
               </Tooltip>
@@ -237,7 +246,7 @@ const Navbar = () => {
                 anchorOrigin={{ vertical: "top", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "right" }}
               >
-                {settings.map(setting => (
+                {settings.map((setting) => (
                   <MenuItem
                     key={setting}
                     onClick={() => handleUserMenuClick(setting)}
@@ -251,7 +260,7 @@ const Navbar = () => {
         </Container>
       </AppBar>
     </>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;

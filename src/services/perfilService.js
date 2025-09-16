@@ -1,8 +1,7 @@
-import Publicacion from '../models/Publicacion';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import Publicacion from "../models/Publicacion";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
-
 
 // Función para obtener publicaciones filtradas desde el backend
 export async function fetchPublicacionesFiltradas(params) {
@@ -20,14 +19,14 @@ export async function fetchPublicacionesFiltradas(params) {
   const data = await response.json();
 
   // Convertimos cada objeto recibido en una instancia de Publicacion
-  return data.map(pub => new Publicacion(pub));
+  return data.map((pub) => new Publicacion(pub));
 }
 
 export async function eliminarPublicacion(id) {
   const response = await fetch(`${BASE_URL}/publicaciones/${id}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       // Agrega Authorization si usas autenticación
       // 'Authorization': 'Bearer TU_TOKEN_AQUI'
     },
@@ -35,12 +34,11 @@ export async function eliminarPublicacion(id) {
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.error || 'Error al eliminar la publicación');
+    throw new Error(errorData.error || "Error al eliminar la publicación");
   }
 
   return await response.json(); // mensaje confirmando eliminación
 }
-
 
 export function fetchMisPublicaciones() {
   const auth = getAuth();
@@ -57,26 +55,30 @@ export function fetchMisPublicaciones() {
       try {
         const token = await user.getIdToken();
 
-        const response = await fetch(`${BASE_URL}/publicaciones/mis-publicaciones`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
+        const response = await fetch(
+          `${BASE_URL}/publicaciones/mis-publicaciones`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
 
         if (!response.ok) {
-          throw new Error(`Error al obtener tus publicaciones: ${response.statusText}`);
+          throw new Error(
+            `Error al obtener tus publicaciones: ${response.statusText}`,
+          );
         }
 
         const data = await response.json();
-        resolve(data.map(pub => new Publicacion(pub)));
+        resolve(data.map((pub) => new Publicacion(pub)));
       } catch (err) {
         reject(err);
       }
     });
   });
 }
-
 
 export function fetchUsuarioActual() {
   const auth = getAuth();
@@ -93,10 +95,10 @@ export function fetchUsuarioActual() {
       try {
         const token = await user.getIdToken();
 
-        const res = await fetch('http://localhost:5000/usuarios/me', {
+        const res = await fetch("http://localhost:5000/usuarios/me", {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
 
         if (!res.ok) throw new Error("Error al obtener el usuario");
@@ -115,26 +117,26 @@ export function fetchUsuarioActual() {
 // Función para actualizar usuario
 // perfilService.js
 
-import { Usuario } from '../models/UserModel';
+import { Usuario } from "../models/UserModel";
 // Función para obtener usuario por id
 export async function obtenerUsuarioPorId(idUsuario) {
   try {
     const response = await fetch(`${BASE_URL}/usuario/${idUsuario}`, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Error al obtener usuario');
+      throw new Error(errorData.error || "Error al obtener usuario");
     }
 
     const data = await response.json();
     return new Usuario(data);
   } catch (error) {
-    console.error('Error en obtenerUsuarioPorId:', error.message);
+    console.error("Error en obtenerUsuarioPorId:", error.message);
     throw error;
   }
 }
@@ -143,22 +145,22 @@ export async function obtenerUsuarioPorId(idUsuario) {
 export async function actualizarUsuario(idUsuario, data) {
   try {
     const response = await fetch(`${BASE_URL}/usuario/${idUsuario}`, {
-      method: 'PATCH',
+      method: "PATCH",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Error al actualizar usuario');
+      throw new Error(errorData.error || "Error al actualizar usuario");
     }
 
     const result = await response.json();
     return result.mensaje;
   } catch (error) {
-    console.error('Error en actualizarUsuario:', error.message);
+    console.error("Error en actualizarUsuario:", error.message);
     throw error;
   }
 }
@@ -172,7 +174,7 @@ export function configUsuarioActual() {
       unsubscribe();
 
       if (!user) {
-        reject(new Error('Usuario no autenticado'));
+        reject(new Error("Usuario no autenticado"));
         return;
       }
 
@@ -180,14 +182,16 @@ export function configUsuarioActual() {
         const token = await user.getIdToken();
 
         const response = await fetch(`${BASE_URL}/api/userconfig`, {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
         if (!response.ok) {
-          throw new Error(`Error al obtener datos del usuario: ${response.statusText}`);
+          throw new Error(
+            `Error al obtener datos del usuario: ${response.statusText}`,
+          );
         }
 
         const data = await response.json();
@@ -203,23 +207,28 @@ export function configUsuarioActual() {
 
 export async function fetchPublicacionesPorUsuario(idUsuario) {
   try {
-    const response = await fetch(`${BASE_URL}/usuarios/${idUsuario}/publicaciones`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${BASE_URL}/usuarios/${idUsuario}/publicaciones`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Error al obtener publicaciones del usuario');
+      throw new Error(
+        errorData.error || "Error al obtener publicaciones del usuario",
+      );
     }
 
     const data = await response.json();
     // Igual que en fetchMisPublicaciones, devolvemos instancias de Publicacion
-    return data.map(pub => new Publicacion(pub));
+    return data.map((pub) => new Publicacion(pub));
   } catch (error) {
-    console.error('Error en fetchPublicacionesPorUsuario:', error.message);
+    console.error("Error en fetchPublicacionesPorUsuario:", error.message);
     throw error;
   }
 }

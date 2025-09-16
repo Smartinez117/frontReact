@@ -1,21 +1,26 @@
-import * as React from 'react';
-import { Link } from 'react-router-dom'
-import { Box } from '@mui/material';
-import { paperClasses } from '@mui/material/Paper';
-import { listClasses } from '@mui/material/List';
-import Divider, { dividerClasses } from '@mui/material/Divider';
-import Stack from '@mui/material/Stack';
-import Avatar from '@mui/material/Avatar';
-import Typography from '@mui/material/Typography';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import IconButton from '@mui/material/IconButton';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemIcon, { listItemIconClasses } from '@mui/material/ListItemIcon';
-import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import AddIcon from '@mui/icons-material/Add';
-import MenuButton from './MenuButton';
-import { handleLogout, handleNotifications, handleProfile, handleSettings } from '../../utils/GoogleAuth';
+import * as React from "react";
+import { Link } from "react-router-dom";
+import { Box } from "@mui/material";
+import { paperClasses } from "@mui/material/Paper";
+import { listClasses } from "@mui/material/List";
+import Divider, { dividerClasses } from "@mui/material/Divider";
+import Stack from "@mui/material/Stack";
+import Avatar from "@mui/material/Avatar";
+import Typography from "@mui/material/Typography";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import IconButton from "@mui/material/IconButton";
+import ListItemText from "@mui/material/ListItemText";
+import ListItemIcon, { listItemIconClasses } from "@mui/material/ListItemIcon";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import AddIcon from "@mui/icons-material/Add";
+import MenuButton from "./MenuButton";
+import {
+  handleLogout,
+  handleNotifications,
+  handleProfile,
+  handleSettings,
+} from "../../utils/GoogleAuth";
 
 export function ProfileMenu() {
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -35,24 +40,27 @@ export function ProfileMenu() {
       sx={{
         p: 2,
         gap: 1,
-        alignItems: 'center',
+        alignItems: "center",
       }}
     >
       <IconButton component={Link} to="/publicar">
         <AddIcon />
       </IconButton>
-      <Box sx={{ mr: 'auto' }}>
-        <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: '16px' }}>
+      <Box sx={{ mr: "auto" }}>
+        <Typography
+          variant="body2"
+          sx={{ fontWeight: 500, lineHeight: "16px" }}
+        >
           {localStorage.getItem("userName")}
         </Typography>
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        <Typography variant="caption" sx={{ color: "text.secondary" }}>
           {localStorage.getItem("userEmail")}
         </Typography>
       </Box>
       <MenuButton
         aria-label="Open menu"
         onClick={handleClick}
-        sx={{ borderColor: 'transparent' }}
+        sx={{ borderColor: "transparent" }}
       >
         <Avatar
           sizes="small"
@@ -67,17 +75,17 @@ export function ProfileMenu() {
         open={open}
         onClose={handleClose}
         onClick={handleClose}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
         sx={{
           [`& .${listClasses.root}`]: {
-            padding: '4px',
+            padding: "4px",
           },
           [`& .${paperClasses.root}`]: {
             padding: 0,
           },
           [`& .${dividerClasses.root}`]: {
-            margin: '4px -4px',
+            margin: "4px -4px",
           },
         }}
       >
@@ -91,7 +99,7 @@ export function ProfileMenu() {
           onClick={handleLogout}
           sx={{
             [`& .${listItemIconClasses.root}`]: {
-              ml: 'auto',
+              ml: "auto",
               minWidth: 0,
             },
           }}
@@ -103,5 +111,5 @@ export function ProfileMenu() {
         </MenuItem>
       </Menu>
     </Stack>
-  )
+  );
 }

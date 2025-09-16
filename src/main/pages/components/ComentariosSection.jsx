@@ -7,7 +7,7 @@ const ComentariosSection = ({
   usuariosComentarios,
   onEnviarComentario,
   publicandoComentario,
-  errorComentario
+  errorComentario,
 }) => {
   const [nuevoComentario, setNuevoComentario] = useState("");
 

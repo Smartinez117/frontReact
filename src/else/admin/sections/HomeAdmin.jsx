@@ -1,9 +1,9 @@
-import * as React from 'react';
+import * as React from "react";
 import { BarChart } from "@mui/x-charts/BarChart";
 
 const otherSetting = {
   height: 300,
-  yAxis: [{ label: 'rainfall (mm)', width: 60 }],
+  yAxis: [{ label: "rainfall (mm)", width: 60 }],
   grid: { horizontal: true },
 };
 
@@ -13,84 +13,84 @@ const dataset = [
     paris: 57,
     newYork: 86,
     seoul: 21,
-    month: 'January',
+    month: "January",
   },
   {
     london: 50,
     paris: 52,
     newYork: 78,
     seoul: 28,
-    month: 'February',
+    month: "February",
   },
   {
     london: 47,
     paris: 53,
     newYork: 106,
     seoul: 41,
-    month: 'March',
+    month: "March",
   },
   {
     london: 54,
     paris: 56,
     newYork: 92,
     seoul: 73,
-    month: 'April',
+    month: "April",
   },
   {
     london: 57,
     paris: 69,
     newYork: 92,
     seoul: 99,
-    month: 'May',
+    month: "May",
   },
   {
     london: 60,
     paris: 63,
     newYork: 103,
     seoul: 144,
-    month: 'June',
+    month: "June",
   },
   {
     london: 59,
     paris: 60,
     newYork: 105,
     seoul: 319,
-    month: 'July',
+    month: "July",
   },
   {
     london: 65,
     paris: 60,
     newYork: 106,
     seoul: 249,
-    month: 'August',
+    month: "August",
   },
   {
     london: 51,
     paris: 51,
     newYork: 95,
     seoul: 131,
-    month: 'September',
+    month: "September",
   },
   {
     london: 60,
     paris: 65,
     newYork: 97,
     seoul: 55,
-    month: 'October',
+    month: "October",
   },
   {
     london: 67,
     paris: 64,
     newYork: 76,
     seoul: 48,
-    month: 'November',
+    month: "November",
   },
   {
     london: 61,
     paris: 70,
     newYork: 103,
     seoul: 25,
-    month: 'December',
+    month: "December",
   },
 ];
 
@@ -102,16 +102,16 @@ export default function HomeAdmin() {
       dataset={dataset}
       xAxis={[
         {
-          scaleType: 'band',
-          dataKey: 'month',
+          scaleType: "band",
+          dataKey: "month",
           valueFormatter: (month, context) =>
-            context.location === 'tick'
+            context.location === "tick"
               ? `${month.slice(0, 3)} \n2023`
               : `${month} 2023`,
           height: 40,
         },
       ]}
-      series={[{ dataKey: 'seoul', label: 'Seoul rainfall', valueFormatter }]}
+      series={[{ dataKey: "seoul", label: "Seoul rainfall", valueFormatter }]}
       {...otherSetting}
     />
   );

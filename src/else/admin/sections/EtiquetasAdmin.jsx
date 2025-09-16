@@ -1,25 +1,25 @@
-import * as React from 'react';
-import PropTypes from 'prop-types';
-import Box from '@mui/joy/Box';
-import Table from '@mui/joy/Table';
-import Typography from '@mui/joy/Typography';
-import Sheet from '@mui/joy/Sheet';
-import Checkbox from '@mui/joy/Checkbox';
-import FormControl from '@mui/joy/FormControl';
-import FormLabel from '@mui/joy/FormLabel';
-import IconButton from '@mui/joy/IconButton';
-import Link from '@mui/joy/Link';
-import Tooltip from '@mui/joy/Tooltip';
-import Select from '@mui/joy/Select';
-import Option from '@mui/joy/Option';
-import DeleteIcon from '@mui/icons-material/Delete';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import { visuallyHidden } from '@mui/utils';
-import { CssVarsProvider } from '@mui/joy/styles';
-import JoyCssBaseline from '@mui/joy/CssBaseline';
+import * as React from "react";
+import PropTypes from "prop-types";
+import Box from "@mui/joy/Box";
+import Table from "@mui/joy/Table";
+import Typography from "@mui/joy/Typography";
+import Sheet from "@mui/joy/Sheet";
+import Checkbox from "@mui/joy/Checkbox";
+import FormControl from "@mui/joy/FormControl";
+import FormLabel from "@mui/joy/FormLabel";
+import IconButton from "@mui/joy/IconButton";
+import Link from "@mui/joy/Link";
+import Tooltip from "@mui/joy/Tooltip";
+import Select from "@mui/joy/Select";
+import Option from "@mui/joy/Option";
+import DeleteIcon from "@mui/icons-material/Delete";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import { visuallyHidden } from "@mui/utils";
+import { CssVarsProvider } from "@mui/joy/styles";
+import JoyCssBaseline from "@mui/joy/CssBaseline";
 
 function createData(name, calories, fat, carbs, protein) {
   return {
@@ -32,19 +32,19 @@ function createData(name, calories, fat, carbs, protein) {
 }
 
 const rows = [
-  createData('Perro', 305, 3.7, 67, 4.3),
-  createData('Gato', 452, 25.0, 51, 4.9),
-  createData('Conejo', 262, 16.0, 24, 6.0),
-  createData('Pitbull', 159, 6.0, 24, 4.0),
-  createData('Siames', 356, 16.0, 49, 3.9),
-  createData('Bulldog', 408, 3.2, 87, 6.5),
-  createData('Negro', 237, 9.0, 37, 4.3),
-  createData('Caballo', 375, 0.0, 94, 0.0),
-  createData('Roedor', 518, 26.0, 65, 7.0),
-  createData('Doberman', 392, 0.2, 98, 0.0),
-  createData('Tortuga', 318, 0, 81, 2.0),
-  createData('Loro', 360, 19.0, 9, 37.0),
-  createData('Verde', 437, 18.0, 63, 4.0),
+  createData("Perro", 305, 3.7, 67, 4.3),
+  createData("Gato", 452, 25.0, 51, 4.9),
+  createData("Conejo", 262, 16.0, 24, 6.0),
+  createData("Pitbull", 159, 6.0, 24, 4.0),
+  createData("Siames", 356, 16.0, 49, 3.9),
+  createData("Bulldog", 408, 3.2, 87, 6.5),
+  createData("Negro", 237, 9.0, 37, 4.3),
+  createData("Caballo", 375, 0.0, 94, 0.0),
+  createData("Roedor", 518, 26.0, 65, 7.0),
+  createData("Doberman", 392, 0.2, 98, 0.0),
+  createData("Tortuga", 318, 0, 81, 2.0),
+  createData("Loro", 360, 19.0, 9, 37.0),
+  createData("Verde", 437, 18.0, 63, 4.0),
 ];
 
 function labelDisplayedRows({ from, to, count }) {
@@ -62,47 +62,53 @@ function descendingComparator(a, b, orderBy) {
 }
 
 function getComparator(order, orderBy) {
-  return order === 'desc'
+  return order === "desc"
     ? (a, b) => descendingComparator(a, b, orderBy)
     : (a, b) => -descendingComparator(a, b, orderBy);
 }
 
 const headCells = [
   {
-    id: 'name',
+    id: "name",
     numeric: false,
     disablePadding: true,
-    label: 'Nombre',
+    label: "Nombre",
   },
   {
-    id: 'calories',
+    id: "calories",
     numeric: true,
     disablePadding: false,
-    label: 'Id',
+    label: "Id",
   },
   {
-    id: 'fat',
+    id: "fat",
     numeric: true,
     disablePadding: false,
-    label: 'Editar',
+    label: "Editar",
   },
   {
-    id: 'carbs',
+    id: "carbs",
     numeric: true,
     disablePadding: false,
-    label: 'Eliminar',
+    label: "Eliminar",
   },
   {
-    id: 'protein',
+    id: "protein",
     numeric: true,
     disablePadding: false,
-    label: 'Protein (g)',
+    label: "Protein (g)",
   },
 ];
 
 function EnhancedTableHead(props) {
-  const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } =
-    props;
+  const {
+    onSelectAllClick,
+    order,
+    orderBy,
+    numSelected,
+    rowCount,
+    onRequestSort,
+  } = props;
   const createSortHandler = (property) => (event) => {
     onRequestSort(event, property);
   };
@@ -117,10 +123,10 @@ function EnhancedTableHead(props) {
             onChange={onSelectAllClick}
             slotProps={{
               input: {
-                'aria-label': 'select all desserts',
+                "aria-label": "select all desserts",
               },
             }}
-            sx={{ verticalAlign: 'sub' }}
+            sx={{ verticalAlign: "sub" }}
           />
         </th>
         {headCells.map((headCell) => {
@@ -129,13 +135,15 @@ function EnhancedTableHead(props) {
             <th
               key={headCell.id}
               aria-sort={
-                active ? { asc: 'ascending', desc: 'descending' }[order] : undefined
+                active
+                  ? { asc: "ascending", desc: "descending" }[order]
+                  : undefined
               }
             >
               <Link
                 underline="none"
                 color="neutral"
-                textColor={active ? 'primary.plainColor' : undefined}
+                textColor={active ? "primary.plainColor" : undefined}
                 component="button"
                 onClick={createSortHandler(headCell.id)}
                 startDecorator={
@@ -153,19 +161,23 @@ function EnhancedTableHead(props) {
                   ) : null
                 }
                 sx={{
-                  fontWeight: 'lg',
-                  '& svg': {
-                    transition: '0.2s',
+                  fontWeight: "lg",
+                  "& svg": {
+                    transition: "0.2s",
                     transform:
-                      active && order === 'desc' ? 'rotate(0deg)' : 'rotate(180deg)',
+                      active && order === "desc"
+                        ? "rotate(0deg)"
+                        : "rotate(180deg)",
                   },
-                  '&:hover': { '& svg': { opacity: 1 } },
+                  "&:hover": { "& svg": { opacity: 1 } },
                 }}
               >
                 {headCell.label}
                 {active ? (
                   <Box component="span" sx={visuallyHidden}>
-                    {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                    {order === "desc"
+                      ? "sorted descending"
+                      : "sorted ascending"}
                   </Box>
                 ) : null}
               </Link>
@@ -181,7 +193,7 @@ EnhancedTableHead.propTypes = {
   numSelected: PropTypes.number.isRequired,
   onRequestSort: PropTypes.func.isRequired,
   onSelectAllClick: PropTypes.func.isRequired,
-  order: PropTypes.oneOf(['asc', 'desc']).isRequired,
+  order: PropTypes.oneOf(["asc", "desc"]).isRequired,
   orderBy: PropTypes.string.isRequired,
   rowCount: PropTypes.number.isRequired,
 };
@@ -192,27 +204,27 @@ function EnhancedTableToolbar(props) {
     <Box
       sx={[
         {
-          display: 'flex',
-          alignItems: 'center',
+          display: "flex",
+          alignItems: "center",
           py: 1,
           pl: { sm: 2 },
           pr: { xs: 1, sm: 1 },
-          borderTopLeftRadius: 'var(--unstable_actionRadius)',
-          borderTopRightRadius: 'var(--unstable_actionRadius)',
+          borderTopLeftRadius: "var(--unstable_actionRadius)",
+          borderTopRightRadius: "var(--unstable_actionRadius)",
         },
         numSelected > 0 && {
-          bgcolor: 'background.level1',
+          bgcolor: "background.level1",
         },
       ]}
     >
       {numSelected > 0 ? (
-        <Typography sx={{ flex: '1 1 100%' }} component="div">
+        <Typography sx={{ flex: "1 1 100%" }} component="div">
           {numSelected} selected
         </Typography>
       ) : (
         <Typography
           level="body-lg"
-          sx={{ flex: '1 1 100%' }}
+          sx={{ flex: "1 1 100%" }}
           id="tableTitle"
           component="div"
         >
@@ -241,14 +253,14 @@ EnhancedTableToolbar.propTypes = {
 };
 
 export default function EtiquetasAdmin() {
-  const [order, setOrder] = React.useState('asc');
-  const [orderBy, setOrderBy] = React.useState('calories');
+  const [order, setOrder] = React.useState("asc");
+  const [orderBy, setOrderBy] = React.useState("calories");
   const [selected, setSelected] = React.useState([]);
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
   const handleRequestSort = (event, property) => {
-    const isAsc = orderBy === property && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
   };
   const handleSelectAllClick = (event) => {
@@ -296,153 +308,156 @@ export default function EtiquetasAdmin() {
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
   return (
     <CssVarsProvider>
-        <JoyCssBaseline />
-    <Sheet
-      variant="outlined"
-      sx={{ width: '100%', boxShadow: 'sm', borderRadius: 'sm' }}
-    >
-      <EnhancedTableToolbar numSelected={selected.length} />
-      <Table
-        aria-labelledby="tableTitle"
-        hoverRow
-        sx={{
-          '--TableCell-headBackground': 'transparent',
-          '--TableCell-selectedBackground': (theme) =>
-            theme.vars.palette.success.softBg,
-          '& thead th:nth-child(1)': {
-            width: '40px',
-          },
-          '& thead th:nth-child(2)': {
-            width: '30%',
-          },
-          '& tr > *:nth-child(n+3)': { textAlign: 'right' },
-        }}
+      <JoyCssBaseline />
+      <Sheet
+        variant="outlined"
+        sx={{ width: "100%", boxShadow: "sm", borderRadius: "sm" }}
       >
-        <EnhancedTableHead
-          numSelected={selected.length}
-          order={order}
-          orderBy={orderBy}
-          onSelectAllClick={handleSelectAllClick}
-          onRequestSort={handleRequestSort}
-          rowCount={rows.length}
-        />
-        <tbody>
-          {[...rows]
-            .sort(getComparator(order, orderBy))
-            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-            .map((row, index) => {
-              const isItemSelected = selected.includes(row.name);
-              const labelId = `enhanced-table-checkbox-${index}`;
+        <EnhancedTableToolbar numSelected={selected.length} />
+        <Table
+          aria-labelledby="tableTitle"
+          hoverRow
+          sx={{
+            "--TableCell-headBackground": "transparent",
+            "--TableCell-selectedBackground": (theme) =>
+              theme.vars.palette.success.softBg,
+            "& thead th:nth-child(1)": {
+              width: "40px",
+            },
+            "& thead th:nth-child(2)": {
+              width: "30%",
+            },
+            "& tr > *:nth-child(n+3)": { textAlign: "right" },
+          }}
+        >
+          <EnhancedTableHead
+            numSelected={selected.length}
+            order={order}
+            orderBy={orderBy}
+            onSelectAllClick={handleSelectAllClick}
+            onRequestSort={handleRequestSort}
+            rowCount={rows.length}
+          />
+          <tbody>
+            {[...rows]
+              .sort(getComparator(order, orderBy))
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((row, index) => {
+                const isItemSelected = selected.includes(row.name);
+                const labelId = `enhanced-table-checkbox-${index}`;
 
-              return (
-                <tr
-                  onClick={(event) => handleClick(event, row.name)}
-                  role="checkbox"
-                  aria-checked={isItemSelected}
-                  tabIndex={-1}
-                  key={row.name}
-                  // selected={isItemSelected}
-                  style={
-                    isItemSelected
-                      ? {
-                          '--TableCell-dataBackground':
-                            'var(--TableCell-selectedBackground)',
-                          '--TableCell-headBackground':
-                            'var(--TableCell-selectedBackground)',
-                        }
-                      : {}
-                  }
-                >
-                  <th scope="row">
-                    <Checkbox
-                      checked={isItemSelected}
-                      slotProps={{
-                        input: {
-                          'aria-labelledby': labelId,
-                        },
-                      }}
-                      sx={{ verticalAlign: 'top' }}
-                    />
-                  </th>
-                  <th id={labelId} scope="row">
-                    {row.name}
-                  </th>
-                  <td>{row.calories}</td>
-                  <td>{row.fat}</td>
-                  <td>{row.carbs}</td>
-                  <td>{row.protein}</td>
-                </tr>
-              );
-            })}
-          {emptyRows > 0 && (
-            <tr
-              style={{
-                height: `calc(${emptyRows} * 40px)`,
-                '--TableRow-hoverBackground': 'transparent',
-              }}
-            >
-              <td colSpan={6} aria-hidden />
-            </tr>
-          )}
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colSpan={6}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 2,
-                  justifyContent: 'flex-end',
+                return (
+                  <tr
+                    onClick={(event) => handleClick(event, row.name)}
+                    role="checkbox"
+                    aria-checked={isItemSelected}
+                    tabIndex={-1}
+                    key={row.name}
+                    // selected={isItemSelected}
+                    style={
+                      isItemSelected
+                        ? {
+                            "--TableCell-dataBackground":
+                              "var(--TableCell-selectedBackground)",
+                            "--TableCell-headBackground":
+                              "var(--TableCell-selectedBackground)",
+                          }
+                        : {}
+                    }
+                  >
+                    <th scope="row">
+                      <Checkbox
+                        checked={isItemSelected}
+                        slotProps={{
+                          input: {
+                            "aria-labelledby": labelId,
+                          },
+                        }}
+                        sx={{ verticalAlign: "top" }}
+                      />
+                    </th>
+                    <th id={labelId} scope="row">
+                      {row.name}
+                    </th>
+                    <td>{row.calories}</td>
+                    <td>{row.fat}</td>
+                    <td>{row.carbs}</td>
+                    <td>{row.protein}</td>
+                  </tr>
+                );
+              })}
+            {emptyRows > 0 && (
+              <tr
+                style={{
+                  height: `calc(${emptyRows} * 40px)`,
+                  "--TableRow-hoverBackground": "transparent",
                 }}
               >
-                <FormControl orientation="horizontal" size="sm">
-                  <FormLabel>Rows per page:</FormLabel>
-                  <Select onChange={handleChangeRowsPerPage} value={rowsPerPage}>
-                    <Option value={5}>5</Option>
-                    <Option value={10}>10</Option>
-                    <Option value={25}>25</Option>
-                  </Select>
-                </FormControl>
-                <Typography sx={{ textAlign: 'center', minWidth: 80 }}>
-                  {labelDisplayedRows({
-                    from: rows.length === 0 ? 0 : page * rowsPerPage + 1,
-                    to: getLabelDisplayedRowsTo(),
-                    count: rows.length === -1 ? -1 : rows.length,
-                  })}
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <IconButton
-                    size="sm"
-                    color="neutral"
-                    variant="outlined"
-                    disabled={page === 0}
-                    onClick={() => handleChangePage(page - 1)}
-                    sx={{ bgcolor: 'background.surface' }}
-                  >
-                    <KeyboardArrowLeftIcon />
-                  </IconButton>
-                  <IconButton
-                    size="sm"
-                    color="neutral"
-                    variant="outlined"
-                    disabled={
-                      rows.length !== -1
-                        ? page >= Math.ceil(rows.length / rowsPerPage) - 1
-                        : false
-                    }
-                    onClick={() => handleChangePage(page + 1)}
-                    sx={{ bgcolor: 'background.surface' }}
-                  >
-                    <KeyboardArrowRightIcon />
-                  </IconButton>
+                <td colSpan={6} aria-hidden />
+              </tr>
+            )}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={6}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <FormControl orientation="horizontal" size="sm">
+                    <FormLabel>Rows per page:</FormLabel>
+                    <Select
+                      onChange={handleChangeRowsPerPage}
+                      value={rowsPerPage}
+                    >
+                      <Option value={5}>5</Option>
+                      <Option value={10}>10</Option>
+                      <Option value={25}>25</Option>
+                    </Select>
+                  </FormControl>
+                  <Typography sx={{ textAlign: "center", minWidth: 80 }}>
+                    {labelDisplayedRows({
+                      from: rows.length === 0 ? 0 : page * rowsPerPage + 1,
+                      to: getLabelDisplayedRowsTo(),
+                      count: rows.length === -1 ? -1 : rows.length,
+                    })}
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <IconButton
+                      size="sm"
+                      color="neutral"
+                      variant="outlined"
+                      disabled={page === 0}
+                      onClick={() => handleChangePage(page - 1)}
+                      sx={{ bgcolor: "background.surface" }}
+                    >
+                      <KeyboardArrowLeftIcon />
+                    </IconButton>
+                    <IconButton
+                      size="sm"
+                      color="neutral"
+                      variant="outlined"
+                      disabled={
+                        rows.length !== -1
+                          ? page >= Math.ceil(rows.length / rowsPerPage) - 1
+                          : false
+                      }
+                      onClick={() => handleChangePage(page + 1)}
+                      sx={{ bgcolor: "background.surface" }}
+                    >
+                      <KeyboardArrowRightIcon />
+                    </IconButton>
+                  </Box>
                 </Box>
-              </Box>
-            </td>
-          </tr>
-        </tfoot>
-      </Table>
-    </Sheet>
+              </td>
+            </tr>
+          </tfoot>
+        </Table>
+      </Sheet>
     </CssVarsProvider>
   );
 }

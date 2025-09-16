@@ -7,7 +7,7 @@
   border-radius: 0.625rem;
   max-width: 50rem;
   margin: 0 auto 1.875rem auto;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .nombre-foto {
@@ -16,7 +16,7 @@
   object-fit: cover;
   border-radius: 50%;
   border: 2px solid #ccc;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .nombre-info {

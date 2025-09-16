@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
-import Box from '@mui/material/Box';
+import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import Grid from "@mui/material/Grid";
 import Button from "@mui/material/Button";
@@ -31,7 +31,7 @@ const columns = (handleEliminar) => [
     renderCell: (params) => {
       const id = params.row.id;
       return (
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: "flex", gap: 1 }}>
           <Button
             variant="outlined"
             size="small"
@@ -108,7 +108,7 @@ export default function ReportesAdmin() {
   }, []);
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: "100%" }}>
       {/* Filtros y acciones */}
       <Toolbar disableGutters sx={{ mb: 2 }}>
         <Grid container spacing={2} alignItems="center">
@@ -136,7 +136,7 @@ export default function ReportesAdmin() {
       </Toolbar>
 
       {/* Tabla responsive */}
-      <Box sx={{ width: '100%', overflowX: 'auto' }}>
+      <Box sx={{ width: "100%", overflowX: "auto" }}>
         <DataGrid
           rows={rows}
           columns={columns(handleEliminar)}
@@ -147,15 +147,15 @@ export default function ReportesAdmin() {
           loading={loading}
           sx={{
             border: 0,
-            '& .MuiDataGrid-cell': {
-              whiteSpace: 'normal',
-              lineHeight: '1.4 !important',
-              maxHeight: 'none !important',
-              display: 'flex',
-              alignItems: 'center',
+            "& .MuiDataGrid-cell": {
+              whiteSpace: "normal",
+              lineHeight: "1.4 !important",
+              maxHeight: "none !important",
+              display: "flex",
+              alignItems: "center",
             },
-            '& .MuiDataGrid-columnHeader': {
-              backgroundColor: '#f5f5f5',
+            "& .MuiDataGrid-columnHeader": {
+              backgroundColor: "#f5f5f5",
             },
           }}
         />

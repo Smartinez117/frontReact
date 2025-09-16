@@ -63,8 +63,8 @@ button:hover {
   color: #333;
 }
 
-input[type='text'],
-input[type='email'],
+input[type="text"],
+input[type="email"],
 textarea {
   width: 100%;
   padding: 6px 8px;
@@ -87,10 +87,10 @@ textarea {
 }
 
 /* Botón cancelar distinto color */
-.botones button[type='button'] {
+.botones button[type="button"] {
   background: #999;
 }
 
-.botones button[type='button']:hover {
+.botones button[type="button"]:hover {
   background: #666;
 }

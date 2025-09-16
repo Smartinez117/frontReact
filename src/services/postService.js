@@ -8,13 +8,17 @@ export const fetchProvinces = async () => {
 
 // Función para obtener departamentos por provincia
 export const fetchDepartments = async (provinceId) => {
-  const response = await fetch(`${BASE_URL}/api/ubicacion/departamentos?provincia_id=${provinceId}`);
+  const response = await fetch(
+    `${BASE_URL}/api/ubicacion/departamentos?provincia_id=${provinceId}`,
+  );
   return response.json();
 };
 
 // Función para obtener localidades por departamento
 export const fetchLocalities = async (departmentId) => {
-  const response = await fetch(`${BASE_URL}/api/ubicacion/localidades?departamento_id=${departmentId}`);
+  const response = await fetch(
+    `${BASE_URL}/api/ubicacion/localidades?departamento_id=${departmentId}`,
+  );
   return response.json();
 };
 
@@ -27,7 +31,7 @@ export const fetchTags = async () => {
 // Función para subir imágenes
 export const uploadImages = async (images) => {
   const formData = new FormData();
-  images.forEach(img => formData.append("imagenes", img));
+  images.forEach((img) => formData.append("imagenes", img));
 
   const response = await fetch(`${BASE_URL}/subir-imagenes`, {
     method: "POST",
@@ -47,7 +51,7 @@ export const createPublication = async (publicationData, token) => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(publicationData),
   });

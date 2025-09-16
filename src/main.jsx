@@ -1,28 +1,28 @@
-import React from "react"
-import ReactDOM from "react-dom/client"
-import { Routes, Route } from "react-router-dom"
-import Login from "./else/GoogleLogin.jsx"
-import Home from "./main/pages/Home.jsx"
-import Post from "./main/pages/Post.jsx"
-import Browse from "./main/pages/Browse.jsx"
-import View from "./main/pages/View.jsx"
-import MainLayout from "./main/MainLayout.jsx"
-import Perfil from "./main/pages/Profile.jsx"
-import Editar from "./components/Edit.jsx"
-import ConfigPerfil from "./components/profile/configPerfil.jsx"
-import PanelAdmin from "./else/admin/PanelAdmin.jsx"
-import HomeAdmin from "./else/admin/sections/HomeAdmin.jsx"
-import UsuariosAdmin from "./else/admin/sections/UsuariosAdmin.jsx"
-import PublicacionesAdmin from "./else/admin/sections/PublicacionesAdmin.jsx"
-import ImagenesAdmin from "./else/admin/sections/ImagenesAdmin.jsx"
-import ComentariosAdmin from "./else/admin/sections/ComentariosAdmin.jsx"
-import UbicacionesAdmin from "./else/admin/sections/UbicacionesAdmin.jsx"
-import EtiquetasAdmin from "./else/admin/sections/EtiquetasAdmin.jsx"
-import ReportesAdmin from "./else/admin/sections/ReportesAdmin.jsx"
-import { BrowserRouter } from "react-router-dom"
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { Routes, Route } from "react-router-dom";
+import Login from "./else/GoogleLogin.jsx";
+import Home from "./main/pages/Home.jsx";
+import Post from "./main/pages/Post.jsx";
+import Browse from "./main/pages/Browse.jsx";
+import View from "./main/pages/View.jsx";
+import MainLayout from "./main/MainLayout.jsx";
+import Perfil from "./main/pages/Profile.jsx";
+import Editar from "./components/Edit.jsx";
+import ConfigPerfil from "./components/profile/configPerfil.jsx";
+import PanelAdmin from "./else/admin/PanelAdmin.jsx";
+import HomeAdmin from "./else/admin/sections/HomeAdmin.jsx";
+import UsuariosAdmin from "./else/admin/sections/UsuariosAdmin.jsx";
+import PublicacionesAdmin from "./else/admin/sections/PublicacionesAdmin.jsx";
+import ImagenesAdmin from "./else/admin/sections/ImagenesAdmin.jsx";
+import ComentariosAdmin from "./else/admin/sections/ComentariosAdmin.jsx";
+import UbicacionesAdmin from "./else/admin/sections/UbicacionesAdmin.jsx";
+import EtiquetasAdmin from "./else/admin/sections/EtiquetasAdmin.jsx";
+import ReportesAdmin from "./else/admin/sections/ReportesAdmin.jsx";
+import { BrowserRouter } from "react-router-dom";
 
-import "bootstrap/dist/css/bootstrap.min.css"
-import "bootstrap/dist/js/bootstrap.bundle.min.js"
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -54,5 +54,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="reportes" element={<ReportesAdmin />} />
       </Route>
     </Routes>
-  </BrowserRouter>
-)
+  </BrowserRouter>,
+);

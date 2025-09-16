@@ -1,7 +1,7 @@
-import * as React from 'react';
-import Table from '@mui/joy/Table';
-import { CssVarsProvider } from '@mui/joy/styles';
-import JoyCssBaseline from '@mui/joy/CssBaseline';
+import * as React from "react";
+import Table from "@mui/joy/Table";
+import { CssVarsProvider } from "@mui/joy/styles";
+import JoyCssBaseline from "@mui/joy/CssBaseline";
 
 export default function UbicacionesAdmin() {
   return (
@@ -10,7 +10,7 @@ export default function UbicacionesAdmin() {
       <Table aria-label="basic table">
         <thead>
           <tr>
-            <th style={{ width: '40%' }}>Localidad</th>
+            <th style={{ width: "40%" }}>Localidad</th>
             <th>Partido</th>
             <th>Provincia</th>
             <th>Latitud</th>

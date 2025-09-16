@@ -1,24 +1,24 @@
-import React, { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import { fetchPublicacionesPorUsuario } from "../../services/perfilService" // 🔹 nuevo servicio
-import "./cuserPublications.css"
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { fetchPublicacionesPorUsuario } from "../../services/perfilService"; // 🔹 nuevo servicio
+import "./cuserPublications.css";
 
 const UserPublications = ({ userId }) => {
-  const navigate = useNavigate()
-  const [publicaciones, setPublicaciones] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const navigate = useNavigate();
+  const [publicaciones, setPublicaciones] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!userId) return
-    setLoading(true)
-    setError(null)
+    if (!userId) return;
+    setLoading(true);
+    setError(null);
 
     fetchPublicacionesPorUsuario(userId)
       .then(setPublicaciones)
-      .catch(e => setError(e.message || "Error al obtener publicaciones"))
-      .finally(() => setLoading(false))
-  }, [userId])
+      .catch((e) => setError(e.message || "Error al obtener publicaciones"))
+      .finally(() => setLoading(false));
+  }, [userId]);
 
   return (
     <div className="userPublications-container">
@@ -30,8 +30,9 @@ const UserPublications = ({ userId }) => {
           {publicaciones.length === 0 && (
             <li>Este usuario todavía no tiene publicaciones.</li>
           )}
-          {publicaciones.map(pub => {
-            const imagenPrincipal = pub.imagenes.length > 0 ? pub.imagenes[0] : null
+          {publicaciones.map((pub) => {
+            const imagenPrincipal =
+              pub.imagenes.length > 0 ? pub.imagenes[0] : null;
 
             return (
               <li key={pub.id} className="publicacion-card-vertical">
@@ -66,12 +67,12 @@ const UserPublications = ({ userId }) => {
                   </button>
                 </div>
               </li>
-            )
+            );
           })}
         </ul>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default UserPublications
+export default UserPublications;

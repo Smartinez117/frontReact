@@ -1,14 +1,14 @@
-import * as React from 'react';
-import { CssVarsProvider } from '@mui/joy/styles';
-import JoyCssBaseline from '@mui/joy/CssBaseline';
+import * as React from "react";
+import { CssVarsProvider } from "@mui/joy/styles";
+import JoyCssBaseline from "@mui/joy/CssBaseline";
 
-import AspectRatio from '@mui/joy/AspectRatio';
-import Button from '@mui/joy/Button';
-import Card from '@mui/joy/Card';
-import CardContent from '@mui/joy/CardContent';
-import IconButton from '@mui/joy/IconButton';
-import Typography from '@mui/joy/Typography';
-import BookmarkAdd from '@mui/icons-material/BookmarkAddOutlined';
+import AspectRatio from "@mui/joy/AspectRatio";
+import Button from "@mui/joy/Button";
+import Card from "@mui/joy/Card";
+import CardContent from "@mui/joy/CardContent";
+import IconButton from "@mui/joy/IconButton";
+import Typography from "@mui/joy/Typography";
+import BookmarkAdd from "@mui/icons-material/BookmarkAddOutlined";
 
 export default function PublicacionesAdmin() {
   return (
@@ -23,7 +23,7 @@ export default function PublicacionesAdmin() {
             variant="plain"
             color="neutral"
             size="sm"
-            sx={{ position: 'absolute', top: '0.875rem', right: '0.5rem' }}
+            sx={{ position: "absolute", top: "0.875rem", right: "0.5rem" }}
           >
             <BookmarkAdd />
           </IconButton>
@@ -39,14 +39,16 @@ export default function PublicacionesAdmin() {
         <CardContent orientation="horizontal">
           <div>
             <Typography level="body-xs">Total price:</Typography>
-            <Typography sx={{ fontSize: 'lg', fontWeight: 'lg' }}>$2,900</Typography>
+            <Typography sx={{ fontSize: "lg", fontWeight: "lg" }}>
+              $2,900
+            </Typography>
           </div>
           <Button
             variant="solid"
             size="md"
             color="primary"
             aria-label="Explore Yosemite National Park"
-            sx={{ ml: 'auto', alignSelf: 'center', fontWeight: 600 }}
+            sx={{ ml: "auto", alignSelf: "center", fontWeight: 600 }}
           >
             Explore
           </Button>

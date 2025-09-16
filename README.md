@@ -1,5 +1,19 @@
 # redema-front
 
+## Configuración del entorno
+
+1. Se requiere Node.js para ejecutar la aplicación. [Descargar](https://nodejs.org/es/download)
+2. Se recomienda Visual Studio Code como IDE. [Descargar](https://code.visualstudio.com/)
+3. Se recomienda instalar la extensión de ESLint (Microsoft) para detectar errores.
+4. Se recomienda instalar la extensión de Prettier (Prettier), usar Prettier como Default Formatter y activar Format On Save.
+
+## Comandos útiles
+
+- ´npm install´ instala las dependencias. Ejecutar siempre después de hacer un pull.
+- ´npm run --dev´ ejecuta la aplicación en modo developer.
+- ´npx eslint --fix´ eslint detecta errores en el proyecto y corrige los que puede.
+- ´npx prettier . --write´ prettier formatea todo el código del proyecto.
+
 ## Estructura del proyecto
 
 ```
@@ -27,4 +41,5 @@ redema-front/
 │       └── ...
 │   └── services/
 │       └── ...
+├── eslint.config.js                    // configuración de eslint
 ```

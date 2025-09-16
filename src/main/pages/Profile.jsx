@@ -1,37 +1,37 @@
-import React, { useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
-import SelfPublications from "../../components/profile/selfPublications"
-import UserPublications from "../../components/profile/userPublications"
-import MyBanner from "../../components/profile/myBanner"
-import PublicBanner from "../../components/profile/publicBanner"
-import CssBaseline from "@mui/material/CssBaseline"
-import Container from "@mui/material/Container"
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import SelfPublications from "../../components/profile/selfPublications";
+import UserPublications from "../../components/profile/userPublications";
+import MyBanner from "../../components/profile/myBanner";
+import PublicBanner from "../../components/profile/publicBanner";
+import CssBaseline from "@mui/material/CssBaseline";
+import Container from "@mui/material/Container";
 
-const BASE_URL = import.meta.env.VITE_API_URL
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const Profile = () => {
-  const { slug } = useParams()
-  const currentUserId = localStorage.getItem("userId")
-  const [user, setUser] = useState(null)
+  const { slug } = useParams();
+  const currentUserId = localStorage.getItem("userId");
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/usuario/slug/${slug}`)
-        const data = await res.json()
-        setUser(data)
+        const res = await fetch(`${BASE_URL}/usuario/slug/${slug}`);
+        const data = await res.json();
+        setUser(data);
       } catch (err) {
-        console.error("Error cargando usuario:", err)
+        console.error("Error cargando usuario:", err);
       }
-    }
-    fetchUser()
-  }, [slug])
+    };
+    fetchUser();
+  }, [slug]);
 
   if (!user) {
-    return <p>Cargando perfil...</p>
+    return <p>Cargando perfil...</p>;
   }
 
-  const isOwner = String(user.id) === String(currentUserId)
+  const isOwner = String(user.id) === String(currentUserId);
 
   return (
     <>
@@ -56,7 +56,7 @@ const Profile = () => {
         )}
       </main>
     </>
-  )
-}
+  );
+};
 
-export default Profile
+export default Profile;

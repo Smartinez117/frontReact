@@ -10,7 +10,7 @@ import {
   Divider,
   TextField,
   Backdrop,
-  Fade
+  Fade,
 } from "@mui/material";
 import {
   fetchPublicacionPorId,
@@ -18,7 +18,7 @@ import {
   fetchComentariosPublicacion,
   enviarComentario as enviarComentarioService,
   descargarPDF as descargarPDFService,
-  compartirPublicacion as compartirPublicacionService
+  compartirPublicacion as compartirPublicacionService,
 } from "../../services/publicacionService";
 import ImageSlider from "./components/ImageSlider";
 import ImageModal from "./components/ImageModal";
@@ -46,14 +46,14 @@ const View = () => {
     verDescripcionCompleta: false,
     publicandoComentario: false,
     errorComentario: null,
-    mostrarModalReporte: false
+    mostrarModalReporte: false,
   });
 
   // Cargar datos de la publicación
   useEffect(() => {
     const cargarDatosPublicacion = async () => {
       try {
-        setEstado(prev => ({ ...prev, cargando: true }));
+        setEstado((prev) => ({ ...prev, cargando: true }));
 
         const publicacionData = await fetchPublicacionPorId(id);
         setPublicacion(publicacionData);
@@ -70,9 +70,9 @@ const View = () => {
         setUsuariosComentarios(usuariosData);
       } catch (error) {
         console.error("Error cargando publicación:", error);
-        setEstado(prev => ({ ...prev, error: error.message }));
+        setEstado((prev) => ({ ...prev, error: error.message }));
       } finally {
-        setEstado(prev => ({ ...prev, cargando: false }));
+        setEstado((prev) => ({ ...prev, cargando: false }));
       }
     };
 
@@ -81,7 +81,7 @@ const View = () => {
 
   // Handlers para estado
   const actualizarEstado = (updates) => {
-    setEstado(prev => ({ ...prev, ...updates }));
+    setEstado((prev) => ({ ...prev, ...updates }));
   };
 
   const abrirModal = (slideIndex = 0) => {
@@ -94,13 +94,13 @@ const View = () => {
 
   const toggleDescripcionCompleta = () => {
     actualizarEstado({
-      verDescripcionCompleta: !estado.verDescripcionCompleta
+      verDescripcionCompleta: !estado.verDescripcionCompleta,
     });
   };
 
   const toggleModalReporte = () => {
     actualizarEstado({
-      mostrarModalReporte: !estado.mostrarModalReporte
+      mostrarModalReporte: !estado.mostrarModalReporte,
     });
   };
 
@@ -160,7 +160,7 @@ const View = () => {
     coordenadas = [],
     imagenes = [],
     etiquetas = [],
-    categoria
+    categoria,
   } = publicacion;
 
   return (
@@ -178,10 +178,7 @@ const View = () => {
         >
           {/* Carrusel de imágenes */}
           {imagenes.length > 0 && (
-            <ImageSlider
-              imagenes={imagenes}
-              onImageClick={abrirModal}
-            />
+            <ImageSlider imagenes={imagenes} onImageClick={abrirModal} />
           )}
 
           {/* Modal de imágenes */}
@@ -220,7 +217,9 @@ const View = () => {
                   color="primary"
                   variant="outlined"
                   sx={{ mr: 1, mb: 1, cursor: "pointer" }}
-                  onClick={() => navigate(`/buscar?etiqueta=${encodeURIComponent(tag)}`)}
+                  onClick={() =>
+                    navigate(`/buscar?etiqueta=${encodeURIComponent(tag)}`)
+                  }
                 />
               ))}
             </Box>
@@ -234,10 +233,7 @@ const View = () => {
           </Typography>
 
           {descripcion.length > 200 && (
-            <Button
-              variant="text"
-              onClick={toggleDescripcionCompleta}
-            >
+            <Button variant="text" onClick={toggleDescripcionCompleta}>
               {estado.verDescripcionCompleta ? "Mostrar menos" : "Mostrar más"}
             </Button>
           )}

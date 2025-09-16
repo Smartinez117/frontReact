@@ -26,11 +26,11 @@ export const fetchUsuario = async (id) => {
 // Obtener comentarios de publicación
 export const fetchComentariosPublicacion = async (idPublicacion) => {
   const comentarios = await manejarRequest(
-    `${BASE_URL}/comentarios/publicacion/${idPublicacion}`
+    `${BASE_URL}/comentarios/publicacion/${idPublicacion}`,
   );
 
   // Obtener datos de usuarios de comentarios
-  const idsUnicos = [...new Set(comentarios.map(c => c.id_usuario))];
+  const idsUnicos = [...new Set(comentarios.map((c) => c.id_usuario))];
   const usuariosMap = {};
 
   await Promise.all(
@@ -41,7 +41,7 @@ export const fetchComentariosPublicacion = async (idPublicacion) => {
       } catch (error) {
         console.error(`Error obteniendo usuario ${idUsuario}:`, error);
       }
-    })
+    }),
   );
 
   return { comentarios, usuarios: usuariosMap };
@@ -62,7 +62,7 @@ export const enviarComentario = async (idPublicacion, descripcion) => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
     data: {
       id_publicacion: Number(idPublicacion),
@@ -99,17 +99,19 @@ export const compartirPublicacion = (idPublicacion, titulo) => {
   const url = `${window.location.origin}/publicacion/${idPublicacion}`;
 
   if (navigator.share) {
-    navigator.share({
-      title: titulo || "Publicación",
-      text: `Mirá esta publicación: ${titulo || "Publicación"}`,
-      url,
-    }).catch((error) => {
-      console.error("Error al compartir:", error);
-      // Fallback a copiar al portapapeles
-      navigator.clipboard.writeText(url).then(() => {
-        alert("Enlace copiado al portapapeles");
+    navigator
+      .share({
+        title: titulo || "Publicación",
+        text: `Mirá esta publicación: ${titulo || "Publicación"}`,
+        url,
+      })
+      .catch((error) => {
+        console.error("Error al compartir:", error);
+        // Fallback a copiar al portapapeles
+        navigator.clipboard.writeText(url).then(() => {
+          alert("Enlace copiado al portapapeles");
+        });
       });
-    });
   } else {
     // Fallback para navegadores que no soportan Web Share API
     navigator.clipboard.writeText(url).then(() => {
@@ -154,7 +156,9 @@ export const ubicacionService = {
     handleRequest(`/api/ubicacion/departamentos?provincia_id=${provinciaId}`),
 
   obtenerLocalidades: (departamentoId) =>
-    handleRequest(`/api/ubicacion/localidades?departamento_id=${departamentoId}`),
+    handleRequest(
+      `/api/ubicacion/localidades?departamento_id=${departamentoId}`,
+    ),
 };
 
 // Servicios de etiquetas
@@ -171,7 +175,7 @@ export const publicacionService = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(datosPublicacion),
     });

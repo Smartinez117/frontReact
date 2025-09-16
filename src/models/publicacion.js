@@ -11,7 +11,7 @@ export default class Publicacion {
     fecha_creacion,
     fecha_modificacion,
     coordenadas,
-    imagenes = [] // arreglo de URLs de imágenes
+    imagenes = [], // arreglo de URLs de imágenes
   }) {
     this.id = id;
     this.id_usuario = id_usuario;

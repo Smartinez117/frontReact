@@ -1,35 +1,35 @@
 // publicBanner.jsx es la portada que vemos de un perfil público
-import React, { useEffect, useState } from "react"
-import "./cbanner.css" // tu CSS para estilos
-import { obtenerUsuarioPorId } from "../../services/perfilService"
-import OutlinedFlagIcon from "@mui/icons-material/OutlinedFlag"
-import MailIcon from "@mui/icons-material/Mail"
+import React, { useEffect, useState } from "react";
+import "./cbanner.css"; // tu CSS para estilos
+import { obtenerUsuarioPorId } from "../../services/perfilService";
+import OutlinedFlagIcon from "@mui/icons-material/OutlinedFlag";
+import MailIcon from "@mui/icons-material/Mail";
 
 const PublicBanner = ({ userId }) => {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!userId) return
+    if (!userId) return;
 
     const fetchUser = async () => {
       try {
-        setLoading(true)
-        const data = await obtenerUsuarioPorId(userId)
-        setUser(data)
+        setLoading(true);
+        const data = await obtenerUsuarioPorId(userId);
+        setUser(data);
       } catch (err) {
-        setError(err.message || "Error al cargar el usuario")
+        setError(err.message || "Error al cargar el usuario");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchUser()
-  }, [userId])
+    fetchUser();
+  }, [userId]);
 
-  if (loading) return <p>Cargando perfil...</p>
-  if (error) return <p style={{ color: "red" }}>{error}</p>
+  if (loading) return <p>Cargando perfil...</p>;
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
 
   return (
     <div className="nombre-container">
@@ -46,7 +46,7 @@ const PublicBanner = ({ userId }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PublicBanner
+export default PublicBanner;

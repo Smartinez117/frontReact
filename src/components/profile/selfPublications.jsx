@@ -1,43 +1,45 @@
-import React, { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import "./cuserPublications.css"
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import "./cuserPublications.css";
 import {
   fetchMisPublicaciones,
   fetchPublicacionesPorUsuario,
-  eliminarPublicacion
-} from "../../services/perfilService"
-import { confirmarAccion } from "../../utils/confirmservice"
+  eliminarPublicacion,
+} from "../../services/perfilService";
+import { confirmarAccion } from "../../utils/confirmservice";
 
 const SelfPublications = ({ userId, isOwner }) => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
-  const [publicaciones, setPublicaciones] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [publicaciones, setPublicaciones] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Eliminar con confirmación
-  const handleEliminar = id => {
+  const handleEliminar = (id) => {
     confirmarAccion({
       tipo: "publicacion",
       onConfirm: async () => {
-        await eliminarPublicacion(id)
-        setPublicaciones(prev => prev.filter(pub => pub.id !== id))
-      }
-    })
-  }
+        await eliminarPublicacion(id);
+        setPublicaciones((prev) => prev.filter((pub) => pub.id !== id));
+      },
+    });
+  };
 
   // Cargar publicaciones
   useEffect(() => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
-    const fetchFn = isOwner ? fetchMisPublicaciones : fetchPublicacionesPorUsuario
+    const fetchFn = isOwner
+      ? fetchMisPublicaciones
+      : fetchPublicacionesPorUsuario;
 
     fetchFn(userId)
       .then(setPublicaciones)
-      .catch(e => setError(e.message || "Error al obtener publicaciones"))
-      .finally(() => setLoading(false))
-  }, [userId, isOwner])
+      .catch((e) => setError(e.message || "Error al obtener publicaciones"))
+      .finally(() => setLoading(false));
+  }, [userId, isOwner]);
 
   return (
     <div className="selfPublications-container">
@@ -61,11 +63,10 @@ const SelfPublications = ({ userId, isOwner }) => {
       {/* Lista */}
       {!loading && !error && (
         <ul className="lista-publicaciones-vertical">
-          {publicaciones.length === 0 && (
-            <li>No hay publicaciones todavía.</li>
-          )}
-          {publicaciones.map(pub => {
-            const imagenPrincipal = pub.imagenes.length > 0 ? pub.imagenes[0] : null
+          {publicaciones.length === 0 && <li>No hay publicaciones todavía.</li>}
+          {publicaciones.map((pub) => {
+            const imagenPrincipal =
+              pub.imagenes.length > 0 ? pub.imagenes[0] : null;
 
             return (
               <li key={pub.id} className="publicacion-card-vertical">
@@ -119,12 +120,12 @@ const SelfPublications = ({ userId, isOwner }) => {
                   )}
                 </div>
               </li>
-            )
+            );
           })}
         </ul>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default SelfPublications
+export default SelfPublications;

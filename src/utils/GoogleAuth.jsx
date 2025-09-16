@@ -24,7 +24,6 @@ const handleLogin = async () => {
     localStorage.setItem("token", idToken);
     localStorage.setItem("userIdLocal", data.idLocal);
     localStorage.setItem("userSlug", data.userSlug);
-
   } catch (error) {
     console.error("Login error:", error);
     alert(error.message || "Login failed. Please try again.");
@@ -35,17 +34,16 @@ const handleLogout = async () => {
   try {
     await signOut(auth);
 
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userPhoto');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('token');
-    localStorage.removeItem('userIdLocal');
-    localStorage.removeItem('userSlug');
-
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userPhoto");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("token");
+    localStorage.removeItem("userIdLocal");
+    localStorage.removeItem("userSlug");
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error("Logout error:", error);
   }
-}
+};
 
 const handleProfile = async () => {
   //const userSlug = localStorage.getItem("userSlug")
@@ -60,4 +58,10 @@ const handleSettings = async () => {
   //navigate("/pconfig")
 };
 
-export { handleLogin, handleLogout, handleProfile, handleNotifications, handleSettings };
+export {
+  handleLogin,
+  handleLogout,
+  handleProfile,
+  handleNotifications,
+  handleSettings,
+};
