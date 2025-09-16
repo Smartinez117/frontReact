@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Link } from 'react-router-dom'
 import { Box } from '@mui/material';
 import { paperClasses } from '@mui/material/Paper';
 import { listClasses } from '@mui/material/List';
@@ -8,9 +9,11 @@ import Avatar from '@mui/material/Avatar';
 import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import IconButton from '@mui/material/IconButton';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon, { listItemIconClasses } from '@mui/material/ListItemIcon';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
+import AddIcon from '@mui/icons-material/Add';
 import MenuButton from './MenuButton';
 import { handleLogout, handleNotifications, handleProfile, handleSettings } from '../../utils/GoogleAuth';
 
@@ -35,6 +38,9 @@ export function ProfileMenu() {
         alignItems: 'center',
       }}
     >
+      <IconButton component={Link} to="/publicar">
+        <AddIcon />
+      </IconButton>
       <Box sx={{ mr: 'auto' }}>
         <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: '16px' }}>
           {localStorage.getItem("userName")}

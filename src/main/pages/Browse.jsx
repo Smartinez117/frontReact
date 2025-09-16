@@ -27,7 +27,6 @@ import {
   fetchTodasLasEtiquetas,
   obtenerUbicacionUsuario,
 } from "../../services/browseService";
-import "../../global.css";
 
 const CATEGORIAS_OPCIONES = [
   { label: "Adopción", value: "Adopción" },

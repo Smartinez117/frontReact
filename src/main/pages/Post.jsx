@@ -1,36 +1,65 @@
-import "leaflet/dist/leaflet.css"
-import L from "leaflet"
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png"
-import markerIcon from "leaflet/dist/images/marker-icon.png"
-import markerShadow from "leaflet/dist/images/marker-shadow.png"
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
-import { useEffect, useState } from "react"
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet"
+import * as React from "react";
+import { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 
-import CssBaseline from "@mui/material/CssBaseline"
-import Box from "@mui/material/Box"
-import Container from "@mui/material/Container"
-import * as React from "react"
+import {
+  CssBaseline,
+  Container,
+  Button,
+  TextareaAutosize,
+  Select,
+  MenuItem,
+  Autocomplete,
+  FormControl,
+  FormLabel,
+  Alert,
+  Typography,
+  CircularProgress,
+  Stack,
+  Chip,
+  TextField,
+  Box
+} from "@mui/material";
+import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { styled } from "@mui/material/styles";
 
-import Button from "@mui/joy/Button"
-import Input from "@mui/joy/Input"
-import Textarea from "@mui/joy/Textarea"
-import ToggleButtonGroup from "@mui/joy/ToggleButtonGroup"
-import Select, { selectClasses } from "@mui/joy/Select"
-import Option from "@mui/joy/Option"
-import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown"
-import Autocomplete from "@mui/joy/Autocomplete"
-import FormControl from "@mui/joy/FormControl"
-import FormLabel from "@mui/joy/FormLabel"
-import SvgIcon from "@mui/joy/SvgIcon"
-import Alert from "@mui/joy/Alert"
-import Typography from "@mui/joy/Typography"
-import { styled } from "@mui/joy"
-import CircularProgress from "@mui/material/CircularProgress"
+import { getAuth } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+import { mostrarAlerta } from "../../utils/confirmservice.js";
 
-import { getAuth } from "firebase/auth"
-import { useNavigate } from "react-router-dom"
-import { mostrarAlerta } from "../../utils/confirmservice.js"
+// Importar servicios
+import {
+  fetchProvinces,
+  fetchDepartments,
+  fetchLocalities,
+  fetchTags,
+  uploadImages,
+  createPublication
+} from "../../services/postService";
+
+// Configuración de iconos para Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
+
+const markerIconLocal = new L.Icon({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
 
 const VisuallyHiddenInput = styled("input")`
   clip: rect(0 0 0 0);
@@ -42,425 +71,405 @@ const VisuallyHiddenInput = styled("input")`
   left: 0;
   white-space: nowrap;
   width: 1px;
-`
+`;
 
-delete L.Icon.Default.prototype._getIconUrl
-
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-})
-
-const marcadorIcono = new L.Icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-})
-
-function MapaInteractivo({ lat, lng, setLatLng }) {
-  const map = useMapEvents({
+// Componente para el mapa interactivo
+function InteractiveMap({ position, onPositionChange }) {
+  useMapEvents({
     click(e) {
-      setLatLng({ lat: e.latlng.lat, lng: e.latlng.lng })
+      onPositionChange({ lat: e.latlng.lat, lng: e.latlng.lng });
     },
-  })
+  });
 
-  useEffect(() => {
-    map.setView([lat, lng], 13)
-  }, [lat, lng])
-
-  return <Marker position={[lat, lng]} icon={marcadorIcono} />
+  return <Marker position={[position.lat, position.lng]} icon={markerIconLocal} />;
 }
 
-export default function Post() {
-  const [titulo, setTitulo] = useState("")
-  const [descripcion, setDescripcion] = useState("")
-  const [seleccionado, setSeleccionado] = useState("")
-  const [provincias, setProvincias] = useState([])
-  const [departamentos, setDepartamentos] = useState([])
-  const [localidades, setLocalidades] = useState([])
-  const [provinciaId, setProvinciaId] = useState("")
-  const [departamentoId, setDepartamentoId] = useState("")
-  const [localidadId, setLocalidadId] = useState("")
-  const [coordenadas, setCoordenadas] = useState({ lat: -34.6, lng: -58.4 })
-  const [etiquetas, setEtiquetas] = useState([])
-  const [etiquetasSeleccionadas, setEtiquetasSeleccionadas] = useState([])
-  const [imagenesSeleccionadas, setImagenesSeleccionadas] = useState([])
-  const [errores, setErrores] = useState([])
-  const navigate = useNavigate()
-  const [cargando, setCargando] = useState(false)
+export default function PostCreation() {
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    category: "",
+    provinceId: "",
+    departmentId: "",
+    locationId: "",
+    coordinates: { lat: -34.6, lng: -58.4 },
+    images: []
+  });
 
-  const validarCampos = () => {
-    const nuevosErrores = []
-    if (!seleccionado) nuevosErrores.push("Categoría")
-    if (!titulo.trim()) nuevosErrores.push("Título")
-    if (!descripcion.trim()) nuevosErrores.push("Descripción")
-    if (descripcion.length > 500) nuevosErrores.push("Descripción excede 500 caracteres")
-    if (!provinciaId) nuevosErrores.push("Provincia")
-    if (!departamentoId) nuevosErrores.push("Departamento")
-    if (!localidadId) nuevosErrores.push("Localidad")
-    if (etiquetasSeleccionadas.length === 0) nuevosErrores.push("Etiquetas")
-    if (imagenesSeleccionadas.length === 0) nuevosErrores.push("Imágenes")
-    return nuevosErrores
-  }
+  const [options, setOptions] = useState({
+    provinces: [],
+    departments: [],
+    locations: [],
+    allTags: []
+  });
 
-  const camposValidos = (campo) => !errores.includes(campo)
+  const [uiState, setUiState] = useState({
+    isLoading: false,
+    errors: [],
+    selectedTags: []
+  });
+
+  const navigate = useNavigate();
+
+  // Validación de campos
+  const validateFields = () => {
+    const newErrors = [];
+    if (!formData.category) newErrors.push("Categoría");
+    if (!formData.title.trim()) newErrors.push("Título");
+    if (!formData.description.trim()) newErrors.push("Descripción");
+    if (formData.description.length > 500) newErrors.push("Descripción excede 500 caracteres");
+    if (!formData.provinceId) newErrors.push("Provincia");
+    if (!formData.departmentId) newErrors.push("Departamento");
+    if (!formData.locationId) newErrors.push("Localidad");
+    if (uiState.selectedTags.length === 0) newErrors.push("Etiquetas");
+    if (formData.images.length === 0) newErrors.push("Imágenes");
+
+    setUiState(prev => ({ ...prev, errors: newErrors }));
+    return newErrors;
+  };
+
+  // Efectos para cargar datos usando los servicios
+  useEffect(() => {
+    const loadProvinces = async () => {
+      try {
+        const provinces = await fetchProvinces();
+        setOptions(prev => ({ ...prev, provinces }));
+      } catch (error) {
+        console.error("Error al cargar provincias:", error);
+      }
+    };
+    loadProvinces();
+  }, []);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/ubicacion/provincias")
-      .then(res => res.json())
-      .then(setProvincias)
-      .catch(console.error)
-  }, [])
+    const loadDepartments = async () => {
+      if (formData.provinceId) {
+        try {
+          const departments = await fetchDepartments(formData.provinceId);
+          setOptions(prev => ({ ...prev, departments }));
+        } catch (error) {
+          console.error("Error al cargar departamentos:", error);
+        }
+      } else {
+        setOptions(prev => ({ ...prev, departments: [] }));
+        setFormData(prev => ({ ...prev, departmentId: "", locationId: "" }));
+      }
+    };
+    loadDepartments();
+  }, [formData.provinceId]);
 
   useEffect(() => {
-    if (provinciaId) {
-      fetch(`http://localhost:5000/api/ubicacion/departamentos?provincia_id=${provinciaId}`)
-        .then(res => res.json())
-        .then(setDepartamentos)
-    } else {
-      setDepartamentos([])
-      setDepartamentoId("")
+    const loadLocalities = async () => {
+      if (formData.departmentId) {
+        try {
+          const locations = await fetchLocalities(formData.departmentId);
+          setOptions(prev => ({ ...prev, locations }));
+        } catch (error) {
+          console.error("Error al cargar localidades:", error);
+        }
+      } else {
+        setOptions(prev => ({ ...prev, locations: [] }));
+        setFormData(prev => ({ ...prev, locationId: "" }));
+      }
+    };
+    loadLocalities();
+  }, [formData.departmentId]);
+
+  useEffect(() => {
+    const loadTags = async () => {
+      try {
+        const tags = await fetchTags();
+        const formattedTags = tags.map(tag => ({ label: tag.nombre, id: tag.id }));
+        const defaultTags = formattedTags.filter(tag => ["Perro", "Gato"].includes(tag.label));
+
+        setOptions(prev => ({ ...prev, allTags: formattedTags }));
+        setUiState(prev => ({ ...prev, selectedTags: defaultTags }));
+      } catch (error) {
+        console.error("Error al cargar etiquetas:", error);
+      }
+    };
+    loadTags();
+  }, []);
+
+  // Manejadores de eventos
+  const handleLocationChange = (event) => {
+    const locationId = event.target.value;
+    const location = options.locations.find(loc => loc.id.toString() === locationId);
+    if (location) {
+      setFormData(prev => ({
+        ...prev,
+        locationId,
+        coordinates: {
+          lat: parseFloat(location.latitud),
+          lng: parseFloat(location.longitud)
+        }
+      }));
     }
-  }, [provinciaId])
+  };
 
-  useEffect(() => {
-    if (departamentoId) {
-      fetch(`http://localhost:5000/api/ubicacion/localidades?departamento_id=${departamentoId}`)
-        .then(res => res.json())
-        .then(setLocalidades)
-    } else {
-      setLocalidades([])
-      setLocalidadId("")
-    }
-  }, [departamentoId])
+  const handleImagesChange = (event) => {
+    const files = Array.from(event.target.files);
+    setFormData(prev => ({ ...prev, images: files }));
+  };
 
-  useEffect(() => {
-    fetch("http://localhost:5000/api/etiquetas")
-      .then(res => res.json())
-      .then(data => {
-        const mapped = data.map(e => ({ label: e.nombre, id: e.id }))
-        setEtiquetas(mapped)
-        const iniciales = mapped.filter(et => ["Perro", "Gato"].includes(et.label))
-        setEtiquetasSeleccionadas(iniciales)
-      })
-  }, [])
+  const handlePublish = async () => {
+    const errors = validateFields();
+    if (errors.length > 0) return;
 
-  const handleLocalidadChange = (id) => {
-    setLocalidadId(id)
-    const loc = localidades.find(l => l.id.toString() === id)
-    if (loc) {
-      setCoordenadas({ lat: parseFloat(loc.latitud), lng: parseFloat(loc.longitud) })
-    }
-  }
-
-  const handleImagenesChange = (event) => {
-    const files = Array.from(event.target.files)
-    setImagenesSeleccionadas(files)
-  }
-
-  const handlePublicar = async () => {
-    const nuevosErrores = validarCampos()
-    setErrores(nuevosErrores)
-    if (nuevosErrores.length > 0) return
-
-    setCargando(true)
+    setUiState(prev => ({ ...prev, isLoading: true }));
 
     try {
-      const formData = new FormData()
-      imagenesSeleccionadas.forEach((img) => {
-        formData.append("imagenes", img)
-      })
+      // Subir imágenes
+      const imageData = await uploadImages(formData.images);
 
-      const resImagenes = await fetch("http://localhost:5000/subir-imagenes", {
-        method: "POST",
-        body: formData,
-      })
+      // Preparar datos de la publicación
+      const publicationData = {
+        categoria: formData.category,
+        titulo: formData.title,
+        descripcion: formData.description,
+        id_locacion: formData.locationId,
+        coordenadas: formData.coordinates,
+        etiquetas: uiState.selectedTags.map(tag => tag.id),
+        imagenes: imageData.urls,
+      };
 
-      if (!resImagenes.ok) throw new Error("Error al subir imágenes")
+      // Obtener usuario autenticado
+      const auth = getAuth();
+      const user = auth.currentUser;
 
-      const dataImagenes = await resImagenes.json()
-      const urlsImagenes = dataImagenes.urls
-
-      const datos = {
-        categoria: seleccionado,
-        titulo,
-        descripcion,
-        id_locacion: localidadId,
-        coordenadas,
-        etiquetas: etiquetasSeleccionadas.map(e => e.id),
-        imagenes: urlsImagenes,
-      }
-
-      const auth = getAuth()
-      const user = auth.currentUser
       if (!user) {
         mostrarAlerta({
           titulo: "⚠️ Sesión requerida",
           mensaje: "Debés iniciar sesión para publicar",
           tipo: "warning",
-        })
-        return
+        });
+        return;
       }
-      const token = await user.getIdToken()
 
-      const res = await fetch("http://localhost:5000/publicaciones", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify(datos),
-      })
+      const token = await user.getIdToken();
 
-      const data = await res.json()
-      if (res.ok) {
-        console.log("Publicación creada:", data)
-        mostrarAlerta({
-          titulo: "✅ ¡Listo!",
-          mensaje: "Publicación enviada con éxito",
-          tipo: "success",
-        })
-        navigate(`/publicacion/${data.id_publicacion}`)
-      } else {
-        throw new Error(data.error || "Error en el envío")
-      }
+      // Enviar publicación
+      const responseData = await createPublication(publicationData, token);
+
+      mostrarAlerta({
+        titulo: "✅ ¡Listo!",
+        mensaje: "Publicación enviada con éxito",
+        tipo: "success",
+      });
+      navigate(`/publicacion/${responseData.id_publicacion}`);
     } catch (error) {
-      console.error("Error al publicar:", error)
+      console.error("Error al publicar:", error);
       mostrarAlerta({
         titulo: "Error",
-        mensaje: "Ocurrió un error al publicar",
+        mensaje: error.message || "Ocurrió un error al publicar",
         tipo: "error",
-      })
+      });
+    } finally {
+      setUiState(prev => ({ ...prev, isLoading: false }));
     }
-  }
+  };
 
   return (
     <React.Fragment>
       <CssBaseline />
-      <Container maxWidth="md">
-        <Typography level="h3" sx={{ mt: 2 }}>
+      <Container maxWidth="sm">
+        <Typography variant="h4" component="h1" sx={{ mt: 2, mb: 3, textAlign: 'center' }}>
           Crear publicación
         </Typography>
 
-        <ToggleButtonGroup
-          value={seleccionado}
-          onChange={(event, newValue) => setSeleccionado(newValue)}
-          sx={{ my: 2, gap: 1, flexWrap: "wrap" }}
-          type="single"
-        >
-          {["Adopción", "Búsqueda", "Encuentro", "Estado Crítico"].map(opcion => (
-            <Button
-              key={opcion}
-              value={opcion}
-              color={
-                seleccionado === opcion
-                  ? "success"
-                  : errores.includes("Categoría")
-                  ? "danger"
-                  : "neutral"
-              }
-            >
-              {opcion}
-            </Button>
-          ))}
-        </ToggleButtonGroup>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {/* Sección de Categoría */}
+          <Box>
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ my: 2 }}>
+              {["Adopción", "Búsqueda", "Encuentro", "Estado Crítico"].map(option => (
+                <Chip
+                  key={option}
+                  label={option}
+                  clickable
+                  color={formData.category === option ? "primary" : "default"}
+                  variant={formData.category === option ? "filled" : "outlined"}
+                  onClick={() => setFormData(prev => ({ ...prev, category: option }))}
+                />
+              ))}
+            </Stack>
+          </Box>
 
-        <Input
-          placeholder="Título"
-          value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
-          color={
-            titulo.trim()
-              ? "success"
-              : errores.includes("Título")
-              ? "danger"
-              : "neutral"
-          }
-          sx={{ my: 2 }}
-        />
-
-        <Textarea
-          placeholder="Descripción del caso…"
-          value={descripcion}
-          onChange={(e) => setDescripcion(e.target.value)}
-          minRows={2}
-          maxRows={5}
-          color={
-            descripcion && descripcion.length <= 500
-              ? "success"
-              : errores.includes("Descripción")
-              ? "danger"
-              : "neutral"
-          }
-          sx={{ mb: 2 }}
-        />
-
-        <Select
-          placeholder="Seleccioná una provincia"
-          value={provinciaId || null}
-          onChange={(e, val) => setProvinciaId(val)}
-          indicator={<KeyboardArrowDown />}
-          color={
-            provinciaId
-              ? "success"
-              : errores.includes("Provincia")
-              ? "danger"
-              : "neutral"
-          }
-          sx={{ width: "100%", mb: 2 }}
-        >
-          {provincias.map((prov) => (
-            <Option key={prov.id} value={prov.id.toString()}>
-              {prov.nombre}
-            </Option>
-          ))}
-        </Select>
-
-        <Select
-          placeholder="Seleccioná un partido/departamento/comuna"
-          value={departamentoId || null}
-          onChange={(e, val) => setDepartamentoId(val)}
-          disabled={!provinciaId}
-          indicator={<KeyboardArrowDown />}
-          color={
-            departamentoId
-              ? "success"
-              : errores.includes("Departamento")
-              ? "danger"
-              : "neutral"
-          }
-          sx={{ width: "100%", mb: 2 }}
-        >
-          {departamentos.map((d) => (
-            <Option key={d.id} value={d.id.toString()}>
-              {d.nombre}
-            </Option>
-          ))}
-        </Select>
-
-        <Select
-          placeholder="Seleccioná una localidad/barrio"
-          value={localidadId || null}
-          onChange={(e, val) => handleLocalidadChange(val)}
-          disabled={!departamentoId}
-          indicator={<KeyboardArrowDown />}
-          color={
-            localidadId
-              ? "success"
-              : errores.includes("Localidad")
-              ? "danger"
-              : "neutral"
-          }
-          sx={{ width: "100%", mb: 3 }}
-        >
-          {localidades.map((l) => (
-            <Option key={l.id} value={l.id.toString()}>
-              {l.nombre}
-            </Option>
-          ))}
-        </Select>
-
-        <div style={{ height: "400px", marginTop: "1rem" }}>
-          <MapContainer
-            center={[coordenadas.lat, coordenadas.lng]}
-            zoom={13}
-            style={{ height: "100%", width: "100%" }}
-          >
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            <MapaInteractivo
-              lat={coordenadas.lat}
-              lng={coordenadas.lng}
-              setLatLng={setCoordenadas}
+          {/* Sección de Título y Descripción */}
+          <Box>
+            <Typography variant="h6" component="h2">
+              Título
+            </Typography>
+            <TextField
+              fullWidth
+              placeholder="Título"
+              value={formData.title}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              error={uiState.errors.includes("Título")}
             />
-          </MapContainer>
-        </div>
+          </Box>
 
-        <Typography level="body2" sx={{ mt: 1 }}>
-          Latitud: {coordenadas.lat.toFixed(6)} | Longitud: {coordenadas.lng.toFixed(6)}
-        </Typography>
+          <Box>
+            <Typography variant="h6" component="h2">
+              Descripción
+            </Typography>
+            <TextareaAutosize
+              minRows={3}
+              placeholder="Descripción del caso…"
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              style={{ width: '100%', padding: '8px', fontFamily: 'inherit' }}
+            />
+            <Typography variant="body2" sx={{ textAlign: "right", mt: 1 }}>
+              {formData.description.length}/500 caracteres
+            </Typography>
+          </Box>
 
-        <FormControl sx={{ mt: 3 }}>
-          <FormLabel>Etiquetas</FormLabel>
-          <Autocomplete
-            multiple
-            placeholder="Seleccioná etiquetas"
-            limitTags={3}
-            options={etiquetas}
-            value={etiquetasSeleccionadas}
-            onChange={(event, value) => setEtiquetasSeleccionadas(value)}
-            getOptionLabel={(option) => option.label}
-            color={
-              etiquetasSeleccionadas.length > 0
-                ? "success"
-                : errores.includes("Etiquetas")
-                ? "danger"
-                : "neutral"
-            }
-            sx={{ width: "100%" }}
-          />
-        </FormControl>
-
-        <Button
-          component="label"
-          variant="outlined"
-          color={
-            imagenesSeleccionadas.length > 0
-              ? "success"
-              : errores.includes("Imágenes")
-              ? "danger"
-              : "neutral"
-          }
-          startDecorator={<SvgIcon>...</SvgIcon>}
-        >
-          Subir imágenes ({imagenesSeleccionadas.length})
-          <VisuallyHiddenInput
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleImagenesChange}
-          />
-        </Button>
-
-        {imagenesSeleccionadas.length > 0 && (
-          <Typography level="body2" sx={{ mt: 1, color: "#666" }}>
-            {imagenesSeleccionadas.map(file => file.name).join(", ")}
-          </Typography>
-        )}
-
-        {errores.length > 0 && (
-          <Alert color="danger" variant="soft" sx={{ my: 2 }}>
-            Faltan completar los siguientes campos: {errores.join(", ")}
-          </Alert>
-        )}
-
-        <Button
-          size="lg"
-          variant="solid"
-          disabled={cargando}
-          sx={{
-            width: "100%",
-            mt: 4,
-            backgroundColor: "#F1B400",
-            color: "#0D171C",
-            "&:hover": { backgroundColor: "#d9a900" },
-            "&.JoyButton-root[disabled]": {
-              opacity: 0.7,
-              pointerEvents: "none",
-            },
-          }}
-          onClick={handlePublicar}
-        >
-          {cargando ? (
-            <Box sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}>
-              <CircularProgress size={18} />
-              <span>Publicando…</span>
+          {/* Selectores de Ubicación */}
+          <Box>
+            <Typography variant="h6" component="h2">
+              Ubicación
+            </Typography>
+            <Box sx={{ mb: 2 }}>
+              <Select
+                fullWidth
+                value={formData.provinceId}
+                onChange={(e) => setFormData(prev => ({ ...prev, provinceId: e.target.value }))}
+                displayEmpty
+              >
+                <MenuItem value="">Seleccionar provincia</MenuItem>
+                {options.provinces.map(province => (
+                  <MenuItem key={province.id} value={province.id.toString()}>
+                    {province.nombre}
+                  </MenuItem>
+                ))}
+              </Select>
             </Box>
-          ) : (
-            "Post"
+
+            <Box sx={{ mb: 2 }}>
+              <Select
+                fullWidth
+                value={formData.departmentId}
+                onChange={(e) => setFormData(prev => ({ ...prev, departmentId: e.target.value }))}
+                disabled={!formData.provinceId}
+                displayEmpty
+              >
+                <MenuItem value="">Seleccionar departamento</MenuItem>
+                {options.departments.map(department => (
+                  <MenuItem key={department.id} value={department.id.toString()}>
+                    {department.nombre}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Box>
+
+            <Box sx={{ mb: 2 }}>
+              <Select
+                fullWidth
+                value={formData.locationId}
+                onChange={handleLocationChange}
+                disabled={!formData.departmentId}
+                displayEmpty
+              >
+                <MenuItem value="">Seleccionar localidad</MenuItem>
+                {options.locations.map(location => (
+                  <MenuItem key={location.id} value={location.id.toString()}>
+                    {location.nombre}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Box>
+          </Box>
+
+          {/* Mapa Interactivo */}
+          <Box>
+            <Typography variant="h6" component="h2">
+              Ubicación en el mapa
+            </Typography>
+            <div style={{ height: "400px", marginBottom: "1rem" }}>
+              <MapContainer
+                center={[formData.coordinates.lat, formData.coordinates.lng]}
+                zoom={13}
+                style={{ height: "100%", width: "100%" }}
+              >
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                <InteractiveMap
+                  position={formData.coordinates}
+                  onPositionChange={(newPosition) =>
+                    setFormData(prev => ({ ...prev, coordinates: newPosition }))
+                  }
+                />
+              </MapContainer>
+            </div>
+            <Typography variant="body2">
+              Latitud: {formData.coordinates.lat.toFixed(6)} | Longitud: {formData.coordinates.lng.toFixed(6)}
+            </Typography>
+          </Box>
+
+          {/* Selector de Etiquetas */}
+          <Box>
+            <FormControl fullWidth>
+              <FormLabel>Etiquetas</FormLabel>
+              <Autocomplete
+                multiple
+                options={options.allTags}
+                value={uiState.selectedTags}
+                onChange={(event, value) => setUiState(prev => ({ ...prev, selectedTags: value }))}
+                getOptionLabel={(option) => option.label}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder="Seleccioná etiquetas"
+                  />
+                )}
+              />
+            </FormControl>
+          </Box>
+
+          {/* Selector de Imágenes */}
+          <Box>
+            <Button
+              component="label"
+              variant="outlined"
+              startIcon={<CloudUploadIcon />}
+            >
+              Subir imágenes ({formData.images.length})
+              <VisuallyHiddenInput
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleImagesChange}
+              />
+            </Button>
+            {formData.images.length > 0 && (
+              <Typography variant="body2" sx={{ mt: 1, color: "text.secondary" }}>
+                {formData.images.map(file => file.name).join(", ")}
+              </Typography>
+            )}
+          </Box>
+
+          {/* Mensajes de Error */}
+          {uiState.errors.length > 0 && (
+            <Alert severity="error" sx={{ my: 2 }}>
+              Faltan completar los siguientes campos: {uiState.errors.join(", ")}
+            </Alert>
           )}
-        </Button>
+
+          {/* Botón de Publicar */}
+          <Button
+            variant="contained"
+            size="large"
+            disabled={uiState.isLoading}
+            onClick={handlePublish}
+            sx={{
+              backgroundColor: "#F1B400",
+              color: "#0D171C",
+              "&:hover": { backgroundColor: "#d9a900" },
+            }}
+          >
+            {uiState.isLoading ? <CircularProgress size={24} /> : "Publicar"}
+          </Button>
+        </Box>
       </Container>
     </React.Fragment>
-  )
+  );
 }

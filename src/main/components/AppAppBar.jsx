@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Link } from 'react-router-dom';
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from '../../firebase';
 import { alpha, styled } from '@mui/material/styles';
@@ -67,9 +68,12 @@ export default function AppAppBar() {
       <Container maxWidth="lg">
         <StyledToolbar variant="dense" disableGutters>
           <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', px: 0 }}>
-            <Redema sx={{ fontSize:"4em" }} />
+            <Redema sx={{ fontSize: "4em" }} />
             <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-              <Button variant="text" color="info" size="small">
+              <Button component={Link} to="/" variant="text" color="info" size="small">
+                Inicio
+              </Button>
+              <Button component={Link} to="/buscar" variant="text" color="info" size="small">
                 Publicaciones
               </Button>
               <Button variant="text" color="info" size="small">

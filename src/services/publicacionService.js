@@ -1,7 +1,6 @@
 import axios from "axios";
 import { getAuth } from "firebase/auth";
-
-const BASE_URL = "http://localhost:5000";
+import { BASE_URL } from "../utils/constants";
 
 // Función genérica para manejar requests
 const manejarRequest = async (url, opciones = {}) => {
@@ -117,4 +116,76 @@ export const compartirPublicacion = (idPublicacion, titulo) => {
       alert("Enlace copiado al portapapeles");
     });
   }
+};
+
+// Función genérica para manejar requests
+const handleRequest = async (endpoint, options = {}) => {
+  try {
+    const response = await fetch(`${BASE_URL}${endpoint}`, options);
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Error en request a ${endpoint}:`, error);
+    throw new Error(`Error de conexión: ${error.message}`);
+  }
+};
+
+// Obtener token de autenticación
+const getAuthToken = async () => {
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  if (!user) {
+    throw new Error("Usuario no autenticado");
+  }
+
+  return await user.getIdToken();
+};
+
+// Servicios de ubicación
+export const ubicacionService = {
+  obtenerProvincias: () => handleRequest("/api/ubicacion/provincias"),
+
+  obtenerDepartamentos: (provinciaId) =>
+    handleRequest(`/api/ubicacion/departamentos?provincia_id=${provinciaId}`),
+
+  obtenerLocalidades: (departamentoId) =>
+    handleRequest(`/api/ubicacion/localidades?departamento_id=${departamentoId}`),
+};
+
+// Servicios de etiquetas
+export const etiquetasService = {
+  obtenerTodas: () => handleRequest("/api/etiquetas"),
+};
+
+// Servicios de publicación
+export const publicacionService = {
+  crear: async (datosPublicacion) => {
+    const token = await getAuthToken();
+
+    return handleRequest("/publicaciones", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify(datosPublicacion),
+    });
+  },
+
+  subirImagenes: async (imagenes) => {
+    const formData = new FormData();
+    imagenes.forEach((img) => {
+      formData.append("imagenes", img);
+    });
+
+    return handleRequest("/subir-imagenes", {
+      method: "POST",
+      body: formData,
+    });
+  },
 };
