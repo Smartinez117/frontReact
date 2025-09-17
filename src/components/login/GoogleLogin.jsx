@@ -24,7 +24,7 @@ function Login() {
       localStorage.setItem("userEmail", user.email);
       localStorage.setItem("token", idToken);
 
-      const response = await fetch(`${API_URL}api/etiquetas`, {
+      const response = await fetch(`${API_URL}api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: idToken }),
