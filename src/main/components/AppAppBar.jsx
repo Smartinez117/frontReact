@@ -18,6 +18,7 @@ import ColorModeIconDropdown from "../../shared-theme/ColorModeIconDropdown";
 import LoginButton from "../../shared-theme/LoginButton";
 import { Redema, RedemaIcon } from "../../shared-theme/CustomIcons";
 import { ProfileMenu } from "./ProfileMenu";
+import { socketconnection, socketnotificationlisten } from "../../utils/socket";
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: "flex",
@@ -46,6 +47,8 @@ export default function AppAppBar() {
   React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
+        socketconnection(); //<-- aca hace el llamado al back para registrarse como user conectado
+        socketnotificationlisten(user.uid); //<-- aca hace uso de la funcion que escucah las notficaciones que envia el back al front
         setUser(user);
       } else {
         setUser(null);
