@@ -113,8 +113,10 @@ export default function Editar() {
 
   const camposValidos = (campo) => !errores.includes(campo);
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
-    fetch('http://localhost:5000/api/ubicacion/provincias')
+    fetch(`${API_URL}api/ubicacion/provincias`)
       .then(res => res.json())
       .then(setProvincias)
       .catch(console.error);
@@ -122,7 +124,7 @@ export default function Editar() {
 
   useEffect(() => {
     if (provinciaId) {
-      fetch(`http://localhost:5000/api/ubicacion/departamentos?provincia_id=${provinciaId}`)
+      fetch(`${API_URL}api/ubicacion/departamentos?provincia_id=${provinciaId}`)
         .then(res => res.json())
         .then(setDepartamentos);
     } else {
@@ -133,7 +135,7 @@ export default function Editar() {
 
   useEffect(() => {
     if (departamentoId) {
-      fetch(`http://localhost:5000/api/ubicacion/localidades?departamento_id=${departamentoId}`)
+      fetch(`${API_URL}api/ubicacion/localidades?departamento_id=${departamentoId}`)
         .then(res => res.json())
         .then(setLocalidades);
     } else {
@@ -143,7 +145,7 @@ export default function Editar() {
   }, [departamentoId]);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/etiquetas')
+    fetch(`${API_URL}api/etiquetas`)
       .then(res => res.json())
       .then(data => {
         const mapped = data.map(e => ({ label: e.nombre, id: e.id }));
@@ -154,7 +156,7 @@ export default function Editar() {
   useEffect(() => {
     const fetchDatosPublicacion = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/publicaciones/${id_publicacion}`);
+        const res = await fetch(`${API_URL}publicaciones/${id_publicacion}`);
         if (!res.ok) throw new Error("No se pudo obtener la publicación");
         const data = await res.json();
 
@@ -165,7 +167,7 @@ export default function Editar() {
           setCoordenadas({ lat: parseFloat(data.coordenadas[0]), lng: parseFloat(data.coordenadas[1]) });
         }
         if (data.id_locacion) {
-          const resLoc = await fetch(`http://localhost:5000/api/ubicacion/localidades/${data.id_locacion}`);
+          const resLoc = await fetch(`${API_URL}api/ubicacion/localidades/${data.id_locacion}`);
           if (resLoc.ok) {
             const localidad = await resLoc.json();
             setProvinciaId(localidad.id_provincia.toString());
@@ -231,7 +233,7 @@ export default function Editar() {
           formData.append("imagenes", img);
         });
 
-        const resImagenes = await fetch("http://localhost:5000/subir-imagenes", {
+        const resImagenes = await fetch(`${API_URL}subir-imagenes`, {
           method: "POST",
           body: formData,
         });
@@ -263,7 +265,7 @@ export default function Editar() {
       }
       const token = await user.getIdToken();
 
-      const res = await fetch(`http://localhost:5000/publicaciones/${id_publicacion}`, {
+      const res = await fetch(`${API_URL}publicaciones/${id_publicacion}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

@@ -1,4 +1,5 @@
-const BASE_URL = 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = `${API_URL}`;
 
 // Función para marcar notificación como leída
 export async function marcarNotificacionLeida(idNotificacion) {

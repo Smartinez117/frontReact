@@ -6,6 +6,7 @@ export default function ReporteForm({ idPublicacion, idUsuario, onClose }) {
   const [descripcion, setDescripcion] = useState("");
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState(null);
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,7 +28,7 @@ export default function ReporteForm({ idPublicacion, idUsuario, onClose }) {
     try {
       const token = await user.getIdToken();
 
-      const response = await fetch("http://127.0.0.1:5000/reportes", {
+      const response = await fetch(`${API_URL}reportes`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

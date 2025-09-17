@@ -5,7 +5,7 @@ import {Notificacion} from '../utils/toastUtil'
 
 
 
-const baseURL = "http://localhost:5000"
+const baseURL = "https://backendconflask.onrender.com"
 
 
 //socket para registrasrse como user connected, usando un token 
