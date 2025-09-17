@@ -1,6 +1,6 @@
 import axios from "axios";
 import { getAuth } from "firebase/auth";
-import { BASE_URL } from "../utils/constants";
+import { BASE_URL } from "../utils/constants.jsx";
 
 // Función genérica para manejar requests
 const manejarRequest = async (url, opciones = {}) => {

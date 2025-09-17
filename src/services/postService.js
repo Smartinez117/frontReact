@@ -1,4 +1,4 @@
-import { BASE_URL } from "../utils/constants";
+import { BASE_URL } from "../utils/constants.jsx";
 
 // Función para obtener provincias
 export const fetchProvinces = async () => {

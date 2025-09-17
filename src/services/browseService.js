@@ -1,5 +1,5 @@
-import Publicacion from "../models/Publicacion";
-import { BASE_URL } from "../utils/constants";
+import Publicacion from "../models/Publicacion.js";
+import { BASE_URL } from "../utils/constants.jsx";
 
 // Función genérica para manejar requests HTTP
 async function handleRequest(url, options = {}) {

@@ -1,4 +1,4 @@
-import Publicacion from "../models/Publicacion";
+import Publicacion from "../models/Publicacion.js";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
