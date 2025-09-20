@@ -30,9 +30,6 @@ export function socketconnection(){
       connection.on('connect_error', (error) => {
         console.error('Error en la conexión:', error.message);
       });
-      connection.io.engine.on('packetCreate', (packet) => {
-      console.log('Enviando paquete:', packet);
-});
       return connection;  // puede devolver o guardar la conexión para usarla después
     } catch (error) {
       console.error('Error obteniendo token:', error);
