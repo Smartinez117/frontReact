@@ -43,7 +43,7 @@ export function socketnotificationlisten(useruid) {
     const notificacion = io(baseURL + '/notificacion/' + useruid, {});
 
     notificacion.on('connect', () => {
-        console.log('Socket1 conectado');
+        console.log('Socket-DE-notificaciones conectado');
     });
     
     notificacion.on('connect_error', (error) => {
