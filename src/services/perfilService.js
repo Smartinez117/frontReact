@@ -93,7 +93,7 @@ export function fetchUsuarioActual() {
       try {
         const token = await user.getIdToken();
 
-        const res = await fetch('http://localhost:5000/usuarios/me', {
+        const res = await fetch(`${API_URL}usuarios/me`, {
           headers: {
             Authorization: `Bearer ${token}`
           }

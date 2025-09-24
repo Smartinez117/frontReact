@@ -1,6 +1,6 @@
 import Publicacion from '../models/publicacion';
-
-const BASE_URL = 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = `${API_URL}`;
 
 // Función para obtener publicaciones filtradas desde el backend
 export async function fetchPublicacionesFiltradas(params) {

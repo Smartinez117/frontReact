@@ -71,7 +71,7 @@ export default function ReportesAdmin() {
   const fetchReportes = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/reportes`);
+      const res = await fetch(`${API_URL}reportes`);
       const data = await res.json();
 
       const formateados = data.map((r) => ({
@@ -94,7 +94,7 @@ export default function ReportesAdmin() {
   // Eliminar reporte
   const handleEliminar = async (id) => {
     try {
-      await fetch(`${API_URL}/reportes/${id}`, {
+      await fetch(`${API_URL}reportes/${id}`, {
         method: "DELETE",
       });
       setRows(rows.filter((r) => r.id !== id));
