@@ -90,7 +90,7 @@ export default function UsuariosAdmin() {
     setLoading(true);
     try {
       const response = await fetch(
-        `${API_URL}api/usuarios?page=${page + 1}&per_page=${pageSize}&search=${encodeURIComponent(search)}`
+        `${API_URL}/api/usuarios?page=${page + 1}&per_page=${pageSize}&search=${encodeURIComponent(search)}`
       );
       const data = await response.json();
       setRows(data.usuarios);

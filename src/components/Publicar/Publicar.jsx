@@ -112,7 +112,7 @@ export default function Publicar() {
   const camposValidos = (campo) => !errores.includes(campo);
 
   useEffect(() => {
-    fetch(`${API_URL}api/ubicacion/provincias`)
+    fetch(`${API_URL}/api/ubicacion/provincias`)
       .then(res => res.json())
       .then(setProvincias)
       .catch(console.error);
@@ -120,7 +120,7 @@ export default function Publicar() {
 
   useEffect(() => {
     if (provinciaId) {
-      fetch(`${API_URL}api/ubicacion/departamentos?provincia_id=${provinciaId}`)
+      fetch(`${API_URL}/api/ubicacion/departamentos?provincia_id=${provinciaId}`)
         .then(res => res.json())
         .then(setDepartamentos);
     } else {
@@ -131,7 +131,7 @@ export default function Publicar() {
 
   useEffect(() => {
     if (departamentoId) {
-      fetch(`${API_URL}api/ubicacion/localidades?departamento_id=${departamentoId}`)
+      fetch(`${API_URL}/api/ubicacion/localidades?departamento_id=${departamentoId}`)
         .then(res => res.json())
         .then(setLocalidades);
     } else {
@@ -141,7 +141,7 @@ export default function Publicar() {
   }, [departamentoId]);
 
   useEffect(() => {
-    fetch(`${API_URL}api/etiquetas`)
+    fetch(`${API_URL}/api/etiquetas`)
       .then(res => res.json())
       .then(data => {
         const mapped = data.map(e => ({ label: e.nombre, id: e.id }));
@@ -177,7 +177,7 @@ export default function Publicar() {
         formData.append("imagenes", img);
       });
 
-      const resImagenes = await fetch(`${API_URL}subir-imagenes`, {
+      const resImagenes = await fetch(`${API_URL}/subir-imagenes`, {
         method: "POST",
         body: formData,
       });
@@ -209,7 +209,7 @@ export default function Publicar() {
       }
       const token = await user.getIdToken();
 
-      const res = await fetch(`${API_URL}publicaciones`, {
+      const res = await fetch(`${API_URL}/publicaciones`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

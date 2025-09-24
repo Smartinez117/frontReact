@@ -122,7 +122,7 @@ export default function Publicacion() {
   // Obtener publicación
   useEffect(() => {
     axios
-      .get(`${API_URL}publicaciones/${id}`)
+      .get(`${API_URL}/publicaciones/${id}`)
       .then((res) => {
         setPublicacion(res.data);
         setLoading(false);
@@ -137,7 +137,7 @@ export default function Publicacion() {
   useEffect(() => {
     if (publicacion?.id_usuario) {
       axios
-        .get(`${API_URL}usuario/${publicacion.id_usuario}`)
+        .get(`${API_URL}/usuario/${publicacion.id_usuario}`)
         .then((res) => setUsuario(res.data))
         .catch((err) => console.error("Error al obtener el usuario:", err));
     }
@@ -147,7 +147,7 @@ export default function Publicacion() {
     if (!id) return;
 
     axios
-      .get(`${API_URL}comentarios/publicacion/${id}`)
+      .get(`${API_URL}/comentarios/publicacion/${id}`)
       .then(async (res) => {
         const comentarios = res.data;
         setComentarios(comentarios);
@@ -160,7 +160,7 @@ export default function Publicacion() {
         await Promise.all(
           idsUnicos.map(async (idUsuario) => {
             try {
-              const res = await axios.get(`${API_URL}usuario/${idUsuario}`);
+              const res = await axios.get(`${API_URL}/usuario/${idUsuario}`);
               usuariosMap[idUsuario] = res.data;
             } catch (err) {
               console.error(`Error al obtener usuario ${idUsuario}`, err);
@@ -221,7 +221,7 @@ export default function Publicacion() {
 
   const descargarPDF = async (idPublicacion) => {
     try {
-      const response = await axios.get(`${API_URL}pdf/${idPublicacion}`, {
+      const response = await axios.get(`${API_URL}/pdf/${idPublicacion}`, {
         responseType: "blob",
       });
 
@@ -272,7 +272,7 @@ export default function Publicacion() {
     try {
       const token = await user.getIdToken();
 
-      const res = await fetch(`${API_URL}comentarios`, {
+      const res = await fetch(`${API_URL}/comentarios`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -291,7 +291,7 @@ export default function Publicacion() {
         setNuevoComentario("");
 
         // Recargar comentarios
-        const comentariosRes = await fetch(`${API_URL}comentarios/publicacion/${id}`);
+        const comentariosRes = await fetch(`${API_URL}/comentarios/publicacion/${id}`);
         const comentariosData = await comentariosRes.json();
         setComentarios(comentariosData);
       } else {

@@ -40,7 +40,7 @@ const Buscar = () => {
 
   useEffect(() => {
     // Obtener etiquetas desde backend
-    fetch(`${API_URL}api/etiquetas`)
+    fetch(`${API_URL}/api/etiquetas`)
       .then(res => res.json())
       .then(data => {
         const mapped = data.map(e => ({ label: e.nombre, id: e.id }));
@@ -68,7 +68,7 @@ const Buscar = () => {
   const cargarPublicaciones = async () => {
     try {
       setLoading(true); // ✅ activa loading
-      const res = await fetch(`${API_URL}publicaciones`);
+      const res = await fetch(`${API_URL}/publicaciones`);
       const data = await res.json();
       setPublicaciones(data);
     } catch (error) {

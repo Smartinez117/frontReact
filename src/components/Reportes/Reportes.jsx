@@ -28,7 +28,7 @@ export default function ReporteForm({ idPublicacion, idUsuario, onClose }) {
     try {
       const token = await user.getIdToken();
 
-      const response = await fetch(`${API_URL}reportes`, {
+      const response = await fetch(`${API_URL}/reportes`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
