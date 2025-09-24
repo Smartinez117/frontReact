@@ -8,7 +8,7 @@ import { Outlet, useLocation } from 'react-router-dom'; // 👈 IMPORTANTE PARA 
 import Navigator from './Navigator';
 import Header from './Header';
 import { useEffect, useState } from 'react';
-import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import ModalGeneral from './ModalGeneral'; 
 
 

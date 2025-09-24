@@ -56,7 +56,10 @@ export default function UsuariosAdmin() {
               color="primary"
               size="small"
               sx={{ mr: 1 }}
-              onClick={() => openModal("usuario", row)}
+              onClick={() => openModal("usuario", { nombre: row.nombre, rol: row.rol }, [
+                { name: "nombre", label: "Nombre", type: "text" },
+                { name: "rol", label: "Rol", type: "select", options: ["admin", "usuario"] }
+              ])}
             >
               Editar
             </Button>
