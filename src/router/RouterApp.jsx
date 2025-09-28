@@ -20,6 +20,7 @@ import ComentariosAdmin from "../components/PanelAdmin/sections/ComentariosAdmin
 import UbicacionesAdmin from "../components/PanelAdmin/sections/UbicacionesAdmin.jsx";
 import EtiquetasAdmin from "../components/PanelAdmin/sections/EtiquetasAdmin.jsx";
 import ReportesAdmin from "../components/PanelAdmin/sections/ReportesAdmin.jsx";
+import MapaInteractivo from '../components/Mapa Interactivo/MapaInteractivo.jsx';
 
 function RouterApp() {
   return (
@@ -44,6 +45,7 @@ function RouterApp() {
         <Route path="/perfil/:slug" element={<Perfil/>} />
         <Route path="/editar/:id_publicacion" element={<Editar />} />
         <Route path="/notificaciones" element ={<Notificaciones />} />
+        <Route path="/mapa" element ={<MapaInteractivo />} />
       </Route>
 
     {/*Rutas admin */}
