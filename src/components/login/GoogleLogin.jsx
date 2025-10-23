@@ -19,6 +19,10 @@ function Login() {
       const user = result.user;
       const idToken = await user.getIdToken();
 
+      const refreshToken = userCredential._tokenResponse && userCredential._tokenResponse.refreshToken;
+      console.log('idToken:', idToken);
+      console.log('refreshToken:', refreshToken);
+
       localStorage.setItem("userName", user.displayName);
       localStorage.setItem("userPhoto", user.photoURL);
       localStorage.setItem("userEmail", user.email);
