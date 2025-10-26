@@ -19,7 +19,7 @@ function Login() {
       const user = result.user;
       const idToken = await user.getIdToken();
 
-      const refreshToken = userCredential._tokenResponse && userCredential._tokenResponse.refreshToken;
+      const refreshToken = result && result._tokenResponse && result._tokenResponse.refreshToken || null;
       console.log('idToken:', idToken);
       console.log('refreshToken:', refreshToken);
 
@@ -28,6 +28,8 @@ function Login() {
       localStorage.setItem("userEmail", user.email);
       localStorage.setItem("token", idToken);
 
+      if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
+      
       const response = await fetch(`${API_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
