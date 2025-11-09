@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -56,7 +55,6 @@ const MainLayout = () => {
       <main style={{ padding: '1rem' }}>
         <Outlet />
       </main>
-      <Footer />
     </>
   );
 };

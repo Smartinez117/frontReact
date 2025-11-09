@@ -7,10 +7,10 @@ import Autocomplete from '@mui/material/Autocomplete';
 import { useLocation } from "react-router-dom";
 
 const categoriasPosibles = [
-  { label: "Adopción", value: "Adopción" },
-  { label: "Búsqueda", value: "Búsqueda" },
-  { label: "Encuentro", value: "Encuentro" },
-  { label: "Estado crítico", value: "Estado Crítico" }
+  { label: "¡Busco un hogar!", value: "Adopción" },
+  { label: "¡Me perdí!", value: "Búsqueda" },
+  { label: "¡Me encontraron!", value: "Encuentro" },
+  { label: "¡Necesito ayuda urgente!", value: "Estado Crítico" }
 ];
 
 const API_URL = import.meta.env.VITE_API_URL;

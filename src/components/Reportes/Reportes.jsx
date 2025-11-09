@@ -46,7 +46,7 @@ export default function ReporteForm({ idPublicacion, idUsuario, onClose }) {
         throw new Error("Error al enviar reporte");
       }
 
-      setMensaje("✅ Reporte enviado con éxito.");
+      setMensaje("Reporte enviado con éxito.");
       setDescripcion("");
       setTipo("");
     } catch (err) {

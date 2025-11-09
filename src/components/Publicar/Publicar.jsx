@@ -252,7 +252,7 @@ export default function Publicar() {
           sx={{ my: 2, gap: 1, flexWrap: 'wrap' }}
           type="single"
         >
-          {["Adopción", "Búsqueda", "Encuentro", "Estado Crítico"].map(opcion => (
+          {["¡Busco un hogar!", "¡Me perdí!", "¡Me encontraron!", "¡Necesito ayuda urgente!"].map(opcion => (
             <Button
               key={opcion}
               value={opcion}
