@@ -21,6 +21,10 @@ const getTitle = (tipo) => {
       return '¿Eliminar publicación?';
     case 'usuario':
       return '¿Eliminar usuario?';
+    case 'archivar':
+      return '¿Archivar publicación?';
+    case 'desarchivar':
+      return '¿Desarchivar publicación?';  
     default:
       return '¿Confirmar acción?';
   }
@@ -32,6 +36,10 @@ const getMessage = (tipo) => {
       return '¿Estás seguro de que deseas eliminar esta publicación?';
     case 'usuario':
       return '¿Estás seguro de que deseas eliminar este usuario?';
+    case 'archivar':
+      return 'La publicación será archivada y no será visible para otros usuarios.';
+    case 'desarchivar':
+      return 'La publicación volverá a estar visible para todos.';
     default:
       return '¿Estás seguro de realizar esta acción?';
   }
@@ -42,6 +50,10 @@ const getConfirmText = (tipo) => {
     case 'publicacion':
     case 'usuario':
       return 'Eliminar';
+    case 'archivar':
+      return 'Archivar';
+    case 'desarchivar':
+      return 'Desarchivar';
     default:
       return 'Confirmar';
   }

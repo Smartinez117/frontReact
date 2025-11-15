@@ -6,6 +6,7 @@ export default class Publicacion {
     id_locacion,
     titulo,
     descripcion,
+    estado,
     categoria,
     etiquetas,
     fecha_creacion,
@@ -18,6 +19,7 @@ export default class Publicacion {
     this.id_locacion = id_locacion;
     this.titulo = titulo;
     this.descripcion = descripcion;
+    this.estado = estado;
     this.categoria = categoria;
     this.etiquetas = etiquetas;
     this.fecha_creacion = fecha_creacion;

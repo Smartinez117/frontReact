@@ -41,6 +41,41 @@ export async function eliminarPublicacion(id) {
   return await response.json(); // mensaje confirmando eliminación
 }
 
+export async function archivarPublicacion(id) {
+  const response = await fetch(`${BASE_URL}/publicaciones/${id}/archivar`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      // Agrega Authorization si usas autenticación
+      // 'Authorization': 'Bearer TU_TOKEN_AQUI'
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Error al archivar la publicación');
+  }
+
+  return await response.json(); // mensaje confirmando eliminación
+}
+
+export async function desarchivarPublicacion(id) {
+  const response = await fetch(`${BASE_URL}/publicaciones/${id}/desarchivar`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      // Agrega Authorization si usas autenticación
+      // 'Authorization': 'Bearer TU_TOKEN_AQUI'
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Error al archivar la publicación');
+  }
+
+  return await response.json(); // mensaje confirmando eliminación
+}
 
 export function fetchMisPublicaciones() {
   const auth = getAuth();
