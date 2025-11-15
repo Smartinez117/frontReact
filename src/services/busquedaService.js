@@ -18,7 +18,7 @@ export async function fetchPublicacionesFiltradas(params) {
   const data = await response.json();
 
   // Convertimos cada objeto recibido en una instancia de Publicacion
-  return data.map(pub => new Publicacion(pub));
+  return data;
 }
 
 // Opcional: función para obtener una publicación por ID si la necesitas

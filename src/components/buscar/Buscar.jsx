@@ -15,6 +15,8 @@ const categoriasPosibles = [
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+
+
 const Buscar = () => {
   const navigate = useNavigate();
   const [idPublicacion, setIdPublicacion] = useState(null);
@@ -37,7 +39,15 @@ const Buscar = () => {
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
   const location = useLocation();
-
+  const limpiarFiltros = () => {
+    setCategorias([]);
+    setFechaDesde('');
+    setFechaHasta('');
+    setRadioKm('');
+    setEtiquetasSeleccionadas([]);
+    setTagsSeleccionados([]);
+    aplicarFiltros(); // vuelve a cargar todo sin filtros
+  };
   useEffect(() => {
     // Obtener etiquetas desde backend
     fetch(`${API_URL}/api/etiquetas`)
@@ -103,6 +113,7 @@ const Buscar = () => {
 
     try {
       const publicacionesRaw = await fetchPublicacionesFiltradas(params);
+      console.log('Publicaciones filtradas recibidas:', publicacionesRaw);
       setPublicaciones(publicacionesRaw);
     } catch (e) {
       console.error("Error en fetch filtrado:", e);
@@ -118,6 +129,7 @@ const Buscar = () => {
     } else {
       setCategorias([value]);
     }
+
   };
 
     // Para que aplique directamente el filtro cuando se seleccione una etiqueta.
@@ -186,13 +198,17 @@ const Buscar = () => {
             </div>
 
             <div className="filtro-grupo">
-              <label>Radio desde tu ubicación (km):</label>
-              <input
-                type="number"
-                placeholder="Ej: 20"
+              <label>Buscar cerca de tu ubicación:</label>
+              <select
                 value={radioKm}
                 onChange={e => setRadioKm(e.target.value)}
-              />
+              >
+                <option value="">Cualquier distancia</option>
+                <option value="3">Cerca (3 km)</option>
+                <option value="10">Media distancia (10 km)</option>
+                <option value="20">Lejos (20 km)</option>
+                <option value="50">Muy lejos (50 km)</option>
+              </select>
             </div>
 
             <div className="filtro-grupo">
@@ -216,6 +232,14 @@ const Buscar = () => {
 
             <button className="boton-aplicar-filtros" onClick={aplicarFiltros}>
               Aplicar filtros
+            </button>
+
+            <button
+              className="boton-limpiar-filtros"
+              onClick={limpiarFiltros}
+              type="button"
+            >
+              Quitar filtros
             </button>
           </div>
         )}
@@ -256,6 +280,9 @@ const Buscar = () => {
 
                 <div className="publicacion-contenido">
                   <h3 className="publicacion-titulo">{pub.titulo}</h3>
+                  <p className="publicacion-fecha">
+                    {new Date(pub.fecha_creacion).toLocaleDateString('es-AR')}
+                  </p>
                   <p className="publicacion-localidad">📍 {pub.localidad}</p>
                   <span className="publicacion-categoria">{pub.categoria}</span>
 
