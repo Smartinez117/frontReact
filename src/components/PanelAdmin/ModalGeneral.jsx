@@ -28,13 +28,22 @@ export default function ModalGeneral({
 
   if (!open) return null;
 
-  // Si no recibimos "fields", los generamos a partir de las keys de data (todos text)
   const effectiveFields = Array.isArray(fields) && fields.length > 0
     ? fields
     : (data ? Object.keys(data).map(k => ({ name: k, label: capitalize(k), type: 'text' })) : []);
 
   const handleChange = (name, value) => {
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const renderOption = (opt) => {
+    // acepta opt = primitive (string/num) o { value, label }
+    if (opt && typeof opt === 'object' && ('value' in opt || 'label' in opt)) {
+      const val = opt.value !== undefined ? opt.value : opt.label;
+      const lab = opt.label !== undefined ? opt.label : String(opt.value ?? opt);
+      return { val, lab };
+    }
+    return { val: opt, lab: String(opt) };
   };
 
   return (
@@ -55,16 +64,21 @@ export default function ModalGeneral({
                   label={label}
                   value={value}
                   onChange={(e) => handleChange(name, e.target.value)}
+                  renderValue={val => {
+                    // mostrar la etiqueta legible en el select cuando options son objetos
+                    const found = Array.isArray(options) ? options.map(renderOption).find(o => String(o.val) === String(val)) : null;
+                    return found ? found.lab : String(val);
+                  }}
                 >
-                  {Array.isArray(options) && options.map((opt) => (
-                    <MenuItem key={opt} value={opt}>{opt}</MenuItem>
-                  ))}
+                  {Array.isArray(options) && options.map((optRaw) => {
+                    const { val, lab } = renderOption(optRaw);
+                    return <MenuItem key={String(val)} value={val}>{lab}</MenuItem>;
+                  })}
                 </Select>
               </FormControl>
             );
           }
 
-          // por defecto text input
           return (
             <TextField
               key={name}

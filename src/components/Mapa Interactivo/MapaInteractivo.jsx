@@ -7,25 +7,25 @@ import L from "leaflet";
 
 // Iconos por categoría
 const markerIcons = {
-  "Adopción": new L.Icon({
+  "¡Busco un hogar!": new L.Icon({
     iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
     iconRetinaUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
     shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41],
   }),
-  "Búsqueda": new L.Icon({
+  "¡Me perdí!": new L.Icon({
     iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
     iconRetinaUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
     shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41],
   }),
-  "Encuentro": new L.Icon({
+  " ¡Me encontraron!": new L.Icon({
     iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png",
     iconRetinaUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png",
     shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41],
   }),
-  "Estado Crítico": new L.Icon({
+  "¡Necesito ayuda urgente!": new L.Icon({
     iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png",
     iconRetinaUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png",
     shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
@@ -126,7 +126,7 @@ const MapaInteractivo = () => {
             const lat = parseFloat(pub.coordenadas[0]);
             const lng = parseFloat(pub.coordenadas[1]);
             const imagenUrl = pub.imagen_principal;
-            const iconCat = markerIcons[pub.categoria] || markerIcons["Adopción"];
+            const iconCat = markerIcons[pub.categoria] || markerIcons["¡Busco un hogar!"];
             return (
               <Marker key={"pub-"+idx} position={[lat, lng]} icon={iconCat}>
                 <Popup>

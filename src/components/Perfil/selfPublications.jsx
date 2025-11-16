@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './cuserPublications.css';
-import { fetchMisPublicaciones, fetchPublicacionesPorUsuario, eliminarPublicacion } from '../../services/perfilService';
+import { fetchMisPublicaciones, fetchPublicacionesPorUsuario, eliminarPublicacion, archivarPublicacion, desarchivarPublicacion } from '../../services/perfilService';
 import { confirmarAccion } from '../../utils/confirmservice';
 
 const SelfPublications = ({ userId, isOwner }) => {
@@ -21,6 +21,36 @@ const SelfPublications = ({ userId, isOwner }) => {
       },
     });
   };
+
+  //Archivar publicación
+  const handleArchivar = (id) => {
+    confirmarAccion({
+      tipo: 'archivar',
+      onConfirm: async () => {
+        await archivarPublicacion(id);
+        setPublicaciones(prev =>
+          prev.map(pub =>
+            pub.id === id ? { ...pub, estado: 1 } : pub
+          )
+        );
+      },
+    });
+  };
+
+  const handleDesarchivar = (id) => {
+    confirmarAccion({
+      tipo: 'desarchivar',
+      onConfirm: async () => {
+        await desarchivarPublicacion(id);
+        setPublicaciones(prev =>
+          prev.map(pub =>
+            pub.id === id ? { ...pub, estado: 0 } : pub
+          )
+        );
+      },
+    });
+  };
+
 
   // Cargar publicaciones
   useEffect(() => {
@@ -76,6 +106,13 @@ const SelfPublications = ({ userId, isOwner }) => {
 
                 <div className="publicacion-contenido-vertical">
                   <h3 className="publicacion-titulo">{pub.titulo}</h3>
+                  {/* 🔹 BADGES DE ESTADO */}
+                  {pub.estado === 1 && (
+                    <span className="badge-archivado">Archivado</span>
+                  )}
+                  {pub.estado === 2 && (
+                    <span className="badge-bloqueado">Bloqueado</span>
+                  )}
                   <span className="publicacion-categoria">{pub.categoria}</span>
                   <div className="publicacion-etiquetas">
                     {pub.etiquetas.map((etiqueta, idx) => (
@@ -85,7 +122,7 @@ const SelfPublications = ({ userId, isOwner }) => {
                     ))}
                   </div>
                 </div>
-
+                  
                 <div className="publicacion-botones-lateral">
                   <button
                     type="button"
@@ -112,6 +149,26 @@ const SelfPublications = ({ userId, isOwner }) => {
                       >
                         Eliminar
                       </button>
+                      {pub.estado !== 1 && (
+                        <button
+                          type="button"
+                          className="boton-archivar"
+                          onClick={() => handleArchivar(pub.id)}
+                        >
+                          Archivar
+                        </button>
+                      )}
+
+                      {/* 🔹 Mostrar DESARCHIVAR solo si estado === archivado */}
+                      {pub.estado === 1 && (
+                        <button
+                          type="button"
+                          className="boton-desarchivar"
+                          onClick={() => handleDesarchivar(pub.id)}
+                        >
+                          Desarchivar
+                        </button>
+                      )}
                     </>
                   )}
                 </div>

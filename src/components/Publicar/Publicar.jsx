@@ -61,6 +61,40 @@ const marcadorIcono = new L.Icon({
   iconAnchor: [12, 41],
 });
 
+const MAX_IMAGENES = 5;
+const MAX_SIZE_MB = 5; // Por archivo
+const MAX_WIDTH = 4000;
+const MAX_HEIGHT = 4000;
+
+const formatosPermitidos = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+const validarImagen = (file) => {
+  return new Promise((resolve, reject) => {
+    // Validar tipo
+    if (!formatosPermitidos.includes(file.type)) {
+      return reject("Formato no permitido. Usa JPG, JPEG, PNG o WEBP.");
+    }
+
+    // Validar tamaño
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      return reject(`La imagen supera los ${MAX_SIZE_MB} MB.`);
+    }
+
+    // Validar dimensiones
+    const img = new Image();
+    img.onload = () => {
+      if (img.width > MAX_WIDTH || img.height > MAX_HEIGHT) {
+        reject(`La imagen supera las dimensiones máximas (${MAX_WIDTH}x${MAX_HEIGHT}px).`);
+      } else {
+        resolve(); // Imagen válida
+      }
+    };
+    img.onerror = () => reject("No se pudo leer la imagen.");
+    img.src = URL.createObjectURL(file);
+  });
+};
+
+
 function MapaInteractivo({ lat, lng, setLatLng }) {
   const map = useMapEvents({
     click(e) {
@@ -92,6 +126,47 @@ export default function Publicar() {
   const [errores, setErrores] = useState([]);
   const navigate = useNavigate();
   const [cargando, setCargando] = useState(false);
+
+  useEffect(() => {
+    const borrador = localStorage.getItem("borrador_publicacion");
+    if (borrador) {
+      const data = JSON.parse(borrador);
+
+      setTitulo(data.titulo || "");
+      setDescripcion(data.descripcion || "");
+      setSeleccionado(data.seleccionado || "");
+      setProvinciaId(data.provinciaId || "");
+      setDepartamentoId(data.departamentoId || "");
+      setLocalidadId(data.localidadId || "");
+      setCoordenadas(data.coordenadas || { lat: -34.6, lng: -58.4 });
+      setEtiquetasSeleccionadas(data.etiquetasSeleccionadas || []);
+    }
+  }, []);
+
+  // Guardar automáticamente cuando cambia algo
+  useEffect(() => {
+    const borrador = {
+      titulo,
+      descripcion,
+      seleccionado,
+      provinciaId,
+      departamentoId,
+      localidadId,
+      coordenadas,
+      etiquetasSeleccionadas,
+    };
+
+    localStorage.setItem("borrador_publicacion", JSON.stringify(borrador));
+  }, [
+    titulo,
+    descripcion,
+    seleccionado,
+    provinciaId,
+    departamentoId,
+    localidadId,
+    coordenadas,
+    etiquetasSeleccionadas
+  ]);
 
   const API_URL = import.meta.env.VITE_API_URL;
   
@@ -159,9 +234,40 @@ export default function Publicar() {
     }
   };
 
-  const handleImagenesChange = (event) => {
-    const files = Array.from(event.target.files);
-    setImagenesSeleccionadas(files);
+  const handleImagenesChange = async (event) => {
+    const archivos = Array.from(event.target.files);
+
+    if (imagenesSeleccionadas.length + archivos.length > MAX_IMAGENES) {
+      mostrarAlerta({
+        titulo: "Demasiadas imágenes",
+        mensaje: "Solo podés subir un máximo de 5 imágenes.",
+        tipo: "warning"
+      });
+      return;
+    }
+
+    const nuevasValidas = [];
+
+    for (const file of archivos) {
+      try {
+        await validarImagen(file);
+        nuevasValidas.push(file);
+      } catch (err) {
+        mostrarAlerta({
+          titulo: "Imagen inválida",
+          mensaje: err.toString(),
+          tipo: "warning"
+        });
+      }
+    }
+
+    setImagenesSeleccionadas((prev) => [...prev, ...nuevasValidas]);
+
+    event.target.value = "";
+  };
+
+  const eliminarImagen = (index) => {
+    setImagenesSeleccionadas(prev => prev.filter((_, i) => i !== index));
   };
 
   const handlePublicar = async () => {
@@ -226,6 +332,7 @@ export default function Publicar() {
           mensaje: 'Publicación enviada con éxito',
           tipo: 'success'
         });
+        localStorage.removeItem("borrador_publicacion");
         navigate(`/publicacion/${data.id_publicacion}`);
       } else {
         throw new Error(data.error || "Error en el envío");
@@ -373,7 +480,53 @@ export default function Publicar() {
           Subir imágenes ({imagenesSeleccionadas.length})
           <VisuallyHiddenInput type="file" multiple accept="image/*" onChange={handleImagenesChange} />
         </Button>
+        
+        {imagenesSeleccionadas.length > 0 && (
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '12px',
+            marginTop: '16px'
+          }}>
+            {imagenesSeleccionadas.map((img, index) => (
+              <div
+                key={index}
+                style={{ position: 'relative', display: 'inline-block' }}
+              >
+                <img
+                  src={URL.createObjectURL(img)}
+                  alt="preview"
+                  style={{
+                    width: '120px',
+                    height: '120px',
+                    objectFit: 'cover',
+                    borderRadius: '8px',
+                    border: '1px solid #ccc'
+                  }}
+                />
 
+                <button
+                  onClick={() => eliminarImagen(index)}
+                  style={{
+                    position: 'absolute',
+                    top: '4px',
+                    right: '4px',
+                    background: '#ff4d4d',
+                    border: 'none',
+                    color: 'white',
+                    padding: '4px 6px',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  X
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+ 
+          
         {imagenesSeleccionadas.length > 0 && (
           <Typography level="body2" sx={{ mt: 1, color: '#666' }}>
             {imagenesSeleccionadas.map(file => file.name).join(', ')}
