@@ -10,6 +10,7 @@ import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import { Snackbar, Alert } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import {
   Dialog,
@@ -32,9 +33,10 @@ export default function UsuariosAdmin() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-
   const [open, setOpen] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
 
   // Cargar roles
   useEffect(() => {
@@ -121,7 +123,15 @@ export default function UsuariosAdmin() {
         prev.map((u) => (u.id === actualizado.id ? { ...u, ...actualizado } : u))
       );
 
+      setRows((prev) =>
+        prev.map((u) => (u.id === actualizado.id ? { ...u, ...actualizado } : u))
+      );
+
       setOpen(false);
+
+      setSnackbarMessage("Cambios guardados correctamente");
+      setSnackbarOpen(true);
+
     } catch (error) {
       console.error("Error al guardar:", error);
     }
@@ -285,6 +295,18 @@ export default function UsuariosAdmin() {
           </Button>
         </DialogActions>
       </Dialog>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </>
+
+
   );
 }
