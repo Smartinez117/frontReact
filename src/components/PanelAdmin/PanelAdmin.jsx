@@ -159,7 +159,6 @@ const drawerWidth = 256;
 
 export default function PanelAdmin() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const [modalConfig, setModalConfig] = useState({ open: false });
   const isSmUp = useMediaQuery(theme.breakpoints.up('sm'));
   const location = useLocation(); // 👈 para el título dinámico
 
@@ -167,13 +166,6 @@ export default function PanelAdmin() {
     setMobileOpen(!mobileOpen);
   };
 
-  const openModal = (entity, data) => {
-    setModalConfig({
-      open: true,
-      entity,  // "usuario" | "ubicacion" | "etiqueta"
-      data     // objeto con valores actuales
-    });
-  };
 
   //Datos del usuario:
     const [userName, setUserName] = useState('');
@@ -258,21 +250,10 @@ export default function PanelAdmin() {
             >
               {/*SOLO acá permito el scroll horizontal */}
               <Box sx={{ width: '100%', overflowX: 'auto' }}>
-                <Outlet context={{ openModal }}  />
+                <Outlet/>
               </Box>
             </Paper>
 
-            {/*Modal general */}
-            <ModalGeneral
-              open={modalConfig.open}
-              entity={modalConfig.entity}
-              data={modalConfig.data}
-              onClose={() => setModalConfig({ open: false })}
-              onSave={(updated) => {
-                console.log("Guardado:", updated);
-                setModalConfig({ open: false });
-              }}
-            />
 
           </Box>
           <Box component="footer" sx={{ p: 2, bgcolor: '#eaeff1' }}>
