@@ -93,6 +93,47 @@ export default function Publicar() {
   const navigate = useNavigate();
   const [cargando, setCargando] = useState(false);
 
+  useEffect(() => {
+    const borrador = localStorage.getItem("borrador_publicacion");
+    if (borrador) {
+      const data = JSON.parse(borrador);
+
+      setTitulo(data.titulo || "");
+      setDescripcion(data.descripcion || "");
+      setSeleccionado(data.seleccionado || "");
+      setProvinciaId(data.provinciaId || "");
+      setDepartamentoId(data.departamentoId || "");
+      setLocalidadId(data.localidadId || "");
+      setCoordenadas(data.coordenadas || { lat: -34.6, lng: -58.4 });
+      setEtiquetasSeleccionadas(data.etiquetasSeleccionadas || []);
+    }
+  }, []);
+
+  // Guardar automáticamente cuando cambia algo
+  useEffect(() => {
+    const borrador = {
+      titulo,
+      descripcion,
+      seleccionado,
+      provinciaId,
+      departamentoId,
+      localidadId,
+      coordenadas,
+      etiquetasSeleccionadas,
+    };
+
+    localStorage.setItem("borrador_publicacion", JSON.stringify(borrador));
+  }, [
+    titulo,
+    descripcion,
+    seleccionado,
+    provinciaId,
+    departamentoId,
+    localidadId,
+    coordenadas,
+    etiquetasSeleccionadas
+  ]);
+
   const API_URL = import.meta.env.VITE_API_URL;
   
   const validarCampos = () => {
@@ -226,6 +267,7 @@ export default function Publicar() {
           mensaje: 'Publicación enviada con éxito',
           tipo: 'success'
         });
+        localStorage.removeItem("borrador_publicacion");
         navigate(`/publicacion/${data.id_publicacion}`);
       } else {
         throw new Error(data.error || "Error en el envío");
