@@ -33,17 +33,15 @@ export default function UsuariosAdmin() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
 
-  // modal local
   const [open, setOpen] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
 
-  // Cargar roles al inicio
+  // Cargar roles
   useEffect(() => {
     const fetchRoles = async () => {
       try {
         const res = await fetch(`${API_URL}/api/roles`);
         const data = await res.json();
-        // esperar data sea array o { roles: [...] }
         const r = Array.isArray(data) ? data : data.roles || [];
         setRoles(r);
       } catch (error) {
@@ -80,28 +78,28 @@ export default function UsuariosAdmin() {
     return () => clearTimeout(timeout);
   }, [search, page, pageSize, fetchUsuarios]);
 
-  // Abrir modal para editar usuario
+  // Abrir modal
   const handleEditUsuario = (row) => {
-    // 1) Intentar obtener role_id
-    let roleId = row.role_id;
+    let roleId = row.role_id; // puede venir del backend
 
-    // 2) Si no viene role_id, lo buscamos por nombre del rol
+    // intentar mapear si solo vino "rol"
     if (!roleId && roles.length > 0) {
       const found = roles.find(
-        (r) => r.nombre.toLowerCase() === row.rol?.toLowerCase()
+        (r) => r.nombre?.toLowerCase() === row.rol?.toLowerCase()
       );
       if (found) roleId = found.id;
     }
 
-    // 3) Fallback por si no se encuentra nada
+    // fallback
     if (!roleId && roles.length > 0) {
       roleId = roles[0].id;
     }
 
-    setUsuarioSeleccionado({ ...row, role_id: roleId });
+    setUsuarioSeleccionado({ ...row, role_id: Number(roleId) });
     setOpen(true);
   };
 
+  // Guardar cambios
   const handleGuardar = async () => {
     try {
       const res = await fetch(`${API_URL}/api/admin/usuario/${usuarioSeleccionado.id}`, {
@@ -109,16 +107,16 @@ export default function UsuariosAdmin() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nombre: usuarioSeleccionado.nombre,
-          role_id: usuarioSeleccionado.role_id,
+          role_id: Number(usuarioSeleccionado.role_id),
         }),
       });
 
       if (!res.ok) throw new Error("Error actualizando usuario");
 
       const data = await res.json();
-      const actualizado = data.usuario || data; // para cubrir ambas respuestas
+      const actualizado = data.usuario || data;
 
-      // Actualizar tabla local
+      // Actualizar tabla sin recargar
       setRows((prev) =>
         prev.map((u) => (u.id === actualizado.id ? { ...u, ...actualizado } : u))
       );
@@ -129,15 +127,13 @@ export default function UsuariosAdmin() {
     }
   };
 
-
-
   const columns = useMemo(
     () => [
       { field: "id", headerName: "ID", width: 70 },
       { field: "nombre", headerName: "Nombre", width: 130 },
       { field: "email", headerName: "Email", width: 200 },
-      { field: "rol", headerName: "Rol", width: 90 },
-      { field: "fecha_registro", headerName: "Fecha de registro", width: 130 },
+      { field: "rol", headerName: "Rol", width: 130 },
+      { field: "fecha_registro", headerName: "Fecha", width: 130 },
       {
         field: "acciones",
         headerName: "Acciones",
@@ -153,12 +149,13 @@ export default function UsuariosAdmin() {
                 variant="outlined"
                 size="small"
                 sx={{ mr: 1 }}
-                target="_blank"
                 component={Link}
                 to={`/perfil/${row.slug}`}
+                target="_blank"
               >
                 Ver
               </Button>
+
               <Button
                 variant="contained"
                 color="primary"
@@ -168,6 +165,7 @@ export default function UsuariosAdmin() {
               >
                 Editar
               </Button>
+
               <Button
                 variant="contained"
                 color="secondary"
@@ -177,6 +175,7 @@ export default function UsuariosAdmin() {
               >
                 Suspender
               </Button>
+
               <Button
                 variant="contained"
                 color="error"
@@ -201,24 +200,20 @@ export default function UsuariosAdmin() {
             <Grid item>
               <SearchIcon color="action" />
             </Grid>
+
             <Grid item xs>
               <TextField
                 fullWidth
                 placeholder="Buscar por Nombre o Email"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                InputProps={{
-                  disableUnderline: true,
-                  sx: { fontSize: "default" },
-                }}
                 variant="standard"
+                InputProps={{ disableUnderline: true }}
               />
             </Grid>
+
             <Grid item>
-              <Button variant="contained" sx={{ mr: 1 }}>
-                Agregar usuario
-              </Button>
-              <Tooltip title="Reload">
+              <Tooltip title="Recargar">
                 <IconButton onClick={() => fetchUsuarios()}>
                   <RefreshIcon color="action" />
                 </IconButton>
@@ -244,15 +239,19 @@ export default function UsuariosAdmin() {
         />
       </Box>
 
-      {/* Modal para editar usuario */}
+      {/* MODAL */}
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Editar Usuario</DialogTitle>
+
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
           <TextField
             label="Nombre"
             value={usuarioSeleccionado?.nombre || ""}
             onChange={(e) =>
-              setUsuarioSeleccionado({ ...usuarioSeleccionado, nombre: e.target.value })
+              setUsuarioSeleccionado({
+                ...usuarioSeleccionado,
+                nombre: e.target.value,
+              })
             }
             fullWidth
           />
@@ -269,7 +268,6 @@ export default function UsuariosAdmin() {
                   role_id: Number(e.target.value),
                 })
               }
-              disabled={roles.length === 0}
             >
               {roles.map((rol) => (
                 <MenuItem key={rol.id} value={rol.id}>
