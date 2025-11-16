@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { fetchPublicacionesFiltradas } from '../../services/busquedaService';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './Buscar.css';
 import { FormControl, FormLabel, TextField } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
-import { useLocation } from "react-router-dom";
 
 const categoriasPosibles = [
   { label: "¡Busco un hogar!", value: "Adopción" },
@@ -15,15 +14,18 @@ const categoriasPosibles = [
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-
-
 const Buscar = () => {
   const navigate = useNavigate();
-  const [idPublicacion, setIdPublicacion] = useState(null);
+  const location = useLocation();
+
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const LIMIT = 12;
 
   const [categorias, setCategorias] = useState([]);
   const [publicaciones, setPublicaciones] = useState([]);
-  const [loading, setLoading] = useState(true); // ✅ arranca en true para mostrar "cargando"
+  const [loadingInitial, setLoadingInitial] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
 
   const [fechaDesde, setFechaDesde] = useState('');
@@ -38,7 +40,6 @@ const Buscar = () => {
 
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
-  const location = useLocation();
   const limpiarFiltros = () => {
     setCategorias([]);
     setFechaDesde('');
@@ -46,10 +47,13 @@ const Buscar = () => {
     setRadioKm('');
     setEtiquetasSeleccionadas([]);
     setTagsSeleccionados([]);
-    aplicarFiltros(); // vuelve a cargar todo sin filtros
+    aplicarFiltros();
   };
+
+  // =====================
+  // CARGA INICIAL
+  // =====================
   useEffect(() => {
-    // Obtener etiquetas desde backend
     fetch(`${API_URL}/api/etiquetas`)
       .then(res => res.json())
       .then(data => {
@@ -58,7 +62,6 @@ const Buscar = () => {
       })
       .catch(err => console.error("Error al obtener etiquetas:", err));
 
-    // Obtener ubicación del navegador
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -71,29 +74,26 @@ const Buscar = () => {
       );
     }
 
-    // Cargar publicaciones iniciales
     cargarPublicaciones();
   }, []);
 
   const cargarPublicaciones = async () => {
     try {
-      setLoading(true); // ✅ activa loading
-      const res = await fetch(`${API_URL}/publicaciones`);
+      setLoadingInitial(true);
+      const res = await fetch(`${API_URL}/publicaciones?page=0&limit=12`);
       const data = await res.json();
       setPublicaciones(data);
     } catch (error) {
-      console.error("Error cargando publicaciones:", error);
       setError("Error cargando publicaciones");
     } finally {
-      setLoading(false);
+      setLoadingInitial(false);
     }
   };
 
-  // Endpoint de filtrado, ahora el back ya devuelve `localidad` directamente
-  const aplicarFiltros = async () => {
-    setLoading(true);
-    setError(null);
-
+  // =====================
+  // APLICAR FILTROS
+  // =====================
+  const construirFiltros = () => {
     const params = {};
 
     if (categorias.length > 0) params.categoria = categorias[0];
@@ -111,15 +111,30 @@ const Buscar = () => {
       params.lon = longitud;
     }
 
+    return params;
+  };
+
+  const aplicarFiltros = async () => {
+    setLoadingInitial(true);
+    setError(null);
+
+    const filtros = construirFiltros();
+    const filtrosActivos = Object.keys(filtros).length > 0;
+
     try {
-      const publicacionesRaw = await fetchPublicacionesFiltradas(params);
-      console.log('Publicaciones filtradas recibidas:', publicacionesRaw);
+      const publicacionesRaw = await fetchPublicacionesFiltradas({
+        ...filtros,
+        page: 0,
+        limit: LIMIT,
+      });
+
       setPublicaciones(publicacionesRaw);
+      setPage(0);
+      setHasMore(true);
     } catch (e) {
-      console.error("Error en fetch filtrado:", e);
-      setError(e.message || 'Error al obtener publicaciones');
+      setError("Error al obtener publicaciones");
     } finally {
-      setLoading(false);
+      setLoadingInitial(false);
     }
   };
 
@@ -129,17 +144,18 @@ const Buscar = () => {
     } else {
       setCategorias([value]);
     }
-
   };
 
-    // Para que aplique directamente el filtro cuando se seleccione una etiqueta.
+  // =====================
+  // TAGS INICIALES DESDE URL
+  // =====================
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const etiquetaInicial = params.get("etiqueta");
 
     if (etiquetaInicial) {
-      // Buscar si esa etiqueta existe en las opciones
       const encontrada = etiquetasDisponibles.find(opt => opt.label === etiquetaInicial);
+
       if (encontrada) {
         setEtiquetasSeleccionadas([encontrada]);
         setTagsSeleccionados([etiquetaInicial]);
@@ -149,11 +165,54 @@ const Buscar = () => {
   }, [location.search, etiquetasDisponibles]);
 
   useEffect(() => {
-    if (tagsSeleccionados.length > 0) {
-      aplicarFiltros();
-    }
+    if (tagsSeleccionados.length > 0) aplicarFiltros();
   }, [tagsSeleccionados]);
 
+  // =====================
+  // INFINITE SCROLL
+  // =====================
+  const loadMore = async () => {
+    if (!hasMore || loadingMore) return;
+
+    setLoadingMore(true);
+
+    try {
+      const filtros = construirFiltros();
+      const filtrosActivos = Object.keys(filtros).length > 0;
+
+      let url;
+
+      if (filtrosActivos) {
+        const params = new URLSearchParams({
+          ...filtros,
+          page: page + 1,
+          limit: LIMIT
+        });
+
+        url = `${API_URL}/publicaciones/filtrar?${params.toString()}`;
+      } else {
+        url = `${API_URL}/publicaciones?page=${page + 1}&limit=${LIMIT}`;
+      }
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data.length < LIMIT) setHasMore(false);
+
+      setPublicaciones(prev => [...prev, ...data]);
+      setPage(prev => prev + 1);
+
+    } catch (e) {
+      console.error("Error cargando más publicaciones", e);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+
+  // =====================
+  // RENDER
+  // =====================
   return (
     <div className="buscar-container">
       <div className="header-filtros">
@@ -180,11 +239,7 @@ const Buscar = () => {
                 </button>
               ))}
               {categorias.length > 0 && (
-                <button
-                  className="filtro-boton limpiar"
-                  onClick={() => setCategorias([])}
-                  type="button"
-                >
+                <button className="filtro-boton limpiar" onClick={() => setCategorias([])}>
                   Limpiar
                 </button>
               )}
@@ -199,10 +254,7 @@ const Buscar = () => {
 
             <div className="filtro-grupo">
               <label>Buscar cerca de tu ubicación:</label>
-              <select
-                value={radioKm}
-                onChange={e => setRadioKm(e.target.value)}
-              >
+              <select value={radioKm} onChange={e => setRadioKm(e.target.value)}>
                 <option value="">Cualquier distancia</option>
                 <option value="3">Cerca (3 km)</option>
                 <option value="10">Media distancia (10 km)</option>
@@ -234,32 +286,27 @@ const Buscar = () => {
               Aplicar filtros
             </button>
 
-            <button
-              className="boton-limpiar-filtros"
-              onClick={limpiarFiltros}
-              type="button"
-            >
+            <button className="boton-limpiar-filtros" onClick={limpiarFiltros}>
               Quitar filtros
             </button>
           </div>
         )}
 
-        <button className="boton-crear" type="button" onClick={() => navigate('/publicar')}>
+        <button className="boton-crear" onClick={() => navigate('/publicar')}>
           Nueva publicación
         </button>
       </div>
 
-      {loading && <p>Cargando publicaciones...</p>}
+      {loadingInitial && <p>Cargando publicaciones...</p>}
       {error && <p style={{ color: 'red' }}>Error: {error}</p>}
 
-      {!loading && !error && (
+      {!loadingInitial && !error && (
         <ul className="lista-publicaciones">
-          {publicaciones.length === 0 && (
-            <li>No hay publicaciones disponibles.</li>
-          )}
+          {publicaciones.length === 0 && <li>No hay publicaciones disponibles.</li>}
+
           {publicaciones.map(pub => {
-            // ✅ manejar string o array
             let imagenPrincipal = null;
+
             if (Array.isArray(pub.imagenes) && pub.imagenes.length > 0) {
               imagenPrincipal = pub.imagenes[0];
             } else if (typeof pub.imagenes === "string") {
@@ -307,9 +354,19 @@ const Buscar = () => {
           })}
         </ul>
       )}
+
+      {hasMore && !loadingMore && (
+        <button
+          className="boton-cargar-mas"
+          onClick={loadMore}
+          style={{ margin: '20px auto', display: 'block' }}
+        >
+          Cargar más
+        </button>
+      )}
+      {loadingMore && <p>Cargando más publicaciones...</p>}
     </div>
   );
 };
 
 export default Buscar;
-
