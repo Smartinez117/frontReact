@@ -10,7 +10,7 @@ import MainLayout from '../layouts/MainLayout';
 import Perfil from '../components/Perfil/Perfil';
 import Editar from '../components/Editar/editar.jsx';
 import ConfigPerfil from '../components/Perfil/configPerfil.jsx';
-import Notificaciones from '../components/Notificaciones/notificaciones.jsx';
+import Notificaciones from '../components/Notificaciones/Notificaciones.jsx';
 import PanelAdmin from '../components/PanelAdmin/PanelAdmin.jsx';
 import HomeAdmin from "../components/PanelAdmin/sections/HomeAdmin.jsx";
 import UsuariosAdmin from "../components/PanelAdmin/sections/UsuariosAdmin.jsx";

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { actualizarUsuario, configUsuarioActual } from '../../services/perfilService';
-import './cperfilconfiguraciones.css';
+import './cperfilConfiguraciones.css';
 
 export default function PerfilConfiguracion() {
   const [usuario, setUsuario] = useState(null);
