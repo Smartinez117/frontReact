@@ -38,7 +38,8 @@ export default function UsuariosAdmin() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [accionUsuario, setAccionUsuario] = useState({ usuario: null, tipo: "" });
+  const [accionUsuario, setAccionUsuario] = useState({ row: null, accion: "" });
+
 
 
   // Cargar roles
@@ -140,13 +141,44 @@ export default function UsuariosAdmin() {
     }
   };
 
-  // MODAL CONFIRMACIÓN SUSPENDER/ACTIVAR
-  const handleConfirmarAccion = () => {
-  console.log(`${accionUsuario.tipo} usuario:`, accionUsuario.usuario.id);
-      // aquí iría la llamada al backend
-      setConfirmOpen(false);
-    };
+  const handleAccionUsuario = (row) => {
+    const accion = row.estado === "activo" ? "suspender" : "activar";
+    setAccionUsuario({ row, accion });
+    setConfirmOpen(true);
+  };
 
+
+  const ejecutarAccion = async () => {
+    if (!accionUsuario) return;
+    const { row, accion } = accionUsuario;
+
+    try {
+      const res = await fetch(`${API_URL}/api/admin/usuarios/${row.id}/${accion}`, {
+        method: "PATCH",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "Error en la acción");
+
+      // Actualizar estado en la tabla
+      setRows((prev) =>
+        prev.map((u) =>
+          u.id === row.id ? { ...u, estado: data.usuario.estado } : u
+        )
+      );
+
+      setSnackbarMessage(`Usuario ${accion === "suspender" ? "suspendido" : "activado"} correctamente`);
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error(error);
+      setSnackbarMessage(`Error: ${error.message}`);
+      setSnackbarOpen(true);
+    } finally {
+      setConfirmOpen(false);
+      setAccionUsuario(null);
+    }
+  };
 
   const columns = useMemo(
     () => [
@@ -154,7 +186,7 @@ export default function UsuariosAdmin() {
       { field: "nombre", headerName: "Nombre", width: 130 },
       { field: "email", headerName: "Email", width: 200 },
       { field: "rol", headerName: "Rol", width: 60 },
-      { field: "estado", headerName: "Estado", width: 100},
+      { field: "estado", headerName: "Estado", width: 100 },
       { field: "fecha_registro", headerName: "Fecha", width: 130 },
       {
         field: "acciones",
@@ -165,6 +197,8 @@ export default function UsuariosAdmin() {
         filterable: false,
         renderCell: (params) => {
           const row = params.row;
+          const isAdmin = row.rol?.toLowerCase() === "admin";
+
           return (
             <>
               <Button
@@ -188,21 +222,27 @@ export default function UsuariosAdmin() {
                 Editar
               </Button>
 
-            <Button
-              variant="contained"
-              color={row.estado === "activo" ? "secondary" : "success"}
-              size="small"
-              sx={{ width: 80, mr: 1 }}
-              disabled={row.rol?.toLowerCase() === "admin"} // Admin no se puede suspender
-              onClick={() => {
-                setAccionUsuario({ usuario: row, tipo: row.estado === "activo" ? "suspender" : "activar" });
-                setConfirmOpen(true);
-              }}
-
-            >
-              {row.rol?.toLowerCase() === "admin" ? "Denegado" : row.estado === "activo" ? "Suspender" : "Activar"}
-            </Button>
-
+              {isAdmin ? (
+                <Button
+                  variant="contained"
+                  color="inherit"
+                  size="small"
+                  sx={{ mr: 1, width: 80 }}
+                  disabled
+                >
+                  Denegado
+                </Button>
+              ) : (
+                <Button
+                  variant="contained"
+                  color={row.estado === "activo" ? "secondary" : "success"}
+                  size="small"
+                  sx={{ mr: 1, width: 80 }}
+                  onClick={() => handleAccionUsuario(row)}
+                >
+                  {row.estado === "activo" ? "Suspender" : "Activar"}
+                </Button>
+              )}
 
               <Button
                 variant="contained"
@@ -315,25 +355,28 @@ export default function UsuariosAdmin() {
       </Dialog>
 
       {/* MODAL CONFIRMAR SUSPENDER/ACTIVAR */}
-
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-        <DialogTitle>Confirmar acción</DialogTitle>
+        <DialogTitle>
+          {accionUsuario?.accion === "suspender"
+            ? "Confirmar suspensión"
+            : "Confirmar activación"}
+        </DialogTitle>
         <DialogContent>
-          {accionUsuario.tipo === "suspender" && (
-            <p>¿Seguro que quieres suspender al usuario <b>{accionUsuario.usuario?.nombre}</b>?</p>
-          )}
-          {accionUsuario.tipo === "activar" && (
-            <p>¿Seguro que quieres activar al usuario <b>{accionUsuario.usuario?.nombre}</b>?</p>
+          {accionUsuario?.row && (
+            <p>
+              ¿Seguro que quieres {accionUsuario.accion} al usuario{" "}
+              <strong>{accionUsuario.row.nombre}</strong>?
+            </p>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmOpen(false)}>Cancelar</Button>
           <Button
             variant="contained"
-            color={accionUsuario.tipo === "activar" ? "success" : "secondary"}
-            onClick={() => handleConfirmarAccion()}
+            onClick={ejecutarAccion}
+            color={accionUsuario?.accion === "suspender" ? "secondary" : "success"}
           >
-            {accionUsuario.tipo === "activar" ? "Activar" : "Suspender"}
+            {accionUsuario?.accion === "suspender" ? "Suspender" : "Activar"}
           </Button>
         </DialogActions>
       </Dialog>
