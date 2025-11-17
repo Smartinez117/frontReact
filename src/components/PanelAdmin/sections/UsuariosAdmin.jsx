@@ -40,6 +40,9 @@ export default function UsuariosAdmin() {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [accionUsuario, setAccionUsuario] = useState({ row: null, accion: "" });
+  const [borrarUsuario, setBorrarUsuario] = useState(null);
+  const [confirmBorrarOpen, setConfirmBorrarOpen] = useState(false);
+
 
 
 
@@ -142,6 +145,7 @@ export default function UsuariosAdmin() {
     }
   };
 
+  //Abrir modal suspender/activar
   const handleAccionUsuario = (row) => {
     const accion = row.estado === "activo" ? "suspender" : "activar";
     setAccionUsuario({ row, accion });
@@ -187,7 +191,40 @@ export default function UsuariosAdmin() {
       setAccionUsuario(null);
     }
   };
+    
+  //Abrir modal eliminar
+  const handleBorrarUsuario = (row) => {
+    setBorrarUsuario(row);
+    setConfirmBorrarOpen(true);
+  };
 
+  const ejecutarBorrado = async () => {
+    if (!borrarUsuario) return;
+    try {
+      const res = await fetch(`${API_URL}/api/admin/usuarios/${borrarUsuario.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "Error al eliminar usuario");
+
+      // Actualizar tabla
+      setRows((prev) => prev.filter((u) => u.id !== borrarUsuario.id));
+
+      setSnackbarMessage(`Usuario borrado`);
+      setSnackbarSeverity("error"); // rojo para eliminar
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error(error);
+      setSnackbarMessage(`Error: ${error.message}`);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      } finally {
+      setConfirmBorrarOpen(false);
+      setBorrarUsuario(null);
+    }
+  };
+  
   const columns = useMemo(
     () => [
       { field: "id", headerName: "ID", width: 70 },
@@ -195,7 +232,7 @@ export default function UsuariosAdmin() {
       { field: "email", headerName: "Email", width: 200 },
       { field: "rol", headerName: "Rol", width: 60 },
       { field: "estado", headerName: "Estado", width: 100 },
-      { field: "fecha_registro", headerName: "Fecha", width: 130 },
+      { field: "fecha_registro", headerName: "Fecha", width: 120 },
       {
         field: "acciones",
         headerName: "Acciones",
@@ -235,7 +272,7 @@ export default function UsuariosAdmin() {
                   variant="contained"
                   color="inherit"
                   size="small"
-                  sx={{ mr: 1, width: 80 }}
+                  sx={{ mr: 1, width: 70 }}
                   disabled
                 >
                   Denegado
@@ -252,14 +289,27 @@ export default function UsuariosAdmin() {
                 </Button>
               )}
 
-              <Button
-                variant="contained"
-                color="error"
-                size="small"
-                onClick={() => console.log("Borrar usuario:", row.id)}
-              >
-                Borrar
-              </Button>
+              {!isAdmin ? (
+                <Button
+                  variant="contained"
+                  color="error"
+                  size="small"
+                  onClick={() => handleBorrarUsuario(row)}
+                >
+                  Borrar
+                </Button>
+              ) : (
+                <Button
+                  variant="contained"
+                  color="inherit"
+                  size="small"
+                  sx={{ mr: 1, width: 80 }}
+                  disabled
+                >
+                  Denegado
+                </Button>
+              )}
+
             </>
           );
         },
@@ -385,6 +435,24 @@ export default function UsuariosAdmin() {
             color={accionUsuario?.accion === "suspender" ? "secondary" : "success"}
           >
             {accionUsuario?.accion === "suspender" ? "Suspender" : "Activar"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal eliminar*/}
+      <Dialog open={confirmBorrarOpen} onClose={() => setConfirmBorrarOpen(false)}>
+        <DialogTitle>Confirmar eliminación</DialogTitle>
+        <DialogContent>
+          {borrarUsuario && (
+            <p>
+              ¿Seguro que quieres borrar al usuario <strong>{borrarUsuario.nombre}</strong>?
+            </p>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmBorrarOpen(false)}>Cancelar</Button>
+          <Button variant="contained" color="error" onClick={ejecutarBorrado}>
+            Eliminar
           </Button>
         </DialogActions>
       </Dialog>
