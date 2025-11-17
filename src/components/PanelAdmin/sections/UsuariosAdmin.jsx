@@ -37,6 +37,9 @@ export default function UsuariosAdmin() {
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [accionUsuario, setAccionUsuario] = useState({ usuario: null, tipo: "" });
+
 
   // Cargar roles
   useEffect(() => {
@@ -80,7 +83,7 @@ export default function UsuariosAdmin() {
     return () => clearTimeout(timeout);
   }, [search, page, pageSize, fetchUsuarios]);
 
-  // Abrir modal
+  // Abrir modal EDICIÓN DE USUARIO
   const handleEditUsuario = (row) => {
     let roleId = row.role_id; // puede venir del backend
 
@@ -137,6 +140,14 @@ export default function UsuariosAdmin() {
     }
   };
 
+  // MODAL CONFIRMACIÓN SUSPENDER/ACTIVAR
+  const handleConfirmarAccion = () => {
+  console.log(`${accionUsuario.tipo} usuario:`, accionUsuario.usuario.id);
+      // aquí iría la llamada al backend
+      setConfirmOpen(false);
+    };
+
+
   const columns = useMemo(
     () => [
       { field: "id", headerName: "ID", width: 70 },
@@ -183,7 +194,11 @@ export default function UsuariosAdmin() {
               size="small"
               sx={{ width: 80, mr: 1 }}
               disabled={row.rol?.toLowerCase() === "admin"} // Admin no se puede suspender
-              onClick={() => console.log(`${row.estado === "activo" ? "Suspender" : "Activar"} usuario:`, row.id)}
+              onClick={() => {
+                setAccionUsuario({ usuario: row, tipo: row.estado === "activo" ? "suspender" : "activar" });
+                setConfirmOpen(true);
+              }}
+
             >
               {row.rol?.toLowerCase() === "admin" ? "Denegado" : row.estado === "activo" ? "Suspender" : "Activar"}
             </Button>
@@ -298,6 +313,31 @@ export default function UsuariosAdmin() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* MODAL CONFIRMAR SUSPENDER/ACTIVAR */}
+
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+        <DialogTitle>Confirmar acción</DialogTitle>
+        <DialogContent>
+          {accionUsuario.tipo === "suspender" && (
+            <p>¿Seguro que quieres suspender al usuario <b>{accionUsuario.usuario?.nombre}</b>?</p>
+          )}
+          {accionUsuario.tipo === "activar" && (
+            <p>¿Seguro que quieres activar al usuario <b>{accionUsuario.usuario?.nombre}</b>?</p>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmOpen(false)}>Cancelar</Button>
+          <Button
+            variant="contained"
+            color={accionUsuario.tipo === "activar" ? "success" : "secondary"}
+            onClick={() => handleConfirmarAccion()}
+          >
+            {accionUsuario.tipo === "activar" ? "Activar" : "Suspender"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
