@@ -142,7 +142,8 @@ export default function UsuariosAdmin() {
       { field: "id", headerName: "ID", width: 70 },
       { field: "nombre", headerName: "Nombre", width: 130 },
       { field: "email", headerName: "Email", width: 200 },
-      { field: "rol", headerName: "Rol", width: 130 },
+      { field: "rol", headerName: "Rol", width: 60 },
+      { field: "estado", headerName: "Estado", width: 100},
       { field: "fecha_registro", headerName: "Fecha", width: 130 },
       {
         field: "acciones",
@@ -176,15 +177,17 @@ export default function UsuariosAdmin() {
                 Editar
               </Button>
 
-              <Button
-                variant="contained"
-                color="secondary"
-                size="small"
-                sx={{ mr: 1 }}
-                onClick={() => console.log("Suspender usuario:", row.id)}
-              >
-                Suspender
-              </Button>
+            <Button
+              variant="contained"
+              color={row.estado === "activo" ? "secondary" : "success"}
+              size="small"
+              sx={{ width: 80, mr: 1 }}
+              disabled={row.rol?.toLowerCase() === "admin"} // Admin no se puede suspender
+              onClick={() => console.log(`${row.estado === "activo" ? "Suspender" : "Activar"} usuario:`, row.id)}
+            >
+              {row.rol?.toLowerCase() === "admin" ? "Denegado" : row.estado === "activo" ? "Suspender" : "Activar"}
+            </Button>
+
 
               <Button
                 variant="contained"
