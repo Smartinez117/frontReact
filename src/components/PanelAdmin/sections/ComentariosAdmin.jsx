@@ -41,14 +41,11 @@ export default function ComentariosAdmin() {
           </Typography>
         </CardContent>
         <CardActions buttonFlex="0 1 120px">
-          <IconButton variant="outlined" color="neutral" sx={{ mr: 'auto' }}>
-            <FavoriteBorder />
-          </IconButton>
           <Button variant="outlined" color="neutral">
-            View
+            Ver
           </Button>
-          <Button variant="solid" color="primary">
-            Join
+          <Button variant="solid" color="danger">
+            Borrar
           </Button>
         </CardActions>
       </Card>
