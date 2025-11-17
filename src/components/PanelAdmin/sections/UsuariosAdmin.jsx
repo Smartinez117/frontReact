@@ -37,6 +37,7 @@ export default function UsuariosAdmin() {
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [accionUsuario, setAccionUsuario] = useState({ row: null, accion: "" });
 
@@ -168,7 +169,14 @@ export default function UsuariosAdmin() {
         )
       );
 
-      setSnackbarMessage(`Usuario ${accion === "suspender" ? "suspendido" : "activado"} correctamente`);
+      setSnackbarMessage(
+        accion === "suspender"
+          ? "Usuario suspendido"
+          : "Usuario activado"
+      );
+      setSnackbarSeverity(accion === "suspender" ? "error" : "success");
+      setSnackbarOpen(true);
+
       setSnackbarOpen(true);
     } catch (error) {
       console.error(error);
@@ -387,7 +395,11 @@ export default function UsuariosAdmin() {
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          sx={{ width: '100%' }}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>
