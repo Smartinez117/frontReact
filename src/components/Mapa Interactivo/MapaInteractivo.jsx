@@ -5,6 +5,8 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 // Iconos por categoría
 const markerIcons = {
   "¡Busco un hogar!": new L.Icon({
@@ -53,7 +55,7 @@ const MapaInteractivo = () => {
     // Llamada al backend para traer publicaciones
     const fetchData = async () => {
       try {
-        const res = await fetch("http://localhost:5000/publicaciones/mapa"); 
+        const res = await fetch(`${API_URL}/publicaciones/mapa`); 
         const data = await res.json();
         setPublicaciones(data);
       } catch (error) {
@@ -66,7 +68,7 @@ const MapaInteractivo = () => {
     const fetchRefugios = async () => {
       try {
         const query = '[out:json][timeout:25];node[amenity=animal_shelter](-55,-73,-21,-53);out body;';
-        const res = await fetch("http://localhost:5000/api/refugios", {
+        const res = await fetch(`${API_URL}/refugios`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query })
