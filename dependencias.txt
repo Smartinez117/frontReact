@@ -15,6 +15,7 @@ npm install @mui/joy
 npm install @mui/x-data-grid
 npm install @mui/x-charts
 npm install socket.io-client
+npm install @mui/material @emotion/react @emotion/styled
 
 
 

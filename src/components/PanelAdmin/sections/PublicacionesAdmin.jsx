@@ -10,6 +10,8 @@ import Sheet from '@mui/joy/Sheet';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Link } from "react-router-dom";
 import { useCallback } from "react";
+import Pagination from '@mui/material/Pagination';
+import Stack from '@mui/material/Stack';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -34,7 +36,6 @@ export default function PublicacionesAdmin() {
 
       const data = await response.json();
 
-      // Agregar primera imagen
       const publicacionesConImagen = data.publicaciones.map((pub) => ({
         ...pub,
         primeraImagen: pub.imagenes?.length > 0 ? pub.imagenes[0] : null,
@@ -60,105 +61,94 @@ export default function PublicacionesAdmin() {
     setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const handlePageChange = (event, value) => {
+    fetchPublicaciones(value, limit);
+  };
+
   if (loading) return <p>Cargando publicaciones...</p>;
 
   return (
-    <CssVarsProvider>
-      <JoyCssBaseline />
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+    <>
+      <CssVarsProvider>
+        <JoyCssBaseline />
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+          {publicaciones.map((pub) => (
+            <Card key={pub.id} sx={{ width: 320, position: "relative", p: 1 }}>
+              <Typography level="title-lg">{pub.titulo}</Typography>
+              <Typography level="body-sm">
+                {new Date(pub.fecha_creacion).toLocaleDateString("es-AR")}
+              </Typography>
 
-        {publicaciones.map((pub) => (
-          <Card key={pub.id} sx={{ width: 320, position: "relative", p: 1 }}>
-            
-            {/* Título y fecha */}
-            <Typography level="title-lg">{pub.titulo}</Typography>
-            <Typography level="body-sm">
-              {new Date(pub.fecha_creacion).toLocaleDateString("es-AR")}
-            </Typography>
+              {pub.primeraImagen && (
+                <AspectRatio minHeight="120px" maxHeight="200px" sx={{ mt: 1 }}>
+                  <img src={pub.primeraImagen} alt={pub.titulo} loading="lazy" />
+                </AspectRatio>
+              )}
 
-            {/* Imagen principal */}
-            {pub.primeraImagen && (
-              <AspectRatio minHeight="120px" maxHeight="200px" sx={{ mt: 1 }}>
-                <img src={pub.primeraImagen} alt={pub.titulo} loading="lazy" />
-              </AspectRatio>
-            )}
-
-            {/* Botón expandir */}
-            <IconButton
-              variant="plain"
-              color="neutral"
-              onClick={() => toggleExpand(pub.id)}
-              sx={{
-                mt: 1,
-                rotate: expanded[pub.id] ? "180deg" : "0deg",
-                transition: "0.2s"
-              }}
-            >
-              <ExpandMoreIcon />
-            </IconButton>
-
-            {/* Datos del usuario */}
-            {expanded[pub.id] && (
-              <Sheet variant="soft" sx={{ p: 1, mt: 1, borderRadius: "sm" }}>
-                <Typography level="body-sm">
-                  <b>Propietario:</b> {pub.usuario?.nombre || "Sin nombre"}
-                </Typography>
-
-                <Typography level="body-sm">
-                  <b>Email:</b> {pub.usuario?.email || "Sin email"}
-                </Typography>
-              </Sheet>
-            )}
-
-            {/* Botones */}
-            <div style={{ display: "flex", gap: "0.5rem", marginTop: 10 }}>
-              <Button
-                variant="solid"
-                size="md"
-                color="primary"
-                sx={{ fontWeight: 600 }}
-                component={Link}
-                to={`/publicacion/${pub.id}`}
-                target="_blank"
+              <IconButton
+                variant="plain"
+                color="neutral"
+                onClick={() => toggleExpand(pub.id)}
+                sx={{
+                  mt: 1,
+                  rotate: expanded[pub.id] ? "180deg" : "0deg",
+                  transition: "0.2s"
+                }}
               >
-                Ver
-              </Button>
+                <ExpandMoreIcon />
+              </IconButton>
 
-              <Button
-                variant="solid"
-                size="md"
-                color="danger"
-                sx={{ fontWeight: 600 }}
-                onClick={() => console.log("Borrar publicación", pub.id)}
-              >
-                Borrar
-              </Button>
-            </div>
+              {expanded[pub.id] && (
+                <Sheet variant="soft" sx={{ p: 1, mt: 1, borderRadius: "sm" }}>
+                  <Typography level="body-sm">
+                    <b>Propietario:</b> {pub.usuario?.nombre || "Sin nombre"}
+                  </Typography>
+                  <Typography level="body-sm">
+                    <b>Email:</b> {pub.usuario?.email || "Sin email"}
+                  </Typography>
+                </Sheet>
+              )}
 
-          </Card>
-        ))}
+              <div style={{ display: "flex", gap: "0.5rem", marginTop: 10 }}>
+                <Button
+                  variant="solid"
+                  size="md"
+                  color="primary"
+                  sx={{ fontWeight: 600 }}
+                  component={Link}
+                  to={`/publicacion/${pub.id}`}
+                  target="_blank"
+                >
+                  Ver
+                </Button>
+                <Button
+                  variant="solid"
+                  size="md"
+                  color="danger"
+                  sx={{ fontWeight: 600 }}
+                  onClick={() => console.log("Borrar publicación", pub.id)}
+                >
+                  Borrar
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </CssVarsProvider>
 
+      {/* PAGINADO fuera de CssVarsProvider para evitar conflictos */}
+      <div style={{ marginTop: "2rem", display: "flex", justifyContent: "center" }}>
+        <Stack spacing={2}>
+          <Pagination
+            count={Math.ceil(total / limit)}
+            page={page}
+            onChange={handlePageChange}
+            color="primary"
+            shape="rounded"
+            size="medium"
+          />
+        </Stack>
       </div>
-
-      {/* PAGINADO */}
-      <div style={{ marginTop: "2rem", display: "flex", gap: "1rem", justifyContent: "center" }}>
-        <Button
-          disabled={page <= 1}
-          onClick={() => fetchPublicaciones(page - 1, limit)}
-        >
-          ◀ Anterior
-        </Button>
-
-        <Typography level="title-md">Página {page}</Typography>
-
-        <Button
-          disabled={page * limit >= total}
-          onClick={() => fetchPublicaciones(page + 1, limit)}
-        >
-          Siguiente ▶
-        </Button>
-      </div>
-
-    </CssVarsProvider>
+    </>
   );
 }
