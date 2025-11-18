@@ -1,154 +1,218 @@
 import * as React from 'react';
-import { CssVarsProvider } from '@mui/joy/styles';
-import JoyCssBaseline from '@mui/joy/CssBaseline';
-import AspectRatio from '@mui/joy/AspectRatio';
-import Button from '@mui/joy/Button';
-import Card from '@mui/joy/Card';
-import Typography from '@mui/joy/Typography';
-import IconButton from '@mui/joy/IconButton';
-import Sheet from '@mui/joy/Sheet';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Link } from "react-router-dom";
-import { useCallback } from "react";
+import { styled } from '@mui/material/styles';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import CardMedia from '@mui/material/CardMedia';
+import CardContent from '@mui/material/CardContent';
+import CardActions from '@mui/material/CardActions';
+import Collapse from '@mui/material/Collapse';
+import Avatar from '@mui/material/Avatar';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Button from '@mui/material/Button';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+import { red } from '@mui/material/colors';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+
+const ExpandMore = styled((props) => {
+  const { expand, ...other } = props;
+  return <IconButton {...other} />;
+})(({ theme, expand }) => ({
+  marginLeft: 'auto',
+  transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
+  transition: theme.transitions.create('transform', {
+    duration: theme.transitions.duration.shortest,
+  }),
+}));
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+// Componente de paginación personalizado
+function PaginationRounded({ count, page, onChange }) {
+  return (
+    <Stack spacing={2} sx={{ alignItems: 'center', mt: 4 }}>
+      <Pagination count={count} page={page} onChange={onChange} shape="rounded" />
+    </Stack>
+  );
+}
+
 export default function PublicacionesAdmin() {
   const [publicaciones, setPublicaciones] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
   const [expanded, setExpanded] = React.useState({});
+  const [confirmBorrarPubOpen, setConfirmBorrarPubOpen] = React.useState(false);
+  const [publicacionSeleccionada, setPublicacionSeleccionada] = React.useState(null);
   const [page, setPage] = React.useState(1);
-  const [limit, setLimit] = React.useState(10);
   const [total, setTotal] = React.useState(0);
+  const [snackbarOpen, setSnackbarOpen] = React.useState(false);
+  const [snackbarMessage, setSnackbarMessage] = React.useState('');
+  const limit = 9; // 3 cards por fila
 
-  const fetchPublicaciones = useCallback(async (pagina = 1, limite = 15) => {
-    setLoading(true);
+  const fetchPublicaciones = async (pagina = 1) => {
     try {
-      const response = await fetch(
-        `${API_URL}/api/admin/publicaciones?page=${pagina}&limit=${limite}`
-      );
-
-      if (!response.ok) {
-        throw new Error("Error al traer publicaciones");
-      }
-
-      const data = await response.json();
-
-      const publicacionesConImagen = data.publicaciones.map((pub) => ({
+      const res = await fetch(`${API_URL}/api/admin/publicaciones?page=${pagina}&limit=${limit}`);
+      const data = await res.json();
+      const pubsConImagen = data.publicaciones.map(pub => ({
         ...pub,
-        primeraImagen: pub.imagenes?.length > 0 ? pub.imagenes[0] : null,
+        primeraImagen: pub.imagenes?.[0] || null,
       }));
-
-      setPublicaciones(publicacionesConImagen);
+      setPublicaciones(pubsConImagen);
       setTotal(data.total);
       setPage(data.page);
-      setLimit(data.limit);
-
     } catch (error) {
-      console.error("Error cargando publicaciones:", error);
-    } finally {
-      setLoading(false);
+      console.error(error);
     }
-  }, []);
+  };
 
   React.useEffect(() => {
-    fetchPublicaciones();
-  }, [fetchPublicaciones]);
+    fetchPublicaciones(page);
+  }, [page]);
 
-  const toggleExpand = (id) => {
+  const handleExpandClick = (id) => {
     setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handlePageChange = (event, value) => {
-    fetchPublicaciones(value, limit);
+  const handleBorrarPublicacionModal = (pub) => {
+    setPublicacionSeleccionada(pub);
+    setConfirmBorrarPubOpen(true);
   };
 
-  if (loading) return <p>Cargando publicaciones...</p>;
+  const ejecutarBorradoPublicacion = async () => {
+    if (!publicacionSeleccionada) return;
+    try {
+      const res = await fetch(`${API_URL}/publicaciones/${publicacionSeleccionada.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Error al eliminar publicación");
+      }
+
+      // Actualizar lista y cerrar modal
+      setPublicaciones(prev => prev.filter(p => p.id !== publicacionSeleccionada.id));
+      setTotal(prev => prev - 1);
+      setConfirmBorrarPubOpen(false);
+      setPublicacionSeleccionada(null);
+
+      // Mostrar snackbar de éxito
+      setSnackbarMessage("Publicación borrada");
+      setSnackbarOpen(true);
+
+    } catch (error) {
+      console.error(error);
+      // Mostrar snackbar de error
+      setSnackbarMessage(`Error al eliminar: ${error.message}`);
+      setSnackbarOpen(true);
+    }
+  };
+
+  const handlePageChange = (event, value) => {
+    fetchPublicaciones(value);
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
 
   return (
     <>
-      <CssVarsProvider>
-        <JoyCssBaseline />
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-          {publicaciones.map((pub) => (
-            <Card key={pub.id} sx={{ width: 320, position: "relative", p: 1 }}>
-              <Typography level="title-lg">{pub.titulo}</Typography>
-              <Typography level="body-sm">
-                {new Date(pub.fecha_creacion).toLocaleDateString("es-AR")}
-              </Typography>
-
+      <Grid container spacing={2}>
+        {publicaciones.map(pub => (
+          <Grid item xs={12} sm={4} key={pub.id} sx={{ display: 'flex' }}>
+            <Card sx={{ width: 320, position: "relative", p: 1 }}>
+              <CardHeader
+                avatar={
+                  <Avatar sx={{ bgcolor: red[500] }}>{pub.usuario?.nombre?.[0] || "U"}</Avatar>
+                }
+                title={pub.titulo}
+                subheader={new Date(pub.fecha_creacion).toLocaleDateString("es-AR")}
+              />
               {pub.primeraImagen && (
-                <AspectRatio minHeight="120px" maxHeight="200px" sx={{ mt: 1 }}>
-                  <img src={pub.primeraImagen} alt={pub.titulo} loading="lazy" />
-                </AspectRatio>
+                <CardMedia
+                  component="img"
+                  height="194"
+                  image={pub.primeraImagen}
+                  alt={pub.titulo}
+                />
               )}
-
-              <IconButton
-                variant="plain"
-                color="neutral"
-                onClick={() => toggleExpand(pub.id)}
-                sx={{
-                  mt: 1,
-                  rotate: expanded[pub.id] ? "180deg" : "0deg",
-                  transition: "0.2s"
-                }}
-              >
-                <ExpandMoreIcon />
-              </IconButton>
-
-              {expanded[pub.id] && (
-                <Sheet variant="soft" sx={{ p: 1, mt: 1, borderRadius: "sm" }}>
-                  <Typography level="body-sm">
-                    <b>Propietario:</b> {pub.usuario?.nombre || "Sin nombre"}
-                  </Typography>
-                  <Typography level="body-sm">
-                    <b>Email:</b> {pub.usuario?.email || "Sin email"}
-                  </Typography>
-                </Sheet>
-              )}
-
-              <div style={{ display: "flex", gap: "0.5rem", marginTop: 10 }}>
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Collapse in={expanded[pub.id]} timeout="auto" unmountOnExit>
+                  <Typography><b>Propietario:</b> {pub.usuario?.nombre || "Sin nombre"}</Typography>
+                  <Typography><b>Email:</b> {pub.usuario?.email || "Sin email"}</Typography>
+                </Collapse>
+              </CardContent>
+              <CardActions disableSpacing>
                 <Button
-                  variant="solid"
-                  size="md"
+                  variant="contained"
+                  size="small"
                   color="primary"
-                  sx={{ fontWeight: 600 }}
-                  component={Link}
-                  to={`/publicacion/${pub.id}`}
+                  href={`/publicacion/${pub.id}`}
                   target="_blank"
                 >
                   Ver
                 </Button>
                 <Button
-                  variant="solid"
-                  size="md"
-                  color="danger"
-                  sx={{ fontWeight: 600 }}
-                  onClick={() => console.log("Borrar publicación", pub.id)}
+                  variant="contained"
+                  size="small"
+                  color="error"
+                  onClick={() => handleBorrarPublicacionModal(pub)}
                 >
                   Borrar
                 </Button>
-              </div>
+                <ExpandMore
+                  expand={expanded[pub.id]}
+                  onClick={() => handleExpandClick(pub.id)}
+                  aria-expanded={expanded[pub.id]}
+                  aria-label="show more"
+                >
+                  <ExpandMoreIcon />
+                </ExpandMore>
+              </CardActions>
             </Card>
-          ))}
-        </div>
-      </CssVarsProvider>
+          </Grid>
+        ))}
+      </Grid>
 
-      {/* PAGINADO fuera de CssVarsProvider para evitar conflictos */}
-      <div style={{ marginTop: "2rem", display: "flex", justifyContent: "center" }}>
-        <Stack spacing={2}>
-          <Pagination
-            count={Math.ceil(total / limit)}
-            page={page}
-            onChange={handlePageChange}
-            color="primary"
-            shape="rounded"
-            size="medium"
-          />
-        </Stack>
-      </div>
+      {/* Paginación */}
+      <PaginationRounded
+        count={Math.ceil(total / limit)}
+        page={page}
+        onChange={handlePageChange}
+      />
+
+      {/* Modal de borrado */}
+      <Dialog open={confirmBorrarPubOpen} onClose={() => setConfirmBorrarPubOpen(false)}>
+        <DialogTitle>Confirmar eliminación</DialogTitle>
+        <DialogContent>
+          {publicacionSeleccionada && (
+            <Typography>
+              ¿Seguro que quieres borrar la publicación <b>{publicacionSeleccionada.titulo}</b>?
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmBorrarPubOpen(false)}>Cancelar</Button>
+          <Button variant="contained" color="error" onClick={ejecutarBorradoPublicacion}>
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </>
   );
 }
