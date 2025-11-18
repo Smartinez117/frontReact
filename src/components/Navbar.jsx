@@ -17,6 +17,11 @@ import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import {socketconnection,socketnotificationlisten} from '../utils/socket';
 import {Notificacion} from '../utils/toastUtil'
 import { Toaster } from 'react-hot-toast';
+import { socketNotificationsConnected } from '../utils/socket';
+import AddAlertIcon from '@mui/icons-material/AddAlert';
+import AlignItemsList from '../utils/listaNOt'; // import de la funcion para mostrar las notificaciones
+import { registrarCallbackAgregar } from "../utils/toastUtil";
+
 
 const pages = ['Inicio', 'Publicar', 'Buscar', 'Mapa'];
 const settings = ['Notificaciones', 'Mi perfil', 'Configuración', 'Cerrar sesión'];
@@ -24,6 +29,12 @@ const settings = ['Notificaciones', 'Mi perfil', 'Configuración', 'Cerrar sesi�
 const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
+  const [notificaciones, setNotificaciones] = useState([]);//lista para las notificaciones
+  const [open, setOpen] = useState(false);//para desplegar la lista
+
+  function agregarNotificacion(noti) {
+  setNotificaciones(prev => [...prev, noti]);
+  }
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -46,17 +57,20 @@ const Navbar = () => {
   const [userPhoto, setUserPhoto] = useState('');
 
   useEffect(() => {
+  // registra la función que recibirá las notificaciones
+  registrarCallbackAgregar(agregarNotificacion);
+}, []);
+
+
+  useEffect(() => {
     const auth = getAuth();
-    
-
-
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         const name = localStorage.getItem("userName");
         const photo = localStorage.getItem("userPhoto");
 
-        socketconnection()  //<-- aca hace el llamado al back para registrarse como user conectado
-        socketnotificationlisten(user.uid)//<-- aca hace uso de la funcion que escucah las notficaciones que envia el back al front
+        socketconnection(user)  //<-- aca hace el llamado al back para registrarse como user conectado
+        if (!socketNotificationsConnected){socketnotificationlisten(user.uid)}//<-- aca hace uso de la funcion que escucah las notficaciones que envia el back al front
 
         if (name) setUserName(name);
         if (photo) setUserPhoto(photo);
@@ -220,7 +234,18 @@ const Navbar = () => {
             <Button onClick={() => navigate('/mapa')} sx={{ my: 2, color: 'black' }}>Mapa</Button>
           </Box>
 
-          <Box sx={{ flexGrow: 0 }}>
+          <Box sx={{ flexGrow: 0,display: 'flex', alignItems: 'center', gap: 1  }}>
+              <Tooltip title="Notificaciones">
+               <IconButton color="blue" onClick={()=> setOpen(!open)}>
+                 <AddAlertIcon />
+               </IconButton>
+              </Tooltip>
+              {open && (
+              <Box sx={{ position: "absolute", top: "60px", right: "20px",bgcolor:"white" }}>
+              <AlignItemsList notificaciones={notificaciones} />
+             </Box>
+              )}
+
             <Tooltip title="Abrir opciones">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                 {userPhoto ? (
