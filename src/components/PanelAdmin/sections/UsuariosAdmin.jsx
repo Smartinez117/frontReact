@@ -31,8 +31,13 @@ export default function UsuariosAdmin() {
   const [rowCount, setRowCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(10);
+
+  // CAMBIO CLAVE 1: Usar paginationModel unificado
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
+
   const [open, setOpen] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -42,9 +47,6 @@ export default function UsuariosAdmin() {
   const [accionUsuario, setAccionUsuario] = useState({ row: null, accion: "" });
   const [borrarUsuario, setBorrarUsuario] = useState(null);
   const [confirmBorrarOpen, setConfirmBorrarOpen] = useState(false);
-
-
-
 
   // Cargar roles
   useEffect(() => {
@@ -65,46 +67,69 @@ export default function UsuariosAdmin() {
   const fetchUsuarios = useCallback(async () => {
     setLoading(true);
     try {
+      // DataGrid usa página 0-based, el backend espera 1-based (generalmente)
+      // Ajustamos aquí: paginationModel.page + 1
+      const queryPage = paginationModel.page + 1;
+      const queryLimit = paginationModel.pageSize;
+      
       const response = await fetch(
-        `${API_URL}/api/usuarios?page=${page + 1}&per_page=${pageSize}&search=${encodeURIComponent(
+        `${API_URL}/api/usuarios?page=${queryPage}&per_page=${queryLimit}&search=${encodeURIComponent(
           search
         )}`
       );
       const data = await response.json();
-      setRows(data.usuarios || []);
-      setRowCount(data.total || 0);
+
+      const usuarios = Array.isArray(data.usuarios)
+        ? data.usuarios
+        : data.data || data.usuarios || [];
+      
+      // Normalizar total
+      const totalRaw = data.total ?? data.totalCount ?? data.count ?? usuarios.length;
+      const total = Number(totalRaw) || 0;
+
+      // Asegurar IDs para DataGrid
+      const normalized = usuarios.map((u, idx) => ({
+        ...u,
+        id: typeof u.id !== "undefined" ? u.id : u._id ?? idx,
+      }));
+
+      setRows(normalized);
+      setRowCount(total);
+
     } catch (error) {
       console.error("Error cargando usuarios:", error);
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, search]);
+  }, [paginationModel, search]); // Dependencias limpias
 
+  // CAMBIO CLAVE 2: Resetear página a 0 SOLO cuando cambia el texto de búsqueda
+  // Esto evita el conflicto de botones bloqueados
   useEffect(() => {
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, [search]);
+
+  // CAMBIO CLAVE 3: Ejecutar fetch cuando cambia la paginación o la búsqueda (con debounce implícito si se desea, o directo)
+  useEffect(() => {
+    // Pequeño timeout para no saturar si escribes rápido, igual que tenías antes
     const timeout = setTimeout(() => {
-      setPage(0);
       fetchUsuarios();
     }, 300);
     return () => clearTimeout(timeout);
-  }, [search, page, pageSize, fetchUsuarios]);
+  }, [fetchUsuarios]); // fetchUsuarios ya depende de paginationModel y search
 
   // Abrir modal EDICIÓN DE USUARIO
   const handleEditUsuario = (row) => {
-    let roleId = row.role_id; // puede venir del backend
-
-    // intentar mapear si solo vino "rol"
+    let roleId = row.role_id;
     if (!roleId && roles.length > 0) {
       const found = roles.find(
         (r) => r.nombre?.toLowerCase() === row.rol?.toLowerCase()
       );
       if (found) roleId = found.id;
     }
-
-    // fallback
     if (!roleId && roles.length > 0) {
       roleId = roles[0].id;
     }
-
     setUsuarioSeleccionado({ ...row, role_id: Number(roleId) });
     setOpen(true);
   };
@@ -112,61 +137,61 @@ export default function UsuariosAdmin() {
   // Guardar cambios
   const handleGuardar = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/admin/usuario/${usuarioSeleccionado.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nombre: usuarioSeleccionado.nombre,
-          role_id: Number(usuarioSeleccionado.role_id),
-        }),
-      });
+      const res = await fetch(
+        `${API_URL}/api/admin/usuario/${usuarioSeleccionado.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nombre: usuarioSeleccionado.nombre,
+            role_id: Number(usuarioSeleccionado.role_id),
+          }),
+        }
+      );
 
       if (!res.ok) throw new Error("Error actualizando usuario");
-
       const data = await res.json();
       const actualizado = data.usuario || data;
 
-      // Actualizar tabla sin recargar
+      // Actualizar localmente
       setRows((prev) =>
         prev.map((u) => (u.id === actualizado.id ? { ...u, ...actualizado } : u))
       );
-
-      setRows((prev) =>
-        prev.map((u) => (u.id === actualizado.id ? { ...u, ...actualizado } : u))
-      );
-
       setOpen(false);
-
       setSnackbarMessage("Cambios guardados correctamente");
+      setSnackbarSeverity("success");
       setSnackbarOpen(true);
+      
+      // Opcional: recargar datos reales
+      fetchUsuarios();
 
     } catch (error) {
       console.error("Error al guardar:", error);
+      setSnackbarMessage("Error al guardar cambios");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     }
   };
 
-  //Abrir modal suspender/activar
+  // Acciones (Suspender/Activar)
   const handleAccionUsuario = (row) => {
     const accion = row.estado === "activo" ? "suspender" : "activar";
     setAccionUsuario({ row, accion });
     setConfirmOpen(true);
   };
 
-
   const ejecutarAccion = async () => {
     if (!accionUsuario) return;
     const { row, accion } = accionUsuario;
-
     try {
-      const res = await fetch(`${API_URL}/api/admin/usuarios/${row.id}/${accion}`, {
-        method: "PATCH",
-      });
-
+      const res = await fetch(
+        `${API_URL}/api/admin/usuarios/${row.id}/${accion}`,
+        { method: "PATCH" }
+      );
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error || "Error en la acción");
 
-      // Actualizar estado en la tabla
+      // Actualizar fila
       setRows((prev) =>
         prev.map((u) =>
           u.id === row.id ? { ...u, estado: data.usuario.estado } : u
@@ -174,25 +199,22 @@ export default function UsuariosAdmin() {
       );
 
       setSnackbarMessage(
-        accion === "suspender"
-          ? "Usuario suspendido"
-          : "Usuario activado"
+        accion === "suspender" ? "Usuario suspendido" : "Usuario activado"
       );
-      setSnackbarSeverity(accion === "suspender" ? "error" : "success");
-      setSnackbarOpen(true);
-
+      setSnackbarSeverity(accion === "suspender" ? "warning" : "success"); // Warning queda mejor visualmente para suspender
       setSnackbarOpen(true);
     } catch (error) {
       console.error(error);
       setSnackbarMessage(`Error: ${error.message}`);
+      setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {
       setConfirmOpen(false);
       setAccionUsuario(null);
     }
   };
-    
-  //Abrir modal eliminar
+
+  // Eliminar
   const handleBorrarUsuario = (row) => {
     setBorrarUsuario(row);
     setConfirmBorrarOpen(true);
@@ -201,36 +223,36 @@ export default function UsuariosAdmin() {
   const ejecutarBorrado = async () => {
     if (!borrarUsuario) return;
     try {
-      const res = await fetch(`${API_URL}/api/admin/usuarios/${borrarUsuario.id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `${API_URL}/api/admin/usuarios/${borrarUsuario.id}`,
+        { method: "DELETE" }
+      );
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error || "Error al eliminar usuario");
 
-      // Actualizar tabla
       setRows((prev) => prev.filter((u) => u.id !== borrarUsuario.id));
+      setRowCount((prev) => prev - 1); // Ajustar contador visualmente
 
       setSnackbarMessage(`Usuario borrado`);
-      setSnackbarSeverity("error"); // rojo para eliminar
+      setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } catch (error) {
       console.error(error);
       setSnackbarMessage(`Error: ${error.message}`);
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
-      } finally {
+    } finally {
       setConfirmBorrarOpen(false);
       setBorrarUsuario(null);
     }
   };
-  
+
   const columns = useMemo(
     () => [
       { field: "id", headerName: "ID", width: 70 },
       { field: "nombre", headerName: "Nombre", width: 130 },
       { field: "email", headerName: "Email", width: 200 },
-      { field: "rol", headerName: "Rol", width: 60 },
+      { field: "rol", headerName: "Rol", width: 80 },
       { field: "estado", headerName: "Estado", width: 100 },
       { field: "fecha_registro", headerName: "Fecha", width: 120 },
       {
@@ -251,7 +273,7 @@ export default function UsuariosAdmin() {
                 size="small"
                 sx={{ mr: 1 }}
                 component={Link}
-                to={`/perfil/${row.slug}`}
+                to={`/perfil/${row.slug || row.id}`} // Fallback si no hay slug
                 target="_blank"
               >
                 Ver
@@ -272,7 +294,7 @@ export default function UsuariosAdmin() {
                   variant="contained"
                   color="inherit"
                   size="small"
-                  sx={{ mr: 1, width: 70 }}
+                  sx={{ mr: 1, width: 90 }}
                   disabled
                 >
                   Denegado
@@ -282,7 +304,7 @@ export default function UsuariosAdmin() {
                   variant="contained"
                   color={row.estado === "activo" ? "secondary" : "success"}
                   size="small"
-                  sx={{ mr: 1, width: 80 }}
+                  sx={{ mr: 1, width: 90 }}
                   onClick={() => handleAccionUsuario(row)}
                 >
                   {row.estado === "activo" ? "Suspender" : "Activar"}
@@ -303,13 +325,12 @@ export default function UsuariosAdmin() {
                   variant="contained"
                   color="inherit"
                   size="small"
-                  sx={{ mr: 1, width: 80 }}
+                  sx={{ width: 80 }}
                   disabled
                 >
                   Denegado
                 </Button>
               )}
-
             </>
           );
         },
@@ -351,24 +372,28 @@ export default function UsuariosAdmin() {
         <DataGrid
           rows={rows}
           columns={columns}
-          pagination
+          
+          // MODO SERVIDOR ACTIVADO
           paginationMode="server"
           rowCount={rowCount}
-          page={page}
-          pageSize={pageSize}
-          onPageChange={(newPage) => setPage(newPage)}
-          onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
+          
+          // NUEVA GESTIÓN DE PAGINACIÓN (v6+)
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          
           pageSizeOptions={[5, 10, 20]}
           autoHeight
           loading={loading}
           sx={{ border: 0 }}
+          
+          // Desactivar selección de filas si no se usa
+          disableRowSelectionOnClick
         />
       </Box>
 
-      {/* MODAL */}
+      {/* MODAL EDITAR */}
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Editar Usuario</DialogTitle>
-
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
           <TextField
             label="Nombre"
@@ -381,7 +406,6 @@ export default function UsuariosAdmin() {
             }
             fullWidth
           />
-
           <FormControl fullWidth>
             <InputLabel id="rol-label">Rol</InputLabel>
             <Select
@@ -403,7 +427,6 @@ export default function UsuariosAdmin() {
             </Select>
           </FormControl>
         </DialogContent>
-
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancelar</Button>
           <Button variant="contained" onClick={handleGuardar}>
@@ -412,7 +435,7 @@ export default function UsuariosAdmin() {
         </DialogActions>
       </Dialog>
 
-      {/* MODAL CONFIRMAR SUSPENDER/ACTIVAR */}
+      {/* MODAL CONFIRMAR ACCIÓN */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>
           {accionUsuario?.accion === "suspender"
@@ -439,7 +462,7 @@ export default function UsuariosAdmin() {
         </DialogActions>
       </Dialog>
 
-      {/* Modal eliminar*/}
+      {/* MODAL ELIMINAR */}
       <Dialog open={confirmBorrarOpen} onClose={() => setConfirmBorrarOpen(false)}>
         <DialogTitle>Confirmar eliminación</DialogTitle>
         <DialogContent>
@@ -466,13 +489,11 @@ export default function UsuariosAdmin() {
         <Alert
           onClose={() => setSnackbarOpen(false)}
           severity={snackbarSeverity}
-          sx={{ width: '100%' }}
+          sx={{ width: "100%" }}
         >
           {snackbarMessage}
         </Alert>
       </Snackbar>
     </>
-
-
   );
 }
