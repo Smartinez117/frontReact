@@ -6,6 +6,9 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
 import MenuIcon from '@mui/icons-material/Menu';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import SettingsIcon from '@mui/icons-material/Settings';
+import LogoutIcon from '@mui/icons-material/Logout';
 import Container from '@mui/material/Container';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -308,17 +311,49 @@ const settings = ['Notificaciones', 'Mi perfil', 'Configuraci처n', 'Cerrar sesi�
                   <React.Fragment key={setting}>
                     {isAdmin && (
                       <MenuItem key="panel-admin" onClick={() => { handleCloseUserMenu(); navigate('/admin/panel'); }}>
+                        <AdminPanelSettingsIcon/>
                         <Typography textAlign="center">Panel Admin</Typography>
                       </MenuItem>
                     )}
                     <MenuItem key={setting} onClick={() => handleUserMenuClick(setting)}>
+                      {setting === "Configuraci처n" && (
+                        <SettingsIcon sx={{ mr: 1 }} />
+                      )}
+
+                      {setting === "Notificaciones" && (
+                        <AddAlertIcon sx={{ mr: 1 }} />
+                      )}
+
+                      {setting === "Mi perfil" && (
+                        <Avatar sx={{ width: 20, height: 20, mr: 1 }} />
+                      )}
+                      {setting === "Cerrar sesi처n" && (
+                        <LogoutIcon sx={{ width: 20, height: 20, mr: 1 }} />
+                      )}
                       <Typography textAlign="center">{setting}</Typography>
                     </MenuItem>
+
                   </React.Fragment>
                 ) : (
                   <MenuItem key={setting} onClick={() => handleUserMenuClick(setting)}>
+                    {setting === "Configuraci처n" && (
+                      <SettingsIcon sx={{ mr: 1 }} />
+                    )}
+
+                    {setting === "Notificaciones" && (
+                      <AddAlertIcon sx={{ mr: 1 }} />
+                    )}
+
+                    {setting === "Mi perfil" && (
+                      <Avatar sx={{ width: 20, height: 20, mr: 1 }} />
+                    )}
+                    {setting === "Cerrar sesi처n" && (
+                      <LogoutIcon sx={{ width: 20, height: 20, mr: 1 }} />
+                    )}
+
                     <Typography textAlign="center">{setting}</Typography>
                   </MenuItem>
+
                 )
               ))}
             </Menu>
