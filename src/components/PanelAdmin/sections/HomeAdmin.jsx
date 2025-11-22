@@ -3,6 +3,10 @@ import { Grid, Paper, Typography } from "@mui/material";
 import PersonIcon from '@mui/icons-material/Person';
 import ArticleIcon from '@mui/icons-material/Article';
 import ReportIcon from '@mui/icons-material/Report';
+import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
+import SosIcon from '@mui/icons-material/Sos';
+import MyLocationIcon from '@mui/icons-material/MyLocation';
+import SearchIcon from '@mui/icons-material/Search';
 
 export default function HomeAdmin() {
   const [stats, setStats] = useState({
@@ -35,7 +39,7 @@ export default function HomeAdmin() {
   return (
     <Grid container spacing={2} sx={{ mt: 2 }}>
       <Grid item xs={12} md={4}>
-        <Paper sx={{ p: 3, textAlign: "center", borderRadius: 3 }}>
+        <Paper sx={{ p: 3, textAlign: "center", borderRadius: 3 , Width: 300 , height: 120}}>
           <Typography variant="h6">Usuarios registrados</Typography>
 
           <div
@@ -56,7 +60,7 @@ export default function HomeAdmin() {
       </Grid>
 
       <Grid item xs={12} md={4}>
-        <Paper sx={{ p: 3, textAlign: "center", borderRadius: 3 }}>
+        <Paper sx={{ p: 3, textAlign: "center", borderRadius: 3 , Width: 300 , height: 120}}>
           <Typography variant="h6">Publicaciones creadas</Typography>
 
           <div
@@ -77,7 +81,7 @@ export default function HomeAdmin() {
       </Grid>
 
       <Grid item xs={12} md={4}>
-        <Paper sx={{ p: 3, textAlign: "center", borderRadius: 3 }}>
+        <Paper sx={{ p: 3, textAlign: "center", borderRadius: 3 , Width: 300 , height: 120}}>
           <Typography variant="h6">Reportes pendientes</Typography>
 
           <div
@@ -96,6 +100,91 @@ export default function HomeAdmin() {
           </div>
         </Paper>
       </Grid>
+
+      <Grid item xs={12} md={4}>
+        <Paper sx={{ p: 3, textAlign: "center", borderRadius: 3 , Width: 300 , height: 120}}>
+          <Typography variant="h6">Mascotas perdidas</Typography>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              marginTop: "10px",
+            }}
+          >
+            <SearchIcon fontSize="large" />
+            <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+              000+
+            </Typography>
+          </div>
+        </Paper>
+      </Grid>
+
+      <Grid item xs={12} md={4}>
+        <Paper sx={{ p: 3, textAlign: "center", borderRadius: 3 , Width: 300 , height: 120}}>
+          <Typography variant="h6">Mascotas encontradas</Typography>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              marginTop: "10px",
+            }}
+          >
+            <MyLocationIcon fontSize="large" />
+            <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+              000+
+            </Typography>
+          </div>
+        </Paper>
+      </Grid>
+
+      <Grid item xs={12} md={4}>
+        <Paper sx={{ p: 3, textAlign: "center", borderRadius: 3 , Width: 300 , height: 120}}>
+          <Typography variant="h6">Mascotas en adopción</Typography>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              marginTop: "10px",
+            }}
+          >
+            <VolunteerActivismIcon fontSize="large" />
+            <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+              000+
+            </Typography>
+          </div>
+        </Paper>
+      </Grid>
+
+      <Grid item xs={12} md={4}>
+        <Paper sx={{ p: 3, textAlign: "center", borderRadius: 3 , Width: 300 , height: 120}}>
+          <Typography variant="h6">Mascotas en estado critico</Typography>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              marginTop: "10px",
+            }}
+          >
+            <SosIcon fontSize="large" />
+            <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+              000+
+            </Typography>
+          </div>
+        </Paper>
+      </Grid>
+
     </Grid>
 
   );
