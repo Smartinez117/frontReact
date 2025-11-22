@@ -1,118 +1,102 @@
-import * as React from 'react';
-import { BarChart } from "@mui/x-charts/BarChart";
-
-const otherSetting = {
-  height: 300,
-  yAxis: [{ label: 'rainfall (mm)', width: 60 }],
-  grid: { horizontal: true },
-};
-
-const dataset = [
-  {
-    london: 59,
-    paris: 57,
-    newYork: 86,
-    seoul: 21,
-    month: 'January',
-  },
-  {
-    london: 50,
-    paris: 52,
-    newYork: 78,
-    seoul: 28,
-    month: 'February',
-  },
-  {
-    london: 47,
-    paris: 53,
-    newYork: 106,
-    seoul: 41,
-    month: 'March',
-  },
-  {
-    london: 54,
-    paris: 56,
-    newYork: 92,
-    seoul: 73,
-    month: 'April',
-  },
-  {
-    london: 57,
-    paris: 69,
-    newYork: 92,
-    seoul: 99,
-    month: 'May',
-  },
-  {
-    london: 60,
-    paris: 63,
-    newYork: 103,
-    seoul: 144,
-    month: 'June',
-  },
-  {
-    london: 59,
-    paris: 60,
-    newYork: 105,
-    seoul: 319,
-    month: 'July',
-  },
-  {
-    london: 65,
-    paris: 60,
-    newYork: 106,
-    seoul: 249,
-    month: 'August',
-  },
-  {
-    london: 51,
-    paris: 51,
-    newYork: 95,
-    seoul: 131,
-    month: 'September',
-  },
-  {
-    london: 60,
-    paris: 65,
-    newYork: 97,
-    seoul: 55,
-    month: 'October',
-  },
-  {
-    london: 67,
-    paris: 64,
-    newYork: 76,
-    seoul: 48,
-    month: 'November',
-  },
-  {
-    london: 61,
-    paris: 70,
-    newYork: 103,
-    seoul: 25,
-    month: 'December',
-  },
-];
-
-const valueFormatter = (value) => `${value}mm`;
+import { useEffect, useState } from "react";
+import { Grid, Paper, Typography } from "@mui/material";
+import PersonIcon from '@mui/icons-material/Person';
+import ArticleIcon from '@mui/icons-material/Article';
+import ReportIcon from '@mui/icons-material/Report';
 
 export default function HomeAdmin() {
+  const [stats, setStats] = useState({
+    usuarios: 0,
+    publicaciones: 0,
+    reportes: 0,
+  });
+
+  const API_URL = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    fetchEstadisticas();
+  }, []);
+
+  const fetchEstadisticas = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/admin/estadisticas`);
+      const data = await res.json();
+
+      setStats({
+        usuarios: data.usuarios || 0,
+        publicaciones: data.publicaciones || 0,
+        reportes: data.reportes || 0,
+      });
+    } catch (error) {
+      console.error("Error al traer estadísticas", error);
+    }
+  };
+
   return (
-    <BarChart
-      dataset={dataset}
-      xAxis={[
-        {
-          scaleType: 'band',
-          dataKey: 'month',
-          valueFormatter: (month, context) =>
-            context.location === 'tick'
-              ? `${month.slice(0, 3)} \n2023`
-              : `${month} 2023`,
-          height: 40,
-        },
-      ]}
-      series={[{ dataKey: 'seoul', label: 'Seoul rainfall', valueFormatter }]}
-      {...otherSetting}
-    />
+    <Grid container spacing={2} sx={{ mt: 2 }}>
+      <Grid item xs={12} md={4}>
+        <Paper sx={{ p: 3, textAlign: "center", borderRadius: 3 }}>
+          <Typography variant="h6">Usuarios registrados</Typography>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              marginTop: "10px",
+            }}
+          >
+            <PersonIcon fontSize="large" />
+            <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+              {stats.usuarios}
+            </Typography>
+          </div>
+        </Paper>
+      </Grid>
+
+      <Grid item xs={12} md={4}>
+        <Paper sx={{ p: 3, textAlign: "center", borderRadius: 3 }}>
+          <Typography variant="h6">Publicaciones creadas</Typography>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              marginTop: "10px",
+            }}
+          >
+            <ArticleIcon fontSize="large" />
+            <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+              {stats.publicaciones}
+            </Typography>
+          </div>
+        </Paper>
+      </Grid>
+
+      <Grid item xs={12} md={4}>
+        <Paper sx={{ p: 3, textAlign: "center", borderRadius: 3 }}>
+          <Typography variant="h6">Reportes pendientes</Typography>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              marginTop: "10px",
+            }}
+          >
+            <ReportIcon fontSize="large" />
+            <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+              {stats.reportes}
+            </Typography>
+          </div>
+        </Paper>
+      </Grid>
+    </Grid>
+
   );
 }
