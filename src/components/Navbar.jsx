@@ -23,8 +23,6 @@ import AlignItemsList from '../utils/listaNOt'; // import de la funcion para mos
 import { registrarCallbackAgregar } from "../utils/toastUtil";
 
 
-const pages = ['Inicio', 'Publicar', 'Buscar', 'Mapa'];
-const settings = ['Notificaciones', 'Mi perfil', 'Configuración', 'Cerrar sesión'];
 
 const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
@@ -55,37 +53,71 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('');
   const [userPhoto, setUserPhoto] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
   // registra la función que recibirá las notificaciones
   registrarCallbackAgregar(agregarNotificacion);
 }, []);
 
+const pages = ['Inicio', 'Publicar', 'Buscar', 'Mapa'];
+const settings = ['Notificaciones', 'Mi perfil', 'Configuración', 'Cerrar sesión'];
 
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
+      useEffect(() => {
+      const auth = getAuth();
+
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          setUserName('');
+          setUserPhoto('');
+          setIsAdmin(false);
+          localStorage.removeItem("userName");
+          localStorage.removeItem("userPhoto");
+          localStorage.removeItem("isAdmin");
+          navigate("/login");
+          return;
+        }
+
+        // 1️⃣ Cargar datos del usuario
         const name = localStorage.getItem("userName");
         const photo = localStorage.getItem("userPhoto");
-
-        socketconnection(user)  //<-- aca hace el llamado al back para registrarse como user conectado
-        if (!socketNotificationsConnected){socketnotificationlisten(user.uid)}//<-- aca hace uso de la funcion que escucah las notficaciones que envia el back al front
-
         if (name) setUserName(name);
         if (photo) setUserPhoto(photo);
-      } else {
-        //console.log("🔴 No hay usuario logueado");
-        setUserName('');
-        setUserPhoto('');
-        localStorage.removeItem("userName");
-        localStorage.removeItem("userPhoto");
-        navigate("/login");
-      }
-    });
 
-    return () => unsubscribe();
-  }, [navigate]);
+        // 2️⃣ Determinar si es admin ANTES de renderizar navbar
+        try {
+          const token = await user.getIdToken();
+          const res = await fetch(`http://localhost:5000/usuario/${user.uid}/is_admin`, {
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`,
+            },
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            const esAdmin = Boolean(data.is_admin);
+            setIsAdmin(esAdmin);
+            esAdmin ? localStorage.setItem("isAdmin", "true") : localStorage.removeItem("isAdmin");
+          } else {
+            console.error("Error verificando admin:", await res.text());
+            setIsAdmin(false);
+          }
+        } catch (err) {
+          console.error("Error admin:", err);
+          setIsAdmin(false);
+        }
+
+        // 3️⃣ Después: sockets
+        socketconnection(user);
+        if (!socketNotificationsConnected) {
+          socketnotificationlisten(user.uid);
+        }
+      });
+
+      return () => unsubscribe();
+    }, [navigate]);
+
 
   const handleUserMenuClick = (setting) => {
     const auth = getAuth();
@@ -96,6 +128,8 @@ const Navbar = () => {
           .then(() => {
             localStorage.removeItem("userName");
             localStorage.removeItem("userPhoto");
+            localStorage.removeItem("isAdmin");
+            setIsAdmin(false);
             console.log("🔒 Sesión cerrada");
             navigate("/login");
           })
@@ -104,11 +138,11 @@ const Navbar = () => {
           });
         break;
 
-      case "Mi perfil":
+      case "Mi perfil": {
         const userSlug = localStorage.getItem("userSlug");
         navigate(`/perfil/${userSlug}`);
-
         break;
+      }
 
       case "Notificaciones":
         navigate("/notificaciones");
@@ -116,6 +150,10 @@ const Navbar = () => {
 
       case "Configuración":
         navigate("/pconfig");
+        break;
+      
+      case "Panel de Admin":
+        navigate("/admin/panel");
         break;
 
       default:
@@ -193,7 +231,6 @@ const Navbar = () => {
                   <Typography textAlign="center">{page}</Typography>
                 </MenuItem>
               ))}
-
             </Menu>
           </Box>
 
@@ -235,7 +272,10 @@ const Navbar = () => {
           </Box>
 
           <Box sx={{ flexGrow: 0,display: 'flex', alignItems: 'center', gap: 1  }}>
-              <Tooltip title="Notificaciones">
+            {userName && (
+              <Typography variant="body2" sx={{ display: { xs: 'none', md: 'block' }, color: '#111' }}>{userName}</Typography>
+            )}
+            <Tooltip title="Notificaciones">
                <IconButton color="blue" onClick={()=> setOpen(!open)}>
                  <AddAlertIcon />
                </IconButton>
@@ -264,9 +304,22 @@ const Navbar = () => {
               transformOrigin={{ vertical: 'top', horizontal: 'right' }}
             >
               {settings.map((setting) => (
-                <MenuItem key={setting} onClick={() => handleUserMenuClick(setting)}>
-                  <Typography textAlign="center">{setting}</Typography>
-                </MenuItem>
+                setting === 'Cerrar sesión' ? (
+                  <React.Fragment key={setting}>
+                    {isAdmin && (
+                      <MenuItem key="panel-admin" onClick={() => { handleCloseUserMenu(); navigate('/admin/panel'); }}>
+                        <Typography textAlign="center">Panel Admin</Typography>
+                      </MenuItem>
+                    )}
+                    <MenuItem key={setting} onClick={() => handleUserMenuClick(setting)}>
+                      <Typography textAlign="center">{setting}</Typography>
+                    </MenuItem>
+                  </React.Fragment>
+                ) : (
+                  <MenuItem key={setting} onClick={() => handleUserMenuClick(setting)}>
+                    <Typography textAlign="center">{setting}</Typography>
+                  </MenuItem>
+                )
               ))}
             </Menu>
           </Box>
