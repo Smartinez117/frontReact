@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './Buscar.css';
 import { FormControl, FormLabel, TextField } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
+import { configUsuarioActual } from '../../services/perfilService';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -54,6 +55,9 @@ const Buscar = () => {
   // =====================
   // CARGA INICIAL (Etiquetas, Categorias y Ubicación)
   // =====================
+  // =====================
+  // CARGA INICIAL
+  // =====================
   useEffect(() => {
     // 1. Cargar Etiquetas
     fetch(`${API_URL}/api/etiquetas`)
@@ -64,31 +68,60 @@ const Buscar = () => {
       })
       .catch(err => console.error("Error al obtener etiquetas:", err));
 
-    // 2. CAMBIO: Cargar Categorías desde el Backend
+    // 2. Cargar Categorías
     fetch(`${API_URL}/api/categorias`) 
       .then(res => {
           if(!res.ok) throw new Error("Error fetching categorias");
           return res.json();
       })
       .then(data => {
-        // data debería ser array de objetos: [{id: 1, nombre: "Adopción", ...}]
         setListaCategorias(data);
       })
-      .catch(err => console.error("Error al obtener categorías, usando fallback...", err));
+      .catch(err => console.error("Error al obtener categorías", err));
 
-    // 3. Geolocation
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLatitud(position.coords.latitude);
-          setLongitud(position.coords.longitude);
-        },
-        (err) => {
-          console.warn("Ubicación no disponible:", err.message);
+    // 3. OBTENER UBICACIÓN (Lógica Modificada)
+    const establecerUbicacion = async () => {
+        let ubicacionEncontrada = false;
+
+        try {
+            // A) Intentamos obtener la ubicación del PERFIL del usuario
+            const usuario = await configUsuarioActual();
+            
+            if (usuario && usuario.id_localidad) {
+                // Consultamos las coordenadas de esa localidad específica
+                const res = await fetch(`${API_URL}/api/ubicacion/localidades/${usuario.id_localidad}`);
+                if (res.ok) {
+                    const locData = await res.json();
+                    // Asegúrate que tu backend devuelva latitud/longitud en este endpoint
+                    if (locData.latitud && locData.longitud) {
+                        setLatitud(parseFloat(locData.latitud));
+                        setLongitud(parseFloat(locData.longitud));
+                        console.log(`📍 Ubicación establecida desde perfil: ${locData.nombre}`);
+                        ubicacionEncontrada = true;
+                    }
+                }
+            }
+        } catch (error) {
+            // Si el usuario no está logueado, fallará configUsuarioActual, ignoramos el error
+            console.log("Usuario no logueado o sin localidad, probando GPS...");
         }
-      );
-    }
 
+        // B) Fallback: Si no tiene perfil o localidad, usamos GPS del navegador
+        if (!ubicacionEncontrada && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setLatitud(position.coords.latitude);
+                    setLongitud(position.coords.longitude);
+                    console.log("📍 Ubicación establecida desde GPS Navegador");
+                },
+                (err) => {
+                    console.warn("Ubicación no disponible:", err.message);
+                }
+            );
+        }
+    };
+
+    establecerUbicacion();
     cargarPublicaciones();
   }, []);
 
@@ -282,7 +315,7 @@ const Buscar = () => {
             </div>
 
             <div className="filtro-grupo">
-              <label>Buscar cerca de tu ubicación:</label>
+              <label>Buscar cerca de tu ubicación (segun lo configurado en tu perfil):</label>
               <select value={radioKm} onChange={e => setRadioKm(e.target.value)}>
                 <option value="">Cualquier distancia</option>
                 <option value="3">Cerca (3 km)</option>
