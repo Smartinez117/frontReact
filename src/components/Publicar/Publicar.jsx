@@ -28,12 +28,19 @@ import Typography from '@mui/joy/Typography';
 import { styled } from '@mui/joy';
 import CircularProgress from '@mui/material/CircularProgress';
 
-
 import { getAuth } from "firebase/auth";
-
 import { useNavigate } from 'react-router-dom';
-
 import { mostrarAlerta } from '../../utils/confirmservice.js'; 
+
+// --- DICCIONARIO DE TRADUCCIÓN ---
+// Clave: El nombre EXACTO como está en tu Base de Datos (PostgreSQL)
+// Valor: El texto que quieres mostrar en el botón
+const TITULOS_AMIGABLES = {
+  "Adopción": "¡Busco un hogar!",
+  "Búsqueda": "¡Me perdí!",
+  "Encuentro": "¡Me encontraron!",
+  "Estado Crítico": "¡Necesito ayuda urgente!"
+};
 
 const VisuallyHiddenInput = styled('input')`
   clip: rect(0 0 0 0);
@@ -62,7 +69,7 @@ const marcadorIcono = new L.Icon({
 });
 
 const MAX_IMAGENES = 5;
-const MAX_SIZE_MB = 5; // Por archivo
+const MAX_SIZE_MB = 5; 
 const MAX_WIDTH = 4000;
 const MAX_HEIGHT = 4000;
 
@@ -70,23 +77,18 @@ const formatosPermitidos = ["image/jpeg", "image/jpg", "image/png", "image/webp"
 
 const validarImagen = (file) => {
   return new Promise((resolve, reject) => {
-    // Validar tipo
     if (!formatosPermitidos.includes(file.type)) {
       return reject("Formato no permitido. Usa JPG, JPEG, PNG o WEBP.");
     }
-
-    // Validar tamaño
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
       return reject(`La imagen supera los ${MAX_SIZE_MB} MB.`);
     }
-
-    // Validar dimensiones
     const img = new Image();
     img.onload = () => {
       if (img.width > MAX_WIDTH || img.height > MAX_HEIGHT) {
         reject(`La imagen supera las dimensiones máximas (${MAX_WIDTH}x${MAX_HEIGHT}px).`);
       } else {
-        resolve(); // Imagen válida
+        resolve();
       }
     };
     img.onerror = () => reject("No se pudo leer la imagen.");
@@ -110,9 +112,15 @@ function MapaInteractivo({ lat, lng, setLatLng }) {
 }
 
 export default function Publicar() {
+  const API_URL = import.meta.env.VITE_API_URL;
+  const navigate = useNavigate();
+
   const [titulo, setTitulo] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [seleccionado, setSeleccionado] = useState('');
+  
+  const [categoriasDisponibles, setCategoriasDisponibles] = useState([]);
+  const [seleccionado, setSeleccionado] = useState(null); // Guarda el ID (Integer)
+
   const [provincias, setProvincias] = useState([]);
   const [departamentos, setDepartamentos] = useState([]);
   const [localidades, setLocalidades] = useState([]);
@@ -124,17 +132,25 @@ export default function Publicar() {
   const [etiquetasSeleccionadas, setEtiquetasSeleccionadas] = useState([]);
   const [imagenesSeleccionadas, setImagenesSeleccionadas] = useState([]);
   const [errores, setErrores] = useState([]);
-  const navigate = useNavigate();
   const [cargando, setCargando] = useState(false);
+
+  // Cargar categorías desde el backend
+  useEffect(() => {
+    fetch(`${API_URL}/api/categorias`)
+      .then(res => res.json())
+      .then(data => {
+         setCategoriasDisponibles(data);
+      })
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     const borrador = localStorage.getItem("borrador_publicacion");
     if (borrador) {
       const data = JSON.parse(borrador);
-
       setTitulo(data.titulo || "");
       setDescripcion(data.descripcion || "");
-      setSeleccionado(data.seleccionado || "");
+      setSeleccionado(data.seleccionado || null);
       setProvinciaId(data.provinciaId || "");
       setDepartamentoId(data.departamentoId || "");
       setLocalidadId(data.localidadId || "");
@@ -143,7 +159,6 @@ export default function Publicar() {
     }
   }, []);
 
-  // Guardar automáticamente cuando cambia algo
   useEffect(() => {
     const borrador = {
       titulo,
@@ -155,7 +170,6 @@ export default function Publicar() {
       coordenadas,
       etiquetasSeleccionadas,
     };
-
     localStorage.setItem("borrador_publicacion", JSON.stringify(borrador));
   }, [
     titulo,
@@ -168,8 +182,6 @@ export default function Publicar() {
     etiquetasSeleccionadas
   ]);
 
-  const API_URL = import.meta.env.VITE_API_URL;
-  
   const validarCampos = () => {
     const nuevosErrores = [];
     if (!seleccionado) nuevosErrores.push("Categoría");
@@ -183,8 +195,6 @@ export default function Publicar() {
     if (imagenesSeleccionadas.length === 0) nuevosErrores.push("Imágenes");
     return nuevosErrores;
   };
-
-  const camposValidos = (campo) => !errores.includes(campo);
 
   useEffect(() => {
     fetch(`${API_URL}/api/ubicacion/provincias`)
@@ -221,8 +231,6 @@ export default function Publicar() {
       .then(data => {
         const mapped = data.map(e => ({ label: e.nombre, id: e.id }));
         setEtiquetas(mapped);
-        const iniciales = mapped.filter(et => ['Perro', 'Gato'].includes(et.label));
-        setEtiquetasSeleccionadas(iniciales);
       });
   }, []);
 
@@ -247,7 +255,6 @@ export default function Publicar() {
     }
 
     const nuevasValidas = [];
-
     for (const file of archivos) {
       try {
         await validarImagen(file);
@@ -260,9 +267,7 @@ export default function Publicar() {
         });
       }
     }
-
     setImagenesSeleccionadas((prev) => [...prev, ...nuevasValidas]);
-
     event.target.value = "";
   };
 
@@ -294,7 +299,7 @@ export default function Publicar() {
       const urlsImagenes = dataImagenes.urls;
 
       const datos = {
-        categoria: seleccionado,
+        id_categoria: seleccionado, // Enviamos el ID
         titulo,
         descripcion,
         id_locacion: localidadId,
@@ -341,9 +346,11 @@ export default function Publicar() {
       console.error("Error al publicar:", error);
       mostrarAlerta({
         titulo: 'Error',
-        mensaje: 'Ocurrió un error al publicar',
+        mensaje: 'Ocurrió un error al publicar: ' + error.message,
         tipo: 'error'
       });
+    } finally {
+        setCargando(false);
     }
   };
 
@@ -353,21 +360,29 @@ export default function Publicar() {
       <Container maxWidth="md">
         <Typography level="h3" sx={{ mt: 2 }}>Crear publicación</Typography>
 
+        {/* --- AQUÍ ESTÁ EL CAMBIO CLAVE --- */}
         <ToggleButtonGroup
           value={seleccionado}
-          onChange={(event, newValue) => setSeleccionado(newValue)}
+          onChange={(event, newValue) => {
+             if(newValue !== null) setSeleccionado(newValue); 
+          }}
           sx={{ my: 2, gap: 1, flexWrap: 'wrap' }}
           type="single"
         >
-          {["¡Busco un hogar!", "¡Me perdí!", "¡Me encontraron!", "¡Necesito ayuda urgente!"].map(opcion => (
-            <Button
-              key={opcion}
-              value={opcion}
-              color={seleccionado === opcion ? "success" : errores.includes("Categoría") ? "danger" : "neutral"}
-            >
-              {opcion}
-            </Button>
-          ))}
+          {categoriasDisponibles.length === 0 ? (
+              <Typography>Cargando categorías...</Typography>
+          ) : (
+            categoriasDisponibles.map(cat => (
+                <Button
+                    key={cat.id}
+                    value={cat.id} // El valor interno sigue siendo el ID
+                    color={seleccionado === cat.id ? "success" : errores.includes("Categoría") ? "danger" : "neutral"}
+                >
+                {/* Mostramos el texto amigable si existe en el mapa, sino el de la BD */}
+                {TITULOS_AMIGABLES[cat.nombre] || cat.nombre}
+                </Button>
+            ))
+          )}
         </ToggleButtonGroup>
 
         <Input
@@ -526,7 +541,6 @@ export default function Publicar() {
           </div>
         )}
  
-          
         {imagenesSeleccionadas.length > 0 && (
           <Typography level="body2" sx={{ mt: 1, color: '#666' }}>
             {imagenesSeleccionadas.map(file => file.name).join(', ')}
@@ -549,7 +563,6 @@ export default function Publicar() {
             backgroundColor: '#F1B400',
             color: '#0D171C',
             '&:hover': { backgroundColor: '#d9a900' },
-            // un ligero estilo para cuando está deshabilitado
             '&.JoyButton-root[disabled]': {
               opacity: 0.7,
               pointerEvents: 'none'
