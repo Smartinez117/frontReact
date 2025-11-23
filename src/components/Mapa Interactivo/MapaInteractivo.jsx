@@ -1,5 +1,3 @@
-
-// src/components/MapaInteractivo.jsx
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -7,7 +5,22 @@ import L from "leaflet";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-// Iconos por categoría
+// 1. Diccionario para traducir lo que viene de la BD a tus textos del frontend
+const TITULOS_AMIGABLES = {
+  "Adopción": "¡Busco un hogar!",
+  "Adopcion": "¡Busco un hogar!",
+  "Búsqueda": "¡Me perdí!",
+  "Busqueda": "¡Me perdí!",
+  "Perdido": "¡Me perdí!",
+  "Encuentro": "¡Me encontraron!",
+  "Encontrado": "¡Me encontraron!", 
+  "Estado Crítico": "¡Necesito ayuda urgente!",
+  "Estado Critico": "¡Necesito ayuda urgente!",
+  "Crítico": "¡Necesito ayuda urgente!",
+  "Urgente": "¡Necesito ayuda urgente!"
+};
+
+// Iconos por categoría (Las claves coinciden con los valores de TITULOS_AMIGABLES)
 const markerIcons = {
   "¡Busco un hogar!": new L.Icon({
     iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
@@ -21,7 +34,7 @@ const markerIcons = {
     shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41],
   }),
-  " ¡Me encontraron!": new L.Icon({
+  "¡Me encontraron!": new L.Icon({
     iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png",
     iconRetinaUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png",
     shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
@@ -35,7 +48,7 @@ const markerIcons = {
   }),
 };
 
-// Icono para refugios (color rojo)
+// Icono para refugios
 const shelterIcon = new L.Icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
   iconRetinaUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
@@ -49,10 +62,10 @@ const shelterIcon = new L.Icon({
 const MapaInteractivo = () => {
   const [publicaciones, setPublicaciones] = useState([]);
   const [refugios, setRefugios] = useState([]);
-  const [categoria, setCategoria] = useState("");
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("");
 
   useEffect(() => {
-    // Llamada al backend para traer publicaciones
+    // Traer publicaciones
     const fetchData = async () => {
       try {
         const res = await fetch(`${API_URL}/publicaciones/mapa`); 
@@ -64,10 +77,18 @@ const MapaInteractivo = () => {
     };
     fetchData();
 
-    // Llamada al backend Flask para traer refugios
+    // Traer refugios (Tu código que ya funciona)
     const fetchRefugios = async () => {
       try {
-        const query = '[out:json][timeout:25];node[amenity=animal_shelter](-55,-73,-21,-53);out body;';
+        const query = `
+          [out:json][timeout:25];
+          (
+            node["amenity"="animal_shelter"](-55,-73,-21,-53);
+            way["amenity"="animal_shelter"](-55,-73,-21,-53);
+            relation["amenity"="animal_shelter"](-55,-73,-21,-53);
+          );
+          out center;
+        `;
         const res = await fetch(`${API_URL}/refugios`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -84,8 +105,18 @@ const MapaInteractivo = () => {
     fetchRefugios();
   }, []);
 
-  // Obtener categorías únicas de las publicaciones
-  const categoriasUnicas = Array.from(new Set(publicaciones.map(p => p.categoria))).filter(Boolean);
+  // Función auxiliar para obtener el nombre limpio
+  const getCategoriaAmigable = (pub) => {
+    // Si es objeto, saca .nombre, si es string, úsalo, sino vacío
+    const nombreDB = (pub.categoria && pub.categoria.nombre) ? pub.categoria.nombre : (pub.categoria || "");
+    // Traducir
+    return TITULOS_AMIGABLES[nombreDB] || nombreDB || "Sin categoría";
+  };
+
+  // Obtener categorías únicas para el Select
+  const categoriasUnicas = Array.from(new Set(
+    publicaciones.map(p => getCategoriaAmigable(p))
+  )).filter(Boolean);
 
   return (
     <div style={{ width: "100%", height: "600px" }}>
@@ -94,8 +125,8 @@ const MapaInteractivo = () => {
           <label htmlFor="categoria-select" style={{ marginRight: 8 }}>Filtrar por categoría:</label>
           <select
             id="categoria-select"
-            value={categoria}
-            onChange={e => setCategoria(e.target.value)}
+            value={categoriaSeleccionada}
+            onChange={e => setCategoriaSeleccionada(e.target.value)}
             style={{ padding: "4px 8px", fontSize: "16px" }}
           >
             <option value="">Todas</option>
@@ -109,26 +140,35 @@ const MapaInteractivo = () => {
           <span style={{ fontSize: "15px", color: "#b71c1c" }}>Marcadores rojos: Refugios de mascotas</span>
         </div>
       </div>
+      
       <MapContainer
         center={[-34.6037, -58.3816]}
         zoom={13}
         style={{ width: "100%", height: "100%" }}
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        
         {/* Marcadores de publicaciones */}
         {publicaciones
-          .filter(pub =>
-            (categoria === "" || pub.categoria === categoria) &&
-            Array.isArray(pub.coordenadas) &&
-            pub.coordenadas.length === 2 &&
-            !isNaN(parseFloat(pub.coordenadas[0])) &&
-            !isNaN(parseFloat(pub.coordenadas[1]))
-          )
           .map((pub, idx) => {
+            // 1. Validar coordenadas
+            if (!Array.isArray(pub.coordenadas) || pub.coordenadas.length !== 2) return null;
             const lat = parseFloat(pub.coordenadas[0]);
             const lng = parseFloat(pub.coordenadas[1]);
+            if (isNaN(lat) || isNaN(lng)) return null;
+
+            // 2. Obtener nombre amigable
+            const nombreAmigable = getCategoriaAmigable(pub);
+
+            // 3. Filtrar
+            if (categoriaSeleccionada !== "" && nombreAmigable !== categoriaSeleccionada) {
+                return null;
+            }
+
+            // 4. Asignar icono
+            const iconCat = markerIcons[nombreAmigable] || markerIcons["¡Busco un hogar!"];
             const imagenUrl = pub.imagen_principal;
-            const iconCat = markerIcons[pub.categoria] || markerIcons["¡Busco un hogar!"];
+
             return (
               <Marker key={"pub-"+idx} position={[lat, lng]} icon={iconCat}>
                 <Popup>
@@ -144,30 +184,38 @@ const MapaInteractivo = () => {
                       <img src={imagenUrl} alt={pub.titulo} style={{ width: "150px", maxHeight: "120px", objectFit: "cover", marginTop: "8px", borderRadius: "8px", cursor: "pointer" }} />
                     </a>
                   )}
-                  <br /><span style={{ fontWeight: "bold", color: "#555" }}>Categoría: {pub.categoria}</span>
+                  <br />
+                  <span style={{ fontWeight: "bold", color: "#555" }}>Categoría: {nombreAmigable}</span>
                 </Popup>
               </Marker>
             );
           })}
+          
         {/* Marcadores de refugios */}
-        {refugios.map((ref, idx) => (
-          <Marker
-            key={"ref-"+idx}
-            position={[ref.lat, ref.lon]}
-            icon={shelterIcon}
-          >
-            <Popup>
-              <strong>{ref.tags && ref.tags.name ? ref.tags.name : "Refugio de mascotas"}</strong><br />
-              {ref.tags && ref.tags.phone && (<span>Tel: {ref.tags.phone}<br /></span>)}
-              {ref.tags && ref.tags.website && (<a href={ref.tags.website} target="_blank" rel="noopener noreferrer">Sitio web</a>)}
-            </Popup>
-          </Marker>
-        ))}
+        {refugios.map((ref, idx) => {
+            // Manejo de centro si es Way/Relation (usando 'center' que trae Overpass con 'out center')
+            const rLat = ref.lat || (ref.center ? ref.center.lat : null);
+            const rLon = ref.lon || (ref.center ? ref.center.lon : null);
+            
+            if (!rLat || !rLon) return null;
+
+            return (
+              <Marker
+                key={"ref-"+idx}
+                position={[rLat, rLon]}
+                icon={shelterIcon}
+              >
+                <Popup>
+                  <strong>{ref.tags && ref.tags.name ? ref.tags.name : "Refugio de mascotas"}</strong><br />
+                  {ref.tags && ref.tags.phone && (<span>Tel: {ref.tags.phone}<br /></span>)}
+                  {ref.tags && ref.tags.website && (<a href={ref.tags.website} target="_blank" rel="noopener noreferrer">Sitio web</a>)}
+                </Popup>
+              </Marker>
+            );
+        })}
       </MapContainer>
     </div>
   );
 };
 
 export default MapaInteractivo;
-        
-
