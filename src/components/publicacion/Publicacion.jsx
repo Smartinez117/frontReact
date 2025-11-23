@@ -14,6 +14,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
+import CircularProgress from "@mui/material/CircularProgress"; // 🔹 IMPORTANTE: Agregado para el spinner
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -24,7 +25,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import FlagIcon from "@mui/icons-material/Flag"; 
 import IconButton from "@mui/material/IconButton"; 
 import Tooltip from "@mui/material/Tooltip"; 
-import LocationOnIcon from "@mui/icons-material/LocationOn"; // Icono ubicación
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 
 import TextField from "@mui/material/TextField";
 import { getAuth } from "firebase/auth";
@@ -32,7 +33,6 @@ import ReporteForm from "../Reportes/Reportes.jsx";
 
 import { useNavigate } from "react-router-dom";
 
-// Evitar error de ícono por defecto en Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png",
@@ -40,7 +40,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png",
 });
 
-// Modal styles
 const styleModal = {
   position: "absolute",
   top: "50%",
@@ -57,7 +56,6 @@ const styleModal = {
   justifyContent: "center",
 };
 
-// Slider resizing
 const AdaptiveHeight = (slider) => {
   function updateHeight() {
     slider.container.style.height =
@@ -67,7 +65,6 @@ const AdaptiveHeight = (slider) => {
   slider.on("slideChanged", updateHeight);
 };
 
-// Slider arrows
 function Arrow({ left, onClick, disabled }) {
   return (
     <svg
@@ -104,8 +101,6 @@ export default function Publicacion() {
   const { id } = useParams();
   const [publicacion, setPublicacion] = useState(null);
   const [usuario, setUsuario] = useState(null);
-  
-  // NUEVO ESTADO: Para guardar el nombre de la localidad
   const [nombreLocalidad, setNombreLocalidad] = useState("");
 
   const [loading, setLoading] = useState(true);
@@ -120,14 +115,15 @@ export default function Publicacion() {
   const [publicandoComentario, setPublicandoComentario] = useState(false);
   const [errorComentario, setErrorComentario] = useState(null);
   
-  // Estados para reportes
+  // Nuevo estado para bloqueo de descarga
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
   const [mostrarModal, setMostrarModal] = useState(false); 
   const [comentarioAReportar, setComentarioAReportar] = useState(null);
 
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // Obtener publicación
   useEffect(() => {
     axios
       .get(`${API_URL}/publicaciones/${id}`)
@@ -141,7 +137,6 @@ export default function Publicacion() {
       });
   }, [id, API_URL]);
 
-  // NUEVO EFFECT: Obtener nombre de localidad cuando tengamos la publicación
   useEffect(() => {
     if (publicacion && publicacion.id_locacion) {
       axios.get(`${API_URL}/api/ubicacion/localidades/${publicacion.id_locacion}`)
@@ -154,7 +149,6 @@ export default function Publicacion() {
     }
   }, [publicacion, API_URL]);
 
-  // Obtener usuario dueño del post
   useEffect(() => {
     if (publicacion?.id_usuario) {
       axios
@@ -164,7 +158,6 @@ export default function Publicacion() {
     }
   }, [publicacion, API_URL]);
 
-  // Obtener comentarios de publicacion
   useEffect(() => {
     if (!id) return;
 
@@ -194,7 +187,6 @@ export default function Publicacion() {
       });
   }, [id, API_URL]);
 
-  // Slider principal
   const [sliderRef, instanceRef] = useKeenSlider(
     {
       initial: 0,
@@ -214,7 +206,6 @@ export default function Publicacion() {
   };
   const handleClose = () => setOpen(false);
 
-  // Navegación con teclado en el modal
   useEffect(() => {
     const onKey = (e) => {
       if (!open) return;
@@ -240,7 +231,11 @@ export default function Publicacion() {
     categoria,
   } = publicacion;
 
+  // --- LÓGICA MODIFICADA PARA DESCARGA ---
   const descargarPDF = async (idPublicacion) => {
+    if (downloadingPdf) return; // Evitar doble clic
+    setDownloadingPdf(true);
+
     try {
       const response = await axios.get(`${API_URL}/pdf/${idPublicacion}`, {
         responseType: "blob",
@@ -256,6 +251,8 @@ export default function Publicacion() {
     } catch (err) {
       console.error("Error al descargar el PDF:", err);
       alert("Ocurrió un error al generar el PDF");
+    } finally {
+      setDownloadingPdf(false); // Desbloquear siempre
     }
   };
 
@@ -506,7 +503,6 @@ export default function Publicacion() {
             Categoría: {categoria ? categoria.nombre : 'Sin categoría'}
           </Typography>
           
-          {/* --- MOSTRAR NOMBRE DE LOCALIDAD DEBAJO DE CATEGORIA --- */}
           {nombreLocalidad && (
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, color: 'text.secondary' }}>
                 <LocationOnIcon fontSize="large" sx={{ mr: 0.5 }} />
@@ -563,7 +559,6 @@ export default function Publicacion() {
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
                 <Marker position={[coordenadas[0], coordenadas[1]]}>
-                  {/* --- CAMBIO EN EL POPUP: Muestra el nombre de la localidad --- */}
                   <Popup>{nombreLocalidad || "Ubicación de la publicación"}</Popup>
                 </Marker>
               </MapContainer>
@@ -571,9 +566,11 @@ export default function Publicacion() {
           )}
 
           <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
+            {/* --- BOTÓN DESCARGAR PDF MODIFICADO --- */}
             <Button
               variant="contained"
-              startIcon={<DownloadIcon />}
+              disabled={downloadingPdf} // Se inhabilita si está descargando
+              startIcon={downloadingPdf ? <CircularProgress size={20} color="inherit" /> : <DownloadIcon />}
               sx={{
                 bgcolor: "#1976d2",
                 color: "#fff",
@@ -582,10 +579,15 @@ export default function Publicacion() {
                 px: 3,
                 borderRadius: 2,
                 fontWeight: "bold",
+                // Estilo extra para cuando está disabled
+                '&.Mui-disabled': {
+                    bgcolor: '#90caf9',
+                    color: '#fff'
+                }
               }}
               onClick={() => descargarPDF(id)}
             >
-              Descargar PDF
+              {downloadingPdf ? "Generando..." : "Descargar PDF"}
             </Button>
 
             <Button
@@ -673,8 +675,6 @@ export default function Publicacion() {
             ) : (
               comentarios.map((comentario) => {
                 const autorComentario = usuariosComentarios[comentario.id_usuario];
-                
-                // Validar si es mi comentario para borrarlo
                 const esMiComentario = currentUser && autorComentario && (currentUser.email === autorComentario.email);
 
                 return (
@@ -698,7 +698,6 @@ export default function Publicacion() {
                           </Typography>
                           
                           <Box>
-                            {/* BOTÓN REPORTAR COMENTARIO (Si no es mío) */}
                             {!esMiComentario && currentUser && (
                                 <Tooltip title="Reportar comentario">
                                     <IconButton
@@ -712,7 +711,6 @@ export default function Publicacion() {
                                 </Tooltip>
                             )}
 
-                            {/* BOTÓN ELIMINAR COMENTARIO (Si es mío) */}
                             {esMiComentario && (
                                 <Tooltip title="Eliminar comentario">
                                     <IconButton 
@@ -742,11 +740,10 @@ export default function Publicacion() {
             )}
           </Box>
 
-          {/* MODAL DE REPORTE DE COMENTARIO */}
           {comentarioAReportar && (
               <ReporteForm
-                idComentario={comentarioAReportar.id} // Pasamos ID Comentario
-                idUsuario={comentarioAReportar.id_usuario} // Usuario denunciado (autor del comentario)
+                idComentario={comentarioAReportar.id}
+                idUsuario={comentarioAReportar.id_usuario}
                 idPublicacion={id}
                 onClose={() => setComentarioAReportar(null)}
               />
