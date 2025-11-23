@@ -135,7 +135,7 @@ export default function Publicacion() {
         console.error("Error al obtener la publicación:", err);
         setLoading(false);
       });
-  }, [id]);
+  }, [id, API_URL]);
 
   // Obtener usuario dueño del post
   useEffect(() => {
@@ -145,7 +145,7 @@ export default function Publicacion() {
         .then((res) => setUsuario(res.data))
         .catch((err) => console.error("Error al obtener el usuario:", err));
     }
-  }, [publicacion]);
+  }, [publicacion, API_URL]);
 
   // Obtener comentarios de publicacion
   useEffect(() => {
@@ -175,7 +175,7 @@ export default function Publicacion() {
       .catch((err) => {
         console.error("Error al obtener comentarios:", err);
       });
-  }, [id]);
+  }, [id, API_URL]);
 
   // Slider principal
   const [sliderRef, instanceRef] = useKeenSlider(
@@ -203,11 +203,12 @@ export default function Publicacion() {
       if (!open) return;
       if (e.key === 'Escape') setOpen(false);
       if (e.key === 'ArrowLeft') setModalSlide((s) => Math.max(0, s - 1));
-      if (e.key === 'ArrowRight') setModalSlide((s) => Math.min(imagenes.length - 1, s + 1));
+      const total = publicacion?.imagenes?.length || 0;
+      if (e.key === 'ArrowRight') setModalSlide((s) => Math.min(total - 1, s + 1));
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, publicacion?.imagenes?.length]);
+  }, [open, publicacion?.imagenes?.length, publicacion]);
 
   if (loading) return <Typography sx={{ p: 4 }}>Cargando publicación...</Typography>;
   if (!publicacion) return <Typography sx={{ p: 4 }}>No se encontró la publicación</Typography>;
@@ -242,18 +243,49 @@ export default function Publicacion() {
   };
 
   const compartirPublicacion = (idPublicacion) => {
-    const url = `https://tusitio.com/publicacion/${idPublicacion}`;
+    // Construir URL pública: priorizamos VITE_FRONTEND_URL si está configurada
+    const baseUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
+    const url = `${baseUrl.replace(/\/$/, '')}/publicacion/${encodeURIComponent(idPublicacion)}`;
     const title = publicacion?.titulo || "Publicación";
+
+    // Texto descriptivo corto para compartir
+    const text = publicacion?.descripcion
+      ? `${publicacion.titulo} — ${publicacion.descripcion.substring(0, 120)}...`
+      : `Mirá esta publicación: ${title}`;
+
+    // Intentamos usar la Web Share API (mejor experiencia en móviles)
     if (navigator.share) {
-      navigator.share({
-          title,
-          text: `Mirá esta publicación: ${title}`,
-          url,
-        }).catch((error) => console.error("Error al compartir:", error));
-    } else {
-      navigator.clipboard.writeText(url).then(() => {
-        alert("Enlace copiado al portapapeles");
-      });
+      navigator.share({ title, text, url })
+        .catch((error) => {
+          console.error("Error al compartir mediante Web Share:", error);
+          // Si falla, caemos al fallback
+          fallbackCopyUrl(url);
+        });
+      return;
+    }
+
+    // Fallback: copiar al portapapeles y abrir diálogo de redes sociales en nueva pestaña
+    fallbackCopyUrl(url);
+  };
+
+  const fallbackCopyUrl = async (url) => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        // Fallback clásico para navegadores viejos
+        const tmp = document.createElement('input');
+        document.body.appendChild(tmp);
+        tmp.value = url;
+        tmp.select();
+        document.execCommand('copy');
+        tmp.remove();
+      }
+      // Informar al usuario y ofrecer abrir opciones sociales en nueva pestaña
+      alert('Enlace copiado al portapapeles. Podés compartirlo en tu red social preferida.');
+    } catch (err) {
+      console.error('No se pudo copiar el enlace:', err);
+      alert('No se pudo copiar el enlace automáticamente. Podés copiarlo manualmente: ' + url);
     }
   };
 
