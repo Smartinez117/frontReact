@@ -37,9 +37,9 @@ import { mostrarAlerta } from '../../utils/confirmservice.js';
 // Valor: El texto que quieres mostrar en el botón
 const TITULOS_AMIGABLES = {
   "Adopción": "¡Busco un hogar!",
-  "Búsqueda": "¡Me perdí!",
+  "Pérdida": "¡Me perdí!",
   "Encuentro": "¡Me encontraron!",
-  "Estado Crítico": "¡Necesito ayuda urgente!"
+  "Estado crítico": "¡Necesito ayuda urgente!"
 };
 
 const VisuallyHiddenInput = styled('input')`

@@ -16,7 +16,7 @@ import Button from '@mui/joy/Button';
 import Input from '@mui/joy/Input';
 import Textarea from '@mui/joy/Textarea';
 import ToggleButtonGroup from '@mui/joy/ToggleButtonGroup';
-import Select, { selectClasses } from '@mui/joy/Select';
+import Select from '@mui/joy/Select';
 import Option from '@mui/joy/Option';
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
 import Autocomplete from '@mui/joy/Autocomplete';
@@ -28,12 +28,16 @@ import Typography from '@mui/joy/Typography';
 import { styled } from '@mui/joy';
 
 import { getAuth } from "firebase/auth";
-
 import { useNavigate, useParams} from 'react-router-dom';
-
 import CircularProgress from '@mui/material/CircularProgress';
-
 import { mostrarAlerta } from '../../utils/confirmservice.js'; 
+
+const TITULOS_AMIGABLES = {
+  "Adopción": "¡Busco un hogar!",
+  "Pérdida": "¡Me perdí!",
+  "Encuentro": "¡Me encontraron!",
+  "Estado crítico": "¡Necesito ayuda urgente!"
+};
 
 const VisuallyHiddenInput = styled('input')`
   clip: rect(0 0 0 0);
@@ -76,9 +80,15 @@ function MapaInteractivo({ lat, lng, setLatLng }) {
 }
 
 export default function Editar() {
+  const API_URL = import.meta.env.VITE_API_URL;
+  const navigate = useNavigate();
+  const { id_publicacion } = useParams();
+
   const [titulo, setTitulo] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [seleccionado, setSeleccionado] = useState('');
+  const [categoriasDisponibles, setCategoriasDisponibles] = useState([]);
+  const [seleccionado, setSeleccionado] = useState(null); 
+
   const [provincias, setProvincias] = useState([]);
   const [departamentos, setDepartamentos] = useState([]);
   const [localidades, setLocalidades] = useState([]);
@@ -88,14 +98,12 @@ export default function Editar() {
   const [coordenadas, setCoordenadas] = useState({ lat: 0, lng: 0 });
   const [etiquetas, setEtiquetas] = useState([]);
   const [etiquetasSeleccionadas, setEtiquetasSeleccionadas] = useState([]);
-  const [imagenesSeleccionadas, setImagenesSeleccionadas] = useState([]);
+  const [imagenesSeleccionadas, setImagenesSeleccionadas] = useState([]); // Nuevas (Files)
+  const [imagenesExistentes, setImagenesExistentes] = useState([]); // Viejas (URLs)
   const [errores, setErrores] = useState([]);
-  const { id_publicacion } = useParams();
+  
   const [etiquetasDesdePublicacion, setEtiquetasDesdePublicacion] = useState([]);
-  const [imagenesExistentes, setImagenesExistentes] = useState([]);
   const [cargando, setCargando] = useState(false);
-
-  const navigate = useNavigate();
 
   const validarCampos = () => {
     const nuevosErrores = [];
@@ -111,9 +119,13 @@ export default function Editar() {
     return nuevosErrores;
   };
 
-  const camposValidos = (campo) => !errores.includes(campo);
-
-  const API_URL = import.meta.env.VITE_API_URL;
+  // Cargas iniciales
+  useEffect(() => {
+    fetch(`${API_URL}/api/categorias`)
+      .then(res => res.json())
+      .then(data => setCategoriasDisponibles(data))
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     fetch(`${API_URL}/api/ubicacion/provincias`)
@@ -153,6 +165,7 @@ export default function Editar() {
       });
   }, []);
 
+  // Cargar Publicación
   useEffect(() => {
     const fetchDatosPublicacion = async () => {
       try {
@@ -162,7 +175,13 @@ export default function Editar() {
 
         setTitulo(data.titulo || '');
         setDescripcion(data.descripcion || '');
-        setSeleccionado(data.categoria || '');
+        
+        if (data.categoria && typeof data.categoria === 'object') {
+            setSeleccionado(data.categoria.id);
+        } else if (typeof data.categoria === 'number') {
+            setSeleccionado(data.categoria);
+        }
+
         if (data.coordenadas && Array.isArray(data.coordenadas)) {
           setCoordenadas({ lat: parseFloat(data.coordenadas[0]), lng: parseFloat(data.coordenadas[1]) });
         }
@@ -176,7 +195,6 @@ export default function Editar() {
           }
         }
 
-        // Guardamos los nombres de las etiquetas
         if (Array.isArray(data.etiquetas)) {
           setEtiquetasDesdePublicacion(data.etiquetas);
         }
@@ -218,6 +236,17 @@ export default function Editar() {
     setImagenesSeleccionadas(files);
   };
 
+  // --- NUEVA FUNCIÓN: Eliminar imagen existente (URL) ---
+  const eliminarImagenExistente = (index) => {
+    setImagenesExistentes(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Eliminar imagen nueva (File)
+  const eliminarImagenNueva = (index) => {
+    setImagenesSeleccionadas(prev => prev.filter((_, i) => i !== index));
+  };
+
+
   const handlePublicar = async () => {
     const nuevosErrores = validarCampos();
     setErrores(nuevosErrores);
@@ -225,8 +254,10 @@ export default function Editar() {
     setCargando(true);
 
     try {
-      let urlsImagenes = [...imagenesExistentes]; // imágenes previas
+      // 1. Empezamos con las imágenes que quedaron en el estado "existentes"
+      let urlsImagenes = [...imagenesExistentes]; 
 
+      // 2. Subimos las nuevas
       if (imagenesSeleccionadas.length > 0) {
         const formData = new FormData();
         imagenesSeleccionadas.forEach((img) => {
@@ -241,20 +272,19 @@ export default function Editar() {
         if (!resImagenes.ok) throw new Error("Error al subir imágenes");
 
         const dataImagenes = await resImagenes.json();
+        // 3. Combinamos: las que no borró el usuario + las nuevas subidas
         urlsImagenes = [...urlsImagenes, ...dataImagenes.urls];
       }
 
-
       const datos = {
-        categoria: seleccionado,
+        id_categoria: seleccionado,
         titulo,
         descripcion,
         id_locacion: localidadId,
         coordenadas: [parseFloat(coordenadas.lat), parseFloat(coordenadas.lng)],
         etiquetas: etiquetasSeleccionadas.map(e => e.id),
-        imagenes: urlsImagenes
+        imagenes: urlsImagenes // enviamos la lista final combinada
       };
-
 
       const auth = getAuth();
       const user = auth.currentUser;
@@ -294,7 +324,7 @@ export default function Editar() {
         tipo: 'error'
       }); 
     }finally {
-      setCargando(false); // 🔹 siempre reactivar al terminar
+      setCargando(false); 
     }
   };
 
@@ -306,19 +336,25 @@ export default function Editar() {
 
         <ToggleButtonGroup
           value={seleccionado}
-          onChange={(event, newValue) => setSeleccionado(newValue)}
+          onChange={(event, newValue) => {
+             if(newValue !== null) setSeleccionado(newValue); 
+          }}
           sx={{ my: 2, gap: 1, flexWrap: 'wrap' }}
-          exclusive
+          type="single"
         >
-          {["Adopción", "Búsqueda", "Encuentro", "Estado Crítico"].map(opcion => (
-            <Button
-              key={opcion}
-              value={opcion}
-              color={seleccionado === opcion ? "success" : errores.includes("Categoría") ? "danger" : "neutral"}
-            >
-              {opcion}
-            </Button>
-          ))}
+          {categoriasDisponibles.length === 0 ? (
+              <Typography>Cargando categorías...</Typography>
+          ) : (
+            categoriasDisponibles.map(cat => (
+                <Button
+                    key={cat.id}
+                    value={cat.id}
+                    color={seleccionado === cat.id ? "success" : errores.includes("Categoría") ? "danger" : "neutral"}
+                >
+                {TITULOS_AMIGABLES[cat.nombre] || cat.nombre}
+                </Button>
+            ))
+          )}
         </ToggleButtonGroup>
 
         <Input
@@ -438,19 +474,82 @@ export default function Editar() {
           </Typography>
         )}
 
+        {/* --- SECCIÓN DE IMÁGENES PREVIAS CON BOTÓN BORRAR --- */}
         {imagenesExistentes.length > 0 && (
           <Box sx={{ mt: 2 }}>
             <Typography level="body2" sx={{ mb: 1 }}>Imágenes previas:</Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
               {imagenesExistentes.map((url, i) => (
-                <img
-                  key={i}
-                  src={url}
-                  alt={`imagen-${i}`}
-                  style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: 8 }}
-                />
+                <div key={i} style={{ position: 'relative', display: 'inline-block' }}>
+                    <img
+                      src={url}
+                      alt={`imagen-${i}`}
+                      style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: 8 }}
+                    />
+                    <button
+                      onClick={() => eliminarImagenExistente(i)}
+                      style={{
+                        position: 'absolute',
+                        top: '4px',
+                        right: '4px',
+                        background: '#ff4d4d',
+                        border: 'none',
+                        color: 'white',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      X
+                    </button>
+                </div>
               ))}
             </Box>
+          </Box>
+        )}
+
+        {/* --- SECCIÓN DE IMÁGENES NUEVAS --- */}
+        {imagenesSeleccionadas.length > 0 && (
+          <Box sx={{ mt: 2 }}>
+             <Typography level="body2" sx={{ mb: 1 }}>Imágenes nuevas:</Typography>
+             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                {imagenesSeleccionadas.map((img, index) => (
+                  <div
+                    key={index}
+                    style={{ position: 'relative', display: 'inline-block' }}
+                  >
+                    <img
+                      src={URL.createObjectURL(img)}
+                      alt="preview"
+                      style={{
+                        width: '100px',
+                        height: '100px',
+                        objectFit: 'cover',
+                        borderRadius: '8px',
+                        border: '1px solid #ccc'
+                      }}
+                    />
+                    <button
+                      onClick={() => eliminarImagenNueva(index)}
+                      style={{
+                        position: 'absolute',
+                        top: '4px',
+                        right: '4px',
+                        background: '#ff4d4d',
+                        border: 'none',
+                        color: 'white',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      X
+                    </button>
+                  </div>
+                ))}
+              </div>
           </Box>
         )}
 
@@ -464,7 +563,7 @@ export default function Editar() {
         <Button
           size="lg"
           variant="solid"
-          disabled={cargando} // 🔹 se inhabilita
+          disabled={cargando}
           sx={{
             width: '100%',
             mt: 4,
