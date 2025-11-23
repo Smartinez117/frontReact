@@ -11,6 +11,8 @@ export class Usuario {
     telefono_pais,
     telefono_numero_local,
     descripcion,
+    id_localidad,
+    ubicacion
   }) {
     this.id = id;
     this.firebase_uid = firebase_uid;
@@ -22,5 +24,8 @@ export class Usuario {
     this.telefono_pais = telefono_pais;
     this.telefono_numero_local = telefono_numero_local;
     this.descripcion = descripcion;
+    
+    this.id_localidad = id_localidad;
+    this.ubicacion = ubicacion;
   }
 }

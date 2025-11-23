@@ -199,6 +199,7 @@ export async function actualizarUsuario(idUsuario, data) {
 }
 
 //funcion para obtener los datos de un usuario con el uid, pero del usuario autenticado
+
 export function configUsuarioActual() {
   const auth = getAuth();
 
@@ -214,6 +215,7 @@ export function configUsuarioActual() {
       try {
         const token = await user.getIdToken();
 
+        // 1. Obtenemos los datos del usuario (que trae id_localidad)
         const response = await fetch(`${BASE_URL}/api/userconfig`, {
           method: 'GET',
           headers: {
@@ -226,7 +228,37 @@ export function configUsuarioActual() {
         }
 
         const data = await response.json();
+
+        // --- NUEVA LÓGICA: "Hidratar" la ubicación ---
+        // Si viene un id_localidad de la base de datos, buscamos sus detalles
+        if (data.id_localidad) {
+            try {
+                // Usamos el token también por si tu API de ubicaciones es privada
+                const locResponse = await fetch(`${BASE_URL}/api/ubicacion/localidades/${data.id_localidad}`, {
+                     method: 'GET',
+                     headers: { 'Authorization': `Bearer ${token}` } 
+                });
+
+                if (locResponse.ok) {
+                    const locData = await locResponse.json();
+                    // Construimos el objeto 'ubicacion' tal cual lo espera tu componente
+                    data.ubicacion = {
+                        id: locData.id,
+                        nombre: locData.nombre,
+                        provincia_id: locData.id_provincia,     // Opcional, útil
+                        departamento_id: locData.id_departamento // Opcional, útil
+                    };
+                }
+            } catch (errLoc) {
+                console.warn("No se pudo obtener el nombre de la localidad", errLoc);
+                // No fallamos todo el proceso, solo la ubicación quedará pendiente
+            }
+        }
+        // ----------------------------------------------
+
+        // Pasamos la data completa (incluyendo la nueva 'data.ubicacion') al modelo
         resolve(new Usuario(data));
+
       } catch (error) {
         reject(error);
       }
