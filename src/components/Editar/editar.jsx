@@ -32,11 +32,12 @@ import { useNavigate, useParams} from 'react-router-dom';
 import CircularProgress from '@mui/material/CircularProgress';
 import { mostrarAlerta } from '../../utils/confirmservice.js'; 
 
-const TITULOS_AMIGABLES = {
-  "Adopción": "¡Busco un hogar!",
-  "Pérdida": "¡Me perdí!",
-  "Encuentro": "¡Me encontraron!",
-  "Estado crítico": "¡Necesito ayuda urgente!"
+// Usamos la configuración por ID para asegurar coincidencia exacta
+const CONFIG_CATEGORIAS = {
+  0: "¡Busco un hogar!",       
+  1: "¡Me encontraron!",       
+  2: "¡Me perdí!",             
+  3: "¡Necesito ayuda urgente!" 
 };
 
 const VisuallyHiddenInput = styled('input')`
@@ -107,7 +108,7 @@ export default function Editar() {
 
   const validarCampos = () => {
     const nuevosErrores = [];
-    if (!seleccionado) nuevosErrores.push("Categoría");
+    if (seleccionado === null || seleccionado === "") nuevosErrores.push("Categoría");
     if (!titulo.trim()) nuevosErrores.push("Título");
     if (!descripcion.trim()) nuevosErrores.push("Descripción");
     if (descripcion.length > 500) nuevosErrores.push("Descripción excede 500 caracteres");
@@ -176,6 +177,7 @@ export default function Editar() {
         setTitulo(data.titulo || '');
         setDescripcion(data.descripcion || '');
         
+        // Extraer ID de categoría
         if (data.categoria && typeof data.categoria === 'object') {
             setSeleccionado(data.categoria.id);
         } else if (typeof data.categoria === 'number') {
@@ -190,6 +192,7 @@ export default function Editar() {
           if (resLoc.ok) {
             const localidad = await resLoc.json();
             setProvinciaId(localidad.id_provincia.toString());
+            // Esperamos un momento para que se carguen deptos/localidades
             setDepartamentoId(localidad.id_departamento.toString());
             setLocalidadId(localidad.id.toString());
           }
@@ -334,10 +337,11 @@ export default function Editar() {
       <Container maxWidth="md">
         <Typography level="h3" sx={{ mt: 2 }}>Editar Publicación</Typography>
 
+        {/* Selección de Categoría (Corregida para IDs numéricos y textos amigables) */}
         <ToggleButtonGroup
-          value={seleccionado}
+          value={seleccionado !== null ? String(seleccionado) : null}
           onChange={(event, newValue) => {
-             if(newValue !== null) setSeleccionado(newValue); 
+             if(newValue !== null) setSeleccionado(Number(newValue)); 
           }}
           sx={{ my: 2, gap: 1, flexWrap: 'wrap' }}
           type="single"
@@ -345,15 +349,21 @@ export default function Editar() {
           {categoriasDisponibles.length === 0 ? (
               <Typography>Cargando categorías...</Typography>
           ) : (
-            categoriasDisponibles.map(cat => (
-                <Button
-                    key={cat.id}
-                    value={cat.id}
-                    color={seleccionado === cat.id ? "success" : errores.includes("Categoría") ? "danger" : "neutral"}
-                >
-                {TITULOS_AMIGABLES[cat.nombre] || cat.nombre}
-                </Button>
-            ))
+            categoriasDisponibles.map(cat => {
+                const isSelected = seleccionado === cat.id;
+                return (
+                    <Button
+                        key={cat.id}
+                        value={String(cat.id)}
+                        variant={isSelected ? "soft" : "outlined"} 
+                        color={isSelected ? "success" : errores.includes("Categoría") ? "danger" : "neutral"}
+                        aria-pressed={isSelected}
+                        sx={{ fontWeight: isSelected ? 'bold' : 'normal' }}
+                    >
+                        {CONFIG_CATEGORIAS[cat.id] || cat.nombre}
+                    </Button>
+                );
+            })
           )}
         </ToggleButtonGroup>
 
