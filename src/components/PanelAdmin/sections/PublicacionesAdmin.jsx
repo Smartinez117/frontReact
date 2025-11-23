@@ -15,9 +15,14 @@ import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-import { red, grey } from '@mui/material/colors'; // Agregué grey para estados
+import Box from '@mui/material/Box'; 
+import TextField from '@mui/material/TextField'; 
+import Checkbox from '@mui/material/Checkbox'; 
+import { red, grey } from '@mui/material/colors';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Chip } from '@mui/material'; // Agregué Chip
+import DeleteIcon from '@mui/icons-material/Delete'; 
+import SearchIcon from '@mui/icons-material/Search'; 
+import { Dialog, DialogTitle, DialogContent, DialogActions, Chip } from '@mui/material';
 
 const ExpandMore = styled((props) => {
   const { expand, ...other } = props;
@@ -32,7 +37,6 @@ const ExpandMore = styled((props) => {
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-// Componente de paginación personalizado
 function PaginationRounded({ count, page, onChange }) {
   return (
     <Stack spacing={2} sx={{ alignItems: 'center', mt: 4 }}>
@@ -49,68 +53,118 @@ export default function PublicacionesAdmin() {
   const [page, setPage] = React.useState(1);
   const [total, setTotal] = React.useState(0);
   
+  // --- ESTADOS DE SELECCIÓN Y FILTRO ---
+  const [selectedIds, setSelectedIds] = React.useState([]);
+  const [filterUserId, setFilterUserId] = React.useState('');
+  const [activeFilter, setActiveFilter] = React.useState('');
+  // -------------------------------------
+
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const [snackbarMessage, setSnackbarMessage] = React.useState('');
-  // Nuevo estado para controlar el color de la alerta (success/error)
   const [snackbarSeverity, setSnackbarSeverity] = React.useState('success');
 
   const limit = 9;
 
-  const fetchPublicaciones = async (pagina = 1) => {
+  const fetchPublicaciones = async (pagina = 1, userId = '') => {
     try {
-      const res = await fetch(`${API_URL}/api/admin/publicaciones?page=${pagina}&limit=${limit}`);
+      let url = `${API_URL}/api/admin/publicaciones?page=${pagina}&limit=${limit}`;
+      
+      if (userId) {
+        url += `&id_usuario=${userId}`;
+      }
+
+      const res = await fetch(url);
       const data = await res.json();
-      console.log("Datos recibidos del backend:", data.publicaciones);
-      const pubsConImagen = data.publicaciones.map(pub => ({
+      
+      const lista = Array.isArray(data.publicaciones) ? data.publicaciones : [];
+
+      const pubsConImagen = lista.map(pub => ({
         ...pub,
         primeraImagen: pub.imagenes?.[0] || null,
       }));
       setPublicaciones(pubsConImagen);
-      setTotal(data.total);
-      setPage(data.page);
+      setTotal(data.total || 0);
+      setPage(Number(data.page) || 1);
     } catch (error) {
       console.error(error);
+      setPublicaciones([]);
     }
   };
 
   React.useEffect(() => {
-    fetchPublicaciones(page);
-  }, [page]);
+    fetchPublicaciones(page, activeFilter);
+  }, [page]); 
 
   const handleExpandClick = (id) => {
     setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // --- Lógica para Archivar / Desarchivar ---
+  // --- MANEJO DE FILTRO ---
+  const handleSearch = () => {
+    setPage(1);
+    setActiveFilter(filterUserId);
+    fetchPublicaciones(1, filterUserId);
+  };
+
+  const handleClearSearch = () => {
+    setFilterUserId('');
+    setActiveFilter('');
+    setPage(1);
+    fetchPublicaciones(1, '');
+  };
+
+  // --- MANEJO DE SELECCIÓN ---
+  const handleToggleSelect = (id) => {
+    setSelectedIds(prev => {
+        if (prev.includes(id)) {
+            return prev.filter(item => item !== id);
+        } else {
+            return [...prev, id];
+        }
+    });
+  };
+
+  // --- BORRADO MASIVO ---
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`¿Estás seguro de eliminar ${selectedIds.length} publicaciones seleccionadas?`)) return;
+
+    const deletePromises = selectedIds.map(id => 
+        fetch(`${API_URL}/publicaciones/${id}`, { method: 'DELETE' })
+    );
+
+    try {
+        await Promise.all(deletePromises);
+        fetchPublicaciones(page, activeFilter);
+        setSelectedIds([]);
+        setSnackbarMessage(`${selectedIds.length} publicaciones eliminadas.`);
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+    } catch (error) {
+        console.error("Error en borrado masivo:", error);
+        setSnackbarMessage("Error al eliminar algunas publicaciones");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+    }
+  };
+
+  // --- Lógica Individual ---
   const handleArchivar = async (pub) => {
-    const isArchived = pub.estado === 1; // Asumiendo que el estado se llama 'archivada' o similar
+    const isArchived = pub.estado === 1; 
     const endpoint = isArchived ? 'desarchivar' : 'archivar';
     
     try {
-      const res = await fetch(`${API_URL}/publicaciones/${pub.id}/${endpoint}`, {
-        method: 'PATCH',
-      });
+      const res = await fetch(`${API_URL}/publicaciones/${pub.id}/${endpoint}`, { method: 'PATCH' });
+      if (!res.ok) throw new Error(`Error al ${endpoint}`);
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || `Error al ${endpoint}`);
-      }
-
-      // Actualizar estado localmente para reflejar el cambio inmediato
       setPublicaciones(prev => prev.map(p => {
-        if (p.id === pub.id) {
-            // Cambiamos el estado localmente
-            return { ...p, estado: isArchived ? 0 : 1 };
-        }
+        if (p.id === pub.id) return { ...p, estado: isArchived ? 0 : 1 };
         return p;
       }));
 
       setSnackbarMessage(isArchived ? "Publicación desarchivada" : "Publicación archivada");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
-
     } catch (error) {
-      console.error(error);
       setSnackbarMessage(`Error: ${error.message}`);
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
@@ -125,13 +179,8 @@ export default function PublicacionesAdmin() {
   const ejecutarBorradoPublicacion = async () => {
     if (!publicacionSeleccionada) return;
     try {
-      const res = await fetch(`${API_URL}/publicaciones/${publicacionSeleccionada.id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Error al eliminar publicación");
-      }
+      const res = await fetch(`${API_URL}/publicaciones/${publicacionSeleccionada.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Error al eliminar");
 
       setPublicaciones(prev => prev.filter(p => p.id !== publicacionSeleccionada.id));
       setTotal(prev => prev - 1);
@@ -139,31 +188,103 @@ export default function PublicacionesAdmin() {
       setPublicacionSeleccionada(null);
 
       setSnackbarMessage("Publicación borrada");
-      setSnackbarSeverity("success"); // Éxito
+      setSnackbarSeverity("success");
       setSnackbarOpen(true);
-
     } catch (error) {
-      console.error(error);
-      setSnackbarMessage(`Error al eliminar: ${error.message}`);
-      setSnackbarSeverity("error"); // Error
+      setSnackbarMessage(`Error: ${error.message}`);
+      setSnackbarSeverity("error");
       setSnackbarOpen(true);
     }
   };
 
   const handlePageChange = (event, value) => {
-    fetchPublicaciones(value);
+    setPage(value);
   };
 
-  const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
-  };
+  const handleCloseSnackbar = () => setSnackbarOpen(false);
+
+  // --- CÁLCULO DE ESTADO DEL CHECKBOX MAESTRO ---
+  const allVisibleIds = publicaciones.map(p => p.id);
+  const isAllSelected = publicaciones.length > 0 && allVisibleIds.every(id => selectedIds.includes(id));
+  const isSomeSelected = publicaciones.length > 0 && allVisibleIds.some(id => selectedIds.includes(id));
 
   return (
     <>
+      {/* --- BARRA DE HERRAMIENTAS --- */}
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
+        
+        {/* Área de Filtro */}
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <TextField 
+                label="Filtrar por ID Usuario" 
+                variant="outlined" 
+                size="small"
+                type="number"
+                value={filterUserId}
+                onChange={(e) => setFilterUserId(e.target.value)}
+            />
+            <Button variant="contained" onClick={handleSearch} startIcon={<SearchIcon />}>
+                Buscar
+            </Button>
+            {activeFilter && (
+                <>
+                    <Button variant="outlined" onClick={handleClearSearch} color="inherit">
+                        Limpiar
+                    </Button>
+                    
+                    {/* CHECKBOX MAESTRO ARREGLADO */}
+                    <Box 
+                        sx={{ display: 'flex', alignItems: 'center', ml: 2, borderLeft: '1px solid #ccc', pl: 2, cursor: 'pointer' }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (isAllSelected) {
+                                // Desmarcar todos los visibles
+                                setSelectedIds(prev => prev.filter(id => !allVisibleIds.includes(id)));
+                            } else {
+                                // Marcar todos los visibles
+                                setSelectedIds(prev => [...new Set([...prev, ...allVisibleIds])]);
+                            }
+                        }}
+                    >
+                        <Checkbox 
+                            checked={isAllSelected}
+                            indeterminate={isSomeSelected && !isAllSelected}
+                            // SOLUCION: Desactivar eventos de puntero en el Checkbox para que el Box capture el clic siempre
+                            style={{ pointerEvents: 'none' }} 
+                            color="error"
+                            sx={{ p: 0, mr: 1 }}
+                        />
+                        <Typography variant="body2">
+                            Marcar todo en página
+                        </Typography>
+                    </Box>
+                </>
+            )}
+        </Box>
+
+        {/* Área de Acciones Masivas */}
+        {selectedIds.length > 0 && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Typography variant="body2">
+                    {selectedIds.length} seleccionadas
+                </Typography>
+                <Button 
+                    variant="contained" 
+                    color="error" 
+                    startIcon={<DeleteIcon />}
+                    onClick={handleBulkDelete}
+                >
+                    Eliminar Marcadas
+                </Button>
+            </Box>
+        )}
+      </Box>
+
+      {/* --- GRILLA DE TARJETAS --- */}
       <Grid container spacing={2}>
         {publicaciones.map(pub => {
-            // Verificamos si está archivada para estilos condicionales
-            const isArchived = pub.estado === 1; // 1 indica archivada
+            const isArchived = pub.estado === 1; 
+            const isSelected = selectedIds.includes(pub.id);
 
             return (
               <Grid item xs={12} sm={4} key={pub.id} sx={{ display: 'flex' }}>
@@ -172,9 +293,9 @@ export default function PublicacionesAdmin() {
                         width: 320, 
                         position: "relative", 
                         p: 1,
-                        // Opcional: poner un fondo grisáceo si está archivada
                         bgcolor: isArchived ? '#f5f5f5' : 'white',
-                        opacity: isArchived ? 0.8 : 1
+                        opacity: isArchived ? 0.8 : 1,
+                        border: isSelected ? `2px solid ${red[500]}` : '1px solid transparent'
                     }}
                 >
                   <CardHeader
@@ -184,23 +305,37 @@ export default function PublicacionesAdmin() {
                       </Avatar>
                     }
                     action={
-                        // Indicador visual si está archivada
-                        isArchived && <Chip label="Archivada" size="small" color="default" />
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Checkbox 
+                                checked={isSelected}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleToggleSelect(pub.id);
+                                }}
+                                // Aseguramos que aquí SÍ se pueda hacer click
+                                sx={{ p: 0, pointerEvents: 'auto' }} 
+                                color="error"
+                            />
+                            {isArchived && <Chip label="Archivada" size="small" color="default" sx={{ ml: 1 }} />}
+                        </Box>
                     }
                     title={pub.titulo}
                     subheader={new Date(pub.fecha_creacion).toLocaleDateString("es-AR")}
                   />
+                  
                   {pub.primeraImagen && (
                     <CardMedia
                       component="img"
                       height="194"
                       image={pub.primeraImagen}
                       alt={pub.titulo}
-                      sx={{ filter: isArchived ? 'grayscale(100%)' : 'none' }} // Efecto visual
+                      sx={{ filter: isArchived ? 'grayscale(100%)' : 'none' }}
                     />
                   )}
                   <CardContent sx={{ flexGrow: 1 }}>
                     <Collapse in={expanded[pub.id]} timeout="auto" unmountOnExit>
+                      <Typography><b>ID Pub:</b> {pub.id}</Typography>
+                      <Typography><b>Usuario ID:</b> {pub.id_usuario}</Typography>
                       <Typography><b>Propietario:</b> {pub.usuario?.nombre || "Sin nombre"}</Typography>
                       <Typography><b>Email:</b> {pub.usuario?.email || "Sin email"}</Typography>
                       <Typography><b>Estado:</b> {pub.estado}</Typography>
@@ -208,33 +343,20 @@ export default function PublicacionesAdmin() {
                   </CardContent>
                   
                   <CardActions disableSpacing sx={{flexWrap: 'wrap', gap: 1}}>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      color="primary"
-                      href={`/publicacion/${pub.id}`}
-                      target="_blank"
-                    >
+                    <Button variant="contained" size="small" color="primary" href={`/publicacion/${pub.id}`} target="_blank">
                       Ver
                     </Button>
 
-                    {/* BOTÓN ARCHIVAR / DESARCHIVAR */}
                     <Button
                       variant="contained"
                       size="small"
-                      // Cambiamos color según acción: Warning para archivar, Info/Success para restaurar
                       color={isArchived ? "success" : "warning"} 
                       onClick={() => handleArchivar(pub)}
                     >
                       {isArchived ? "Desarchivar" : "Archivar"}
                     </Button>
 
-                    <Button
-                      variant="contained"
-                      size="small"
-                      color="error"
-                      onClick={() => handleBorrarPublicacionModal(pub)}
-                    >
+                    <Button variant="contained" size="small" color="error" onClick={() => handleBorrarPublicacionModal(pub)}>
                       Borrar
                     </Button>
 
@@ -253,14 +375,18 @@ export default function PublicacionesAdmin() {
         })}
       </Grid>
 
-      {/* Paginación */}
+      {publicaciones.length === 0 && (
+        <Box sx={{ width: '100%', textAlign: 'center', mt: 4 }}>
+            <Typography>No se encontraron publicaciones.</Typography>
+        </Box>
+      )}
+
       <PaginationRounded
         count={Math.ceil(total / limit)}
         page={page}
         onChange={handlePageChange}
       />
 
-      {/* Modal de borrado */}
       <Dialog open={confirmBorrarPubOpen} onClose={() => setConfirmBorrarPubOpen(false)}>
         <DialogTitle>Confirmar eliminación</DialogTitle>
         <DialogContent>
@@ -278,18 +404,13 @@ export default function PublicacionesAdmin() {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert 
-            onClose={handleCloseSnackbar} 
-            severity={snackbarSeverity} // AHORA ES DINÁMICO
-            sx={{ width: '100%' }}
-        >
+        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
           {snackbarMessage}
         </Alert>
       </Snackbar>
