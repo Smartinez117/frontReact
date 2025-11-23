@@ -24,6 +24,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import FlagIcon from "@mui/icons-material/Flag"; 
 import IconButton from "@mui/material/IconButton"; 
 import Tooltip from "@mui/material/Tooltip"; 
+import LocationOnIcon from "@mui/icons-material/LocationOn"; // Icono ubicación
 
 import TextField from "@mui/material/TextField";
 import { getAuth } from "firebase/auth";
@@ -103,6 +104,10 @@ export default function Publicacion() {
   const { id } = useParams();
   const [publicacion, setPublicacion] = useState(null);
   const [usuario, setUsuario] = useState(null);
+  
+  // NUEVO ESTADO: Para guardar el nombre de la localidad
+  const [nombreLocalidad, setNombreLocalidad] = useState("");
+
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -135,6 +140,19 @@ export default function Publicacion() {
         setLoading(false);
       });
   }, [id, API_URL]);
+
+  // NUEVO EFFECT: Obtener nombre de localidad cuando tengamos la publicación
+  useEffect(() => {
+    if (publicacion && publicacion.id_locacion) {
+      axios.get(`${API_URL}/api/ubicacion/localidades/${publicacion.id_locacion}`)
+        .then(res => {
+            if(res.data && res.data.nombre) {
+                setNombreLocalidad(res.data.nombre);
+            }
+        })
+        .catch(err => console.error("Error cargando localidad", err));
+    }
+  }, [publicacion, API_URL]);
 
   // Obtener usuario dueño del post
   useEffect(() => {
@@ -484,10 +502,19 @@ export default function Publicacion() {
             {titulo}
           </Typography>
 
-          {/* CORRECCIÓN AQUÍ: Mostrar el nombre de la categoría, no el objeto */}
           <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 1 }}>
             Categoría: {categoria ? categoria.nombre : 'Sin categoría'}
           </Typography>
+          
+          {/* --- MOSTRAR NOMBRE DE LOCALIDAD DEBAJO DE CATEGORIA --- */}
+          {nombreLocalidad && (
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, color: 'text.secondary' }}>
+                <LocationOnIcon fontSize="large" sx={{ mr: 0.5 }} />
+                <Typography variant="body2">
+                    {nombreLocalidad}
+                </Typography>
+            </Box>
+          )}
 
           {/* Etiquetas */}
           {etiquetas.length > 0 && (
@@ -536,7 +563,8 @@ export default function Publicacion() {
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
                 <Marker position={[coordenadas[0], coordenadas[1]]}>
-                  <Popup>Ubicación de la publicación</Popup>
+                  {/* --- CAMBIO EN EL POPUP: Muestra el nombre de la localidad --- */}
+                  <Popup>{nombreLocalidad || "Ubicación de la publicación"}</Popup>
                 </Marker>
               </MapContainer>
             </Box>
