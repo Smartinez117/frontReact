@@ -60,7 +60,14 @@ const SelfPublications = ({ userId, isOwner }) => {
     const fetchFn = isOwner ? fetchMisPublicaciones : fetchPublicacionesPorUsuario;
 
     fetchFn(userId)
-      .then(setPublicaciones)
+      .then(data => {
+        // Validación extra por seguridad
+        if (Array.isArray(data)) {
+            setPublicaciones(data);
+        } else {
+            setPublicaciones([]);
+        }
+      })
       .catch((e) => setError(e.message || 'Error al obtener publicaciones'))
       .finally(() => setLoading(false));
   }, [userId, isOwner]);
@@ -92,7 +99,7 @@ const SelfPublications = ({ userId, isOwner }) => {
           )}
           {publicaciones.map((pub) => {
             const imagenPrincipal =
-              pub.imagenes.length > 0 ? pub.imagenes[0] : null;
+              pub.imagenes && pub.imagenes.length > 0 ? pub.imagenes[0] : null;
 
             return (
               <li key={pub.id} className="publicacion-card-vertical">
@@ -106,6 +113,7 @@ const SelfPublications = ({ userId, isOwner }) => {
 
                 <div className="publicacion-contenido-vertical">
                   <h3 className="publicacion-titulo">{pub.titulo}</h3>
+                  
                   {/* 🔹 BADGES DE ESTADO */}
                   {pub.estado === 1 && (
                     <span className="badge-archivado">Archivado</span>
@@ -113,9 +121,15 @@ const SelfPublications = ({ userId, isOwner }) => {
                   {pub.estado === 2 && (
                     <span className="badge-bloqueado">Bloqueado</span>
                   )}
-                  <span className="publicacion-categoria">{pub.categoria}</span>
+                  
+                  {/* --- CORRECCIÓN AQUÍ --- */}
+                  {/* Accedemos a .nombre y validamos que exista */}
+                  <span className="publicacion-categoria">
+                    {pub.categoria ? pub.categoria.nombre : 'Sin categoría'}
+                  </span>
+
                   <div className="publicacion-etiquetas">
-                    {pub.etiquetas.map((etiqueta, idx) => (
+                    {pub.etiquetas && pub.etiquetas.map((etiqueta, idx) => (
                       <span key={idx} className="etiqueta-chip">
                         {etiqueta}
                       </span>
