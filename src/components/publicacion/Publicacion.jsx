@@ -20,13 +20,15 @@ import L from "leaflet";
 
 import ShareIcon from "@mui/icons-material/Share";
 import DownloadIcon from "@mui/icons-material/Download";
+// IMPORTAR ICONO DE BORRAR
+import DeleteIcon from "@mui/icons-material/Delete"; 
+import IconButton from "@mui/material/IconButton"; 
+
 import TextField from "@mui/material/TextField";
 import { getAuth } from "firebase/auth";
 import ReporteForm from "../Reportes/Reportes.jsx";
 
 import { useNavigate } from "react-router-dom";
-
-
 
 // Evitar error de ícono por defecto en Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -53,7 +55,6 @@ const styleModal = {
   justifyContent: "center",
 };
 
-
 // Slider resizing
 const AdaptiveHeight = (slider) => {
   function updateHeight() {
@@ -63,7 +64,6 @@ const AdaptiveHeight = (slider) => {
   slider.on("created", updateHeight);
   slider.on("slideChanged", updateHeight);
 };
-
 
 // Slider arrows
 function Arrow({ left, onClick, disabled }) {
@@ -110,15 +110,14 @@ export default function Publicacion() {
   const [verDescripcionCompleta, setVerDescripcionCompleta] = useState(false);
   const [comentarios, setComentarios] = useState([]);
   const [usuariosComentarios, setUsuariosComentarios] = useState({});
-  const [loadingComentarios, setLoadingComentarios] = useState(true);
   const [nuevoComentario, setNuevoComentario] = useState("");
   const [publicandoComentario, setPublicandoComentario] = useState(false);
   const [errorComentario, setErrorComentario] = useState(null);
-  const [mostrarReporte, setMostrarReporte] = useState(false);
   const [mostrarModal, setMostrarModal] = useState(false);
   const navigate = useNavigate();
 
   const API_URL = import.meta.env.VITE_API_URL;
+
   // Obtener publicación
   useEffect(() => {
     axios
@@ -133,7 +132,7 @@ export default function Publicacion() {
       });
   }, [id]);
 
-  // Obtener usuario
+  // Obtener usuario dueño del post
   useEffect(() => {
     if (publicacion?.id_usuario) {
       axios
@@ -142,21 +141,20 @@ export default function Publicacion() {
         .catch((err) => console.error("Error al obtener el usuario:", err));
     }
   }, [publicacion]);
-  //Obtener comentarios de publicacion
-    useEffect(() => {
+
+  // Obtener comentarios de publicacion
+  useEffect(() => {
     if (!id) return;
 
     axios
       .get(`${API_URL}/comentarios/publicacion/${id}`)
       .then(async (res) => {
-        const comentarios = res.data;
-        setComentarios(comentarios);
+        const comentariosData = res.data;
+        setComentarios(comentariosData);
 
-        // Obtener IDs únicos de usuarios
-        const idsUnicos = [...new Set(comentarios.map(c => c.id_usuario))];
-
-        // Obtener datos de cada usuario
+        const idsUnicos = [...new Set(comentariosData.map(c => c.id_usuario))];
         const usuariosMap = {};
+        
         await Promise.all(
           idsUnicos.map(async (idUsuario) => {
             try {
@@ -224,10 +222,8 @@ export default function Publicacion() {
       const response = await axios.get(`${API_URL}/pdf/${idPublicacion}`, {
         responseType: "blob",
       });
-
       const blob = new Blob([response.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
-
       const link = document.createElement("a");
       link.href = url;
       link.setAttribute("download", `publicacion_${idPublicacion}.pdf`);
@@ -243,17 +239,13 @@ export default function Publicacion() {
   const compartirPublicacion = (idPublicacion) => {
     const url = `https://tusitio.com/publicacion/${idPublicacion}`;
     const title = publicacion?.titulo || "Publicación";
-
     if (navigator.share) {
-      navigator
-        .share({
+      navigator.share({
           title,
           text: `Mirá esta publicación: ${title}`,
           url,
-        })
-        .catch((error) => console.error("Error al compartir:", error));
+        }).catch((error) => console.error("Error al compartir:", error));
     } else {
-      // Fallback: Copiar al portapapeles
       navigator.clipboard.writeText(url).then(() => {
         alert("Enlace copiado al portapapeles");
       });
@@ -269,9 +261,9 @@ export default function Publicacion() {
       return;
     }
 
+    setPublicandoComentario(true);
     try {
       const token = await user.getIdToken();
-
       const res = await fetch(`${API_URL}/comentarios`, {
         method: "POST",
         headers: {
@@ -287,25 +279,67 @@ export default function Publicacion() {
       const data = await res.json();
 
       if (res.ok) {
-        console.log("Comentario creado:", data);
         setNuevoComentario("");
-
         // Recargar comentarios
         const comentariosRes = await fetch(`${API_URL}/comentarios/publicacion/${id}`);
         const comentariosData = await comentariosRes.json();
         setComentarios(comentariosData);
+        
+        // Actualizar mapa de usuarios si es necesario (si soy nuevo comentando)
+        // Para simplificar, recargamos la pagina o asumimos que ya estabamos cargados si comentamos antes
+        // Idealmente hacer un fetch del usuario actual y meterlo en usuariosComentarios
+        const idUsuarioActual = data.id_usuario; // Si el back lo devuelve, si no, recargar
+        if(idUsuarioActual && !usuariosComentarios[idUsuarioActual]){
+             const userRes = await axios.get(`${API_URL}/usuario/${idUsuarioActual}`);
+             setUsuariosComentarios(prev => ({...prev, [idUsuarioActual]: userRes.data}));
+        }
+
       } else {
         throw new Error(data.error || "Error al enviar comentario");
       }
-
     } catch (error) {
       console.error("Error al comentar:", error);
-      alert("❌ Ocurrió un error al enviar el comentario");
+      setErrorComentario("No se pudo enviar el comentario.");
+    } finally {
+        setPublicandoComentario(false);
     }
   };
 
+  // --- FUNCION PARA ELIMINAR COMENTARIO ---
+  const borrarComentario = async (idComentario) => {
+    const auth = getAuth();
+    const user = auth.currentUser;
 
+    if (!user) return;
+    if (!window.confirm("¿Estás seguro de querer borrar este comentario?")) return;
 
+    try {
+        // Obtener token por si el backend requiere auth para borrar (recomendado)
+        const token = await user.getIdToken();
+        
+        const res = await fetch(`${API_URL}/comentarios/${idComentario}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (res.ok) {
+            // Actualizar estado filtrando el eliminado
+            setComentarios(prev => prev.filter(c => c.id !== idComentario));
+        } else {
+            const data = await res.json();
+            alert(data.error || "No se pudo eliminar el comentario");
+        }
+    } catch (error) {
+        console.error("Error eliminando comentario:", error);
+        alert("Error de conexión al eliminar");
+    }
+  };
+
+  // Obtener usuario actual para validaciones de renderizado
+  const auth = getAuth();
+  const currentUser = auth.currentUser;
 
   return (
     <>
@@ -357,7 +391,8 @@ export default function Publicacion() {
               )}
             </Box>
           )}
-          {/* Modal de imágenes */}
+          
+          {/* Modal de imágenes (Sin cambios) */}
           <Modal
             open={open}
             onClose={handleClose}
@@ -395,7 +430,7 @@ export default function Publicacion() {
             </Fade>
           </Modal>
 
-          {/* Usuario */}
+          {/* Datos del Usuario y Publicación */}
           {usuario && (
             <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
               <Box
@@ -408,11 +443,10 @@ export default function Publicacion() {
                   borderRadius: "50%",
                   objectFit: "cover",
                   mr: 2,
-                  cursor: "pointer", // para que se note que es clickeable
+                  cursor: "pointer",
                 }}
                 onClick={() => navigate(`/perfil/${usuario.id}`)}
               />
-              {/* Nombre */}
               <Typography
                 variant="subtitle1"
                 sx={{ cursor: "pointer" }}
@@ -487,46 +521,46 @@ export default function Publicacion() {
               </MapContainer>
             </Box>
           )}
-        <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
-          <Button
-            variant="contained"
-            startIcon={<DownloadIcon />}
-            sx={{
-              bgcolor: "#1976d2",
-              color: "#fff",
-              '&:hover': { bgcolor: "#1565c0" },
-              textTransform: "none",
-              px: 3,
-              borderRadius: 2,
-              fontWeight: "bold",
-            }}
-            onClick={() => descargarPDF(id)}
-          >
-            Descargar PDF
-          </Button>
 
-          <Button
-            variant="outlined"
-            startIcon={<ShareIcon />}
-            sx={{
-              color: "#1976d2",
-              borderColor: "#1976d2",
-              '&:hover': { borderColor: "#1565c0", bgcolor: "#e3f2fd" },
-              textTransform: "none",
-              px: 3,
-              borderRadius: 2,
-              fontWeight: "bold",
-            }}
-            onClick={() => compartirPublicacion(id)}
-          >
-            Compartir
-          </Button>
-           
-          
-        </Box>
+          {/* Botones de Acción */}
+          <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
+            <Button
+              variant="contained"
+              startIcon={<DownloadIcon />}
+              sx={{
+                bgcolor: "#1976d2",
+                color: "#fff",
+                '&:hover': { bgcolor: "#1565c0" },
+                textTransform: "none",
+                px: 3,
+                borderRadius: 2,
+                fontWeight: "bold",
+              }}
+              onClick={() => descargarPDF(id)}
+            >
+              Descargar PDF
+            </Button>
+
+            <Button
+              variant="outlined"
+              startIcon={<ShareIcon />}
+              sx={{
+                color: "#1976d2",
+                borderColor: "#1976d2",
+                '&:hover': { borderColor: "#1565c0", bgcolor: "#e3f2fd" },
+                textTransform: "none",
+                px: 3,
+                borderRadius: 2,
+                fontWeight: "bold",
+              }}
+              onClick={() => compartirPublicacion(id)}
+            >
+              Compartir
+            </Button>
+          </Box>
         
-        </Box>
         <Divider sx={{ my: 2 }} />
+        
         {/* Reportar */}
           <div className="reportar-container">
             <button 
@@ -547,84 +581,104 @@ export default function Publicacion() {
 
           <Divider sx={{ my: 4 }} />
           
-          {/* Comentarios */}
+          {/* Sección de Comentarios */}
           <Box sx={{ mb: 2 }}>
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            Agregar comentario
-          </Typography>
-
-          <TextField
-            multiline
-            minRows={1}
-            fullWidth
-            variant="outlined"
-            placeholder="Escribí tu comentario..."
-            value={nuevoComentario}
-            onChange={(e) => setNuevoComentario(e.target.value)}
-            sx={{ mb: 1 }}
-          />
-
-          {errorComentario && (
-            <Typography color="error" sx={{ mb: 1 }}>
-              {errorComentario}
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              Agregar comentario
             </Typography>
-          )}
 
-          <Button
-            variant="contained"
-            disabled={nuevoComentario.trim().length === 0}
-            onClick={enviarComentario}
-            sx={{
-              textTransform: "none",
-              fontWeight: "bold",
-              bgcolor: "#1976d2",
-              '&:hover': { bgcolor: "#1565c0" },
-            }}
-          >
-            {publicandoComentario ? "Publicando..." : "Publicar comentario"}
-          </Button>
-        </Box>
+            <TextField
+              multiline
+              minRows={1}
+              fullWidth
+              variant="outlined"
+              placeholder="Escribí tu comentario..."
+              value={nuevoComentario}
+              onChange={(e) => setNuevoComentario(e.target.value)}
+              sx={{ mb: 1 }}
+            />
+
+            {errorComentario && (
+              <Typography color="error" sx={{ mb: 1 }}>
+                {errorComentario}
+              </Typography>
+            )}
+
+            <Button
+              variant="contained"
+              disabled={nuevoComentario.trim().length === 0}
+              onClick={enviarComentario}
+              sx={{
+                textTransform: "none",
+                fontWeight: "bold",
+                bgcolor: "#1976d2",
+                '&:hover': { bgcolor: "#1565c0" },
+              }}
+            >
+              {publicandoComentario ? "Publicando..." : "Publicar comentario"}
+            </Button>
+          </Box>
 
           <Box sx={{ mt: 4 }}>
-          <Typography variant="h6" gutterBottom>Comentarios</Typography>
-          {comentarios.length === 0 ? (
-            <Typography>No hay comentarios aún.</Typography>
-          ) : (
-            comentarios.map((comentario) => {
-              const usuario = usuariosComentarios[comentario.id_usuario];
+            <Typography variant="h6" gutterBottom>Comentarios</Typography>
+            {comentarios.length === 0 ? (
+              <Typography>No hay comentarios aún.</Typography>
+            ) : (
+              comentarios.map((comentario) => {
+                const autorComentario = usuariosComentarios[comentario.id_usuario];
+                
+                // Verificamos si el usuario logueado es el dueño del comentario
+                // Usamos el email para comparar porque es un dato común seguro
+                const esMiComentario = currentUser && autorComentario && (currentUser.email === autorComentario.email);
 
-              return (
-                <Box key={comentario.id} sx={{ display: "flex", alignItems: "flex-start", mb: 2 }}>
-                  <Box
-                    component="img"
-                    src={usuario?.foto_perfil_url || "/default-profile.png"}
-                    alt={usuario?.nombre || "Usuario"}
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      mr: 2,
-                    }}
-                  />
-                  <Box>
-                    <Typography variant="subtitle2">
-                      {usuario?.nombre || "Usuario desconocido"}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {new Date(comentario.fecha_creacion).toLocaleString("es-AR", {
-                        dateStyle: "short",
-                        timeStyle: "short",
-                      })}
-                    </Typography>
-                    <Typography variant="body1">{comentario.descripcion}</Typography>
+                return (
+                  <Box key={comentario.id} sx={{ display: "flex", alignItems: "flex-start", mb: 2, width: '100%' }}>
+                    <Box
+                      component="img"
+                      src={autorComentario?.foto_perfil_url || "/default-profile.png"}
+                      alt={autorComentario?.nombre || "Usuario"}
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        mr: 2,
+                      }}
+                    />
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="subtitle2">
+                            {autorComentario?.nombre || "Usuario desconocido"}
+                          </Typography>
+                          
+                          {/* BOTÓN DE ELIMINAR COMENTARIO */}
+                          {esMiComentario && (
+                              <IconButton 
+                                size="small" 
+                                onClick={() => borrarComentario(comentario.id)}
+                                aria-label="eliminar comentario"
+                                sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
+                              >
+                                  <DeleteIcon fontSize="small" />
+                              </IconButton>
+                          )}
+                      </Box>
+                      
+                      <Typography variant="body2" color="text.secondary">
+                        {new Date(comentario.fecha_creacion).toLocaleString("es-AR", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
+                      </Typography>
+                      <Typography variant="body1" sx={{ mt: 0.5 }}>{comentario.descripcion}</Typography>
+                    </Box>
                   </Box>
-                </Box>
-              );
-            })
-          )}
-        </Box>
+                );
+              })
+            )}
+          </Box>
 
+        </Box>
       </Container>
     </>
   );
