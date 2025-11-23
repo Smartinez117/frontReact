@@ -1,29 +1,44 @@
 import React, { useState } from "react";
+import { 
+  Box, 
+  Button, 
+  Typography, 
+  TextField, 
+  FormControl, 
+  FormLabel, 
+  RadioGroup, 
+  FormControlLabel, 
+  Radio,
+  IconButton,
+  Alert,
+  CircularProgress
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { getAuth } from "firebase/auth";
 
-export default function ReporteForm({ idPublicacion, idUsuario, onClose }) {
-  const [tipo, setTipo] = useState("");
+const API_URL = import.meta.env.VITE_API_URL;
+
+export default function ReporteForm({ idPublicacion, idComentario, idUsuario, onClose }) {
+  const [tipo, setTipo] = useState("Spam"); // Valor por defecto para evitar clic extra
   const [descripcion, setDescripcion] = useState("");
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState(null);
-  const API_URL = import.meta.env.VITE_API_URL;
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setMensaje(null);
+    setError(null);
+
     const auth = getAuth();
     const user = auth.currentUser;
 
     if (!user) {
-      setMensaje("Debes iniciar sesión para reportar contenido.");
+      setError("Debes iniciar sesión para reportar contenido.");
+      setLoading(false);
       return;
     }
-    if (!tipo) {
-      setMensaje("Selecciona un tipo de reporte.");
-      return;
-    }
-
-    setLoading(true);
-    setMensaje(null);
 
     try {
       const token = await user.getIdToken();
@@ -35,103 +50,132 @@ export default function ReporteForm({ idPublicacion, idUsuario, onClose }) {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          id_publicacion: idPublicacion,
-          id_usuario: idUsuario,
+          // Enviamos null si no está definido, para cumplir con el contrato del backend
+          id_publicacion: idPublicacion || null,
+          id_comentario: idComentario || null,
+          id_usuario_reportado: idUsuario || null, // Mapeo correcto
           descripcion,
           tipo,
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Error al enviar reporte");
+        throw new Error(data.error || "Error al enviar reporte");
       }
 
-      setMensaje("Reporte enviado con éxito.");
-      setDescripcion("");
-      setTipo("");
+      setMensaje("Reporte enviado con éxito. Gracias por tu colaboración.");
+      // Cerrar modal después de un breve delay para que el usuario lea el mensaje
+      setTimeout(() => {
+        onClose();
+      }, 2000);
+
     } catch (err) {
-      setMensaje("❌ " + err.message);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <button className="modal-close" onClick={onClose}>✖</button>
-        <h3>Denunciar</h3>
-        <p>Selecciona el motivo del reporte:</p>
+    <Box
+      sx={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        bgcolor: "rgba(0, 0, 0, 0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 9999,
+      }}
+      onClick={onClose}
+    >
+      <Box
+        sx={{
+          bgcolor: "background.paper",
+          p: 4,
+          borderRadius: 2,
+          maxWidth: 500,
+          width: "90%",
+          position: "relative",
+          boxShadow: 24
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <IconButton
+          onClick={onClose}
+          sx={{ position: "absolute", top: 8, right: 8 }}
+        >
+          <CloseIcon />
+        </IconButton>
+
+        <Typography variant="h6" gutterBottom>
+          {idComentario ? "Reportar Comentario" : "Reportar Publicación"}
+        </Typography>
+        
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          Selecciona el motivo del reporte. Tu identidad se mantendrá anónima para el usuario reportado.
+        </Typography>
 
         <form onSubmit={handleSubmit}>
-          <label>
-            <input
-              type="radio"
-              name="tipo"
-              value="Spam"
-              checked={tipo === "Spam"}
+          <FormControl component="fieldset" sx={{ mt: 2, width: "100%" }}>
+            <FormLabel component="legend">Motivo</FormLabel>
+            <RadioGroup
+              value={tipo}
               onChange={(e) => setTipo(e.target.value)}
-            />
-            Spam
-          </label>
+            >
+              <FormControlLabel value="Spam" control={<Radio />} label="Es spam o publicidad" />
+              <FormControlLabel value="Inapropiado" control={<Radio />} label="Contenido inapropiado / Sexual" />
+              <FormControlLabel value="Acoso" control={<Radio />} label="Acoso, odio o bullying" />
+              <FormControlLabel value="Fraude" control={<Radio />} label="Información falsa o estafa" />
+              <FormControlLabel value="Otro" control={<Radio />} label="Otro" />
+            </RadioGroup>
+          </FormControl>
 
-          <label>
-            <input
-              type="radio"
-              name="tipo"
-              value="Contenido inapropiado"
-              checked={tipo === "Contenido inapropiado"}
-              onChange={(e) => setTipo(e.target.value)}
-            />
-            Contenido inapropiado
-          </label>
-
-          <label>
-            <input
-              type="radio"
-              name="tipo"
-              value="Acoso"
-              checked={tipo === "Acoso"}
-              onChange={(e) => setTipo(e.target.value)}
-            />
-            Acoso o bullying
-          </label>
-
-          <label>
-            <input
-              type="radio"
-              name="tipo"
-              value="Otro"
-              checked={tipo === "Otro"}
-              onChange={(e) => setTipo(e.target.value)}
-            />
-            Otro
-          </label>
-
-          <textarea
+          <TextField
+            label="Descripción adicional (Opcional)"
+            placeholder="Danos más detalles para ayudarnos a entender..."
+            multiline
+            rows={3}
+            fullWidth
+            variant="outlined"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
-            placeholder="Explica (opcional)"
+            sx={{ mt: 2, mb: 2 }}
           />
 
-          <div className="acciones">
-            <button className="boton-enviar" disabled={loading || !tipo}>
-              {loading ? "Enviando..." : "Denunciar"}
-            </button>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
 
-            <button
-              type="button"
-              className="boton-cancelar"
-              onClick={onClose}
-            >
+          {mensaje && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              {mensaje}
+            </Alert>
+          )}
+
+          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+            <Button onClick={onClose} color="inherit" disabled={loading}>
               Cancelar
-            </button>
-          </div>
-
+            </Button>
+            <Button 
+              type="submit" 
+              variant="contained" 
+              color="error" 
+              disabled={loading || mensaje} // Deshabilitar si carga o si ya se envió éxito
+              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+            >
+              {loading ? "Enviando..." : "Denunciar"}
+            </Button>
+          </Box>
         </form>
-
-        {mensaje && <p>{mensaje}</p>}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

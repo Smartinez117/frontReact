@@ -20,9 +20,11 @@ import L from "leaflet";
 
 import ShareIcon from "@mui/icons-material/Share";
 import DownloadIcon from "@mui/icons-material/Download";
-// IMPORTAR ICONO DE BORRAR
 import DeleteIcon from "@mui/icons-material/Delete"; 
+// NUEVO ICONO PARA REPORTAR
+import FlagIcon from "@mui/icons-material/Flag"; 
 import IconButton from "@mui/material/IconButton"; 
+import Tooltip from "@mui/material/Tooltip"; // Para mejorar la UX
 
 import TextField from "@mui/material/TextField";
 import { getAuth } from "firebase/auth";
@@ -113,9 +115,12 @@ export default function Publicacion() {
   const [nuevoComentario, setNuevoComentario] = useState("");
   const [publicandoComentario, setPublicandoComentario] = useState(false);
   const [errorComentario, setErrorComentario] = useState(null);
-  const [mostrarModal, setMostrarModal] = useState(false);
-  const navigate = useNavigate();
+  
+  // Estados para reportes
+  const [mostrarModal, setMostrarModal] = useState(false); // Para reportar publicación
+  const [comentarioAReportar, setComentarioAReportar] = useState(null); // Para reportar comentario
 
+  const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
 
   // Obtener publicación
@@ -280,15 +285,11 @@ export default function Publicacion() {
 
       if (res.ok) {
         setNuevoComentario("");
-        // Recargar comentarios
         const comentariosRes = await fetch(`${API_URL}/comentarios/publicacion/${id}`);
         const comentariosData = await comentariosRes.json();
         setComentarios(comentariosData);
         
-        // Actualizar mapa de usuarios si es necesario (si soy nuevo comentando)
-        // Para simplificar, recargamos la pagina o asumimos que ya estabamos cargados si comentamos antes
-        // Idealmente hacer un fetch del usuario actual y meterlo en usuariosComentarios
-        const idUsuarioActual = data.id_usuario; // Si el back lo devuelve, si no, recargar
+        const idUsuarioActual = data.id_usuario;
         if(idUsuarioActual && !usuariosComentarios[idUsuarioActual]){
              const userRes = await axios.get(`${API_URL}/usuario/${idUsuarioActual}`);
              setUsuariosComentarios(prev => ({...prev, [idUsuarioActual]: userRes.data}));
@@ -305,7 +306,6 @@ export default function Publicacion() {
     }
   };
 
-  // --- FUNCION PARA ELIMINAR COMENTARIO ---
   const borrarComentario = async (idComentario) => {
     const auth = getAuth();
     const user = auth.currentUser;
@@ -314,9 +314,7 @@ export default function Publicacion() {
     if (!window.confirm("¿Estás seguro de querer borrar este comentario?")) return;
 
     try {
-        // Obtener token por si el backend requiere auth para borrar (recomendado)
         const token = await user.getIdToken();
-        
         const res = await fetch(`${API_URL}/comentarios/${idComentario}`, {
             method: "DELETE",
             headers: {
@@ -325,7 +323,6 @@ export default function Publicacion() {
         });
 
         if (res.ok) {
-            // Actualizar estado filtrando el eliminado
             setComentarios(prev => prev.filter(c => c.id !== idComentario));
         } else {
             const data = await res.json();
@@ -337,7 +334,6 @@ export default function Publicacion() {
     }
   };
 
-  // Obtener usuario actual para validaciones de renderizado
   const auth = getAuth();
   const currentUser = auth.currentUser;
 
@@ -392,7 +388,7 @@ export default function Publicacion() {
             </Box>
           )}
           
-          {/* Modal de imágenes (Sin cambios) */}
+          {/* Modal de imágenes */}
           <Modal
             open={open}
             onClose={handleClose}
@@ -430,7 +426,7 @@ export default function Publicacion() {
             </Fade>
           </Modal>
 
-          {/* Datos del Usuario y Publicación */}
+          {/* Usuario y Publicación */}
           {usuario && (
             <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
               <Box
@@ -522,7 +518,6 @@ export default function Publicacion() {
             </Box>
           )}
 
-          {/* Botones de Acción */}
           <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
             <Button
               variant="contained"
@@ -561,19 +556,19 @@ export default function Publicacion() {
         
         <Divider sx={{ my: 2 }} />
         
-        {/* Reportar */}
+        {/* Reportar Publicación */}
           <div className="reportar-container">
             <button 
               className="reportar-btn" 
               onClick={() => setMostrarModal(true)}
             >
-              🚩 Reportar
+              🚩 Reportar Publicación
             </button>
 
             {mostrarModal && (
               <ReporteForm
                 idPublicacion={id}
-                idUsuario={publicacion.id_usuario}
+                idUsuario={publicacion.id_usuario} // Denunciado (Dueño del post)
                 onClose={() => setMostrarModal(false)}
               />
             )}
@@ -581,7 +576,7 @@ export default function Publicacion() {
 
           <Divider sx={{ my: 4 }} />
           
-          {/* Sección de Comentarios */}
+          {/* Comentarios */}
           <Box sx={{ mb: 2 }}>
             <Typography variant="subtitle1" sx={{ mb: 1 }}>
               Agregar comentario
@@ -627,8 +622,7 @@ export default function Publicacion() {
               comentarios.map((comentario) => {
                 const autorComentario = usuariosComentarios[comentario.id_usuario];
                 
-                // Verificamos si el usuario logueado es el dueño del comentario
-                // Usamos el email para comparar porque es un dato común seguro
+                // Validar si es mi comentario para borrarlo
                 const esMiComentario = currentUser && autorComentario && (currentUser.email === autorComentario.email);
 
                 return (
@@ -651,17 +645,35 @@ export default function Publicacion() {
                             {autorComentario?.nombre || "Usuario desconocido"}
                           </Typography>
                           
-                          {/* BOTÓN DE ELIMINAR COMENTARIO */}
-                          {esMiComentario && (
-                              <IconButton 
-                                size="small" 
-                                onClick={() => borrarComentario(comentario.id)}
-                                aria-label="eliminar comentario"
-                                sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
-                              >
-                                  <DeleteIcon fontSize="small" />
-                              </IconButton>
-                          )}
+                          <Box>
+                            {/* BOTÓN REPORTAR COMENTARIO (Si no es mío) */}
+                            {!esMiComentario && currentUser && (
+                                <Tooltip title="Reportar comentario">
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => setComentarioAReportar(comentario)}
+                                        aria-label="reportar comentario"
+                                        sx={{ color: 'text.secondary', '&:hover': { color: 'warning.main' } }}
+                                    >
+                                        <FlagIcon fontSize="small" />
+                                    </IconButton>
+                                </Tooltip>
+                            )}
+
+                            {/* BOTÓN ELIMINAR COMENTARIO (Si es mío) */}
+                            {esMiComentario && (
+                                <Tooltip title="Eliminar comentario">
+                                    <IconButton 
+                                        size="small" 
+                                        onClick={() => borrarComentario(comentario.id)}
+                                        aria-label="eliminar comentario"
+                                        sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
+                                    >
+                                        <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                </Tooltip>
+                            )}
+                          </Box>
                       </Box>
                       
                       <Typography variant="body2" color="text.secondary">
@@ -677,6 +689,16 @@ export default function Publicacion() {
               })
             )}
           </Box>
+
+          {/* MODAL DE REPORTE DE COMENTARIO */}
+          {comentarioAReportar && (
+              <ReporteForm
+                idComentario={comentarioAReportar.id} // Pasamos ID Comentario
+                idUsuario={comentarioAReportar.id_usuario} // Usuario denunciado (autor del comentario)
+                idPublicacion={id}
+                onClose={() => setComentarioAReportar(null)}
+              />
+          )}
 
         </Box>
       </Container>

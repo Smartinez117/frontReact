@@ -14,7 +14,7 @@ import Tooltip from '@mui/joy/Tooltip';
 import Select from '@mui/joy/Select';
 import Option from '@mui/joy/Option';
 import Checkbox from '@mui/joy/Checkbox';
-import Chip from '@mui/joy/Chip'; 
+import Chip from '@mui/joy/Chip';
 
 // Iconos
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -24,6 +24,9 @@ import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import SearchIcon from '@mui/icons-material/Search';
+import ArticleIcon from '@mui/icons-material/Article';
+import PersonIcon from '@mui/icons-material/Person';
+import CommentIcon from '@mui/icons-material/Comment';
 
 import { visuallyHidden } from '@mui/utils';
 import { CssVarsProvider } from '@mui/joy/styles';
@@ -44,14 +47,15 @@ function getComparator(order, orderBy) {
     : (a, b) => -descendingComparator(a, b, orderBy);
 }
 
-// --- Configuración de Columnas ---
+// --- Configuración de Columnas ACTUALIZADA ---
 const headCells = [
   { id: 'id', numeric: true, disablePadding: true, label: 'ID' },
-  { id: 'tipo', numeric: false, disablePadding: false, label: 'Tipo' },
-  { id: 'descripcion', numeric: false, disablePadding: false, label: 'Descripción' },
-  { id: 'id_usuario', numeric: true, disablePadding: false, label: 'Usuario' },
-  { id: 'id_publicacion', numeric: true, disablePadding: false, label: 'Pub ID' },
-  { id: 'fecha_creacion', numeric: false, disablePadding: false, label: 'Fecha' },
+  { id: 'tipo_reporte', numeric: false, disablePadding: false, label: 'Motivo' },
+  { id: 'objetivo_tipo', numeric: false, disablePadding: false, label: 'Objetivo' }, // Publicación, Usuario, etc.
+  { id: 'objetivo_id', numeric: true, disablePadding: false, label: 'ID Ref' },
+  { id: 'descripcion', numeric: false, disablePadding: false, label: 'Detalle' },
+  { id: 'id_usuario_denunciante', numeric: true, disablePadding: false, label: 'Denunciante' },
+  { id: 'fecha', numeric: false, disablePadding: false, label: 'Fecha' },
   { id: 'acciones', numeric: false, disablePadding: false, label: 'Acciones' },
 ];
 
@@ -81,12 +85,7 @@ function EnhancedTableHead(props) {
             <th
               key={headCell.id}
               aria-sort={active ? { asc: 'ascending', desc: 'descending' }[order] : undefined}
-              style={{ 
-                width: headCell.id === 'id' ? '60px' : 
-                       headCell.id === 'tipo' ? '120px' : 
-                       headCell.id === 'descripcion' ? 'auto' : 
-                       '120px' 
-              }}
+              style={{ width: headCell.id === 'descripcion' ? 'auto' : '100px' }}
             >
               {headCell.id !== 'acciones' ? (
                 <Link
@@ -97,14 +96,9 @@ function EnhancedTableHead(props) {
                   onClick={createSortHandler(headCell.id)}
                   startDecorator={headCell.numeric ? <ArrowDownwardIcon sx={{ opacity: active ? 1 : 0 }} /> : null}
                   endDecorator={!headCell.numeric ? <ArrowDownwardIcon sx={{ opacity: active ? 1 : 0 }} /> : null}
-                  sx={{
-                    fontWeight: 'lg',
-                    '& svg': { transition: '0.2s', transform: active && order === 'desc' ? 'rotate(0deg)' : 'rotate(180deg)' },
-                    '&:hover': { '& svg': { opacity: 1 } },
-                  }}
+                  sx={{ fontWeight: 'lg' }}
                 >
                   {headCell.label}
-                  {active ? <Box component="span" sx={visuallyHidden}>{order === 'desc' ? 'sorted descending' : 'sorted ascending'}</Box> : null}
                 </Link>
               ) : (
                 headCell.label
@@ -117,7 +111,7 @@ function EnhancedTableHead(props) {
   );
 }
 
-// --- Barra de Herramientas con Filtro ---
+// --- Barra de Herramientas ---
 function EnhancedTableToolbar({ numSelected, onDeleteSelected, filterPubId, setFilterPubId, onFilterSubmit, onClearFilter }) {
   return (
     <Box
@@ -131,8 +125,6 @@ function EnhancedTableToolbar({ numSelected, onDeleteSelected, filterPubId, setF
         bgcolor: numSelected > 0 ? 'background.level1' : 'background.surface',
         borderRadius: 'sm',
         mb: 2,
-        flexWrap: 'wrap',
-        gap: 2,
         borderBottom: '1px solid',
         borderColor: 'divider'
       }}
@@ -154,7 +146,6 @@ function EnhancedTableToolbar({ numSelected, onDeleteSelected, filterPubId, setF
           </IconButton>
         </Tooltip>
       ) : (
-        /* SECCIÓN DE FILTROS (IGUAL A COMENTARIOS) */
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
           <form
             onSubmit={(e) => {
@@ -164,7 +155,7 @@ function EnhancedTableToolbar({ numSelected, onDeleteSelected, filterPubId, setF
             style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}
           >
             <FormControl size="sm">
-              <FormLabel>Filtrar por ID Publicación</FormLabel>
+              <FormLabel>Filtrar por ID Referencia</FormLabel>
               <Input
                 placeholder="Ej: 10"
                 type="number"
@@ -201,17 +192,15 @@ export default function ReportesAdmin() {
   const [rows, setRows] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
 
-  // Estado para filtros
+  // Filtros
   const [filterPubId, setFilterPubId] = React.useState('');
   const [activeFilter, setActiveFilter] = React.useState(null);
 
-  // 1. Obtener Reportes (Con lógica de filtro)
+  // 1. Obtener Reportes
   const fetchReportes = async (publicacionId = null) => {
     setLoading(true);
     try {
       let url = `${API_URL}/reportes`;
-      
-      // Si hay filtro, cambiamos URL
       if (publicacionId) {
         url = `${API_URL}/reportes/publicacion/${publicacionId}`;
       }
@@ -219,20 +208,9 @@ export default function ReportesAdmin() {
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
-        let lista = Array.isArray(data) ? data : [];
-
-        // --- INYECCIÓN DE ID SI FALTA (Para que el link funcione) ---
-        if (publicacionId) {
-            lista = lista.map(reporte => ({
-                ...reporte,
-                id_publicacion: reporte.id_publicacion || publicacionId
-            }));
-        }
-        // -----------------------------------------------------------
-
-        setRows(lista);
+        setRows(Array.isArray(data) ? data : []);
         setPage(0);
-        setSelected([]); // Limpiar selección al cambiar vista
+        setSelected([]);
       } else {
         console.error("Error obteniendo reportes");
         setRows([]);
@@ -261,12 +239,12 @@ export default function ReportesAdmin() {
   const handleClearFilter = () => {
     setFilterPubId('');
     setActiveFilter(null);
-    fetchReportes(null); // Traer todos
+    fetchReportes(null);
   };
 
-  // 2. Eliminar Individual
+  // Eliminar
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Estás seguro de eliminar/cerrar este reporte?")) return;
+    if (!window.confirm("¿Estás seguro de eliminar este reporte?")) return;
     try {
       const res = await fetch(`${API_URL}/reportes/${id}`, { method: 'DELETE' });
       if (res.ok) {
@@ -280,33 +258,46 @@ export default function ReportesAdmin() {
     }
   };
 
-  // 3. Eliminar Masivo
   const handleDeleteSelected = async () => {
     if (!window.confirm(`¿Eliminar ${selected.length} reportes?`)) return;
-    
-    const promises = selected.map(id => 
-        fetch(`${API_URL}/reportes/${id}`, { method: 'DELETE' })
-    );
-
+    const promises = selected.map(id => fetch(`${API_URL}/reportes/${id}`, { method: 'DELETE' }));
     try {
         await Promise.all(promises);
         setRows(prev => prev.filter(r => !selected.includes(r.id)));
         setSelected([]);
     } catch (error) {
-        console.error("Error en borrado masivo", error);
+        console.error(error);
     }
   };
 
-  // --- Helpers UI ---
-  const getChipColor = (tipo) => {
+  // Helpers UI
+  const getMotivoColor = (tipo) => {
     if (!tipo) return 'neutral';
     const lower = tipo.toLowerCase();
-    if (lower.includes('abuso') || lower.includes('fraude') || lower.includes('peligroso')) return 'danger';
-    if (lower.includes('spam') || lower.includes('engañoso')) return 'warning';
+    if (lower.includes('abuso') || lower.includes('fraude')) return 'danger';
+    if (lower.includes('spam')) return 'warning';
     return 'primary';
   };
 
-  // --- Manejadores de Tabla ---
+  const getObjetivoIcon = (tipo) => {
+      switch(tipo) {
+          case 'Publicación': return <ArticleIcon />;
+          case 'Usuario': return <PersonIcon />;
+          case 'Comentario': return <CommentIcon />;
+          default: return null;
+      }
+  };
+
+  const getObjetivoColor = (tipo) => {
+      switch(tipo) {
+          case 'Publicación': return 'success';
+          case 'Usuario': return 'primary';
+          case 'Comentario': return 'warning';
+          default: return 'neutral';
+      }
+  };
+
+  // Manejadores Tabla
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
@@ -338,7 +329,6 @@ export default function ReportesAdmin() {
     setPage(0);
   };
 
-  // Paginación
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
   function labelDisplayedRows({ from, to, count }) { return `${from}–${to} de ${count !== -1 ? count : `más de ${to}`}`; }
   const getLabelDisplayedRowsTo = () => rows.length === -1 ? (page + 1) * rowsPerPage : (rowsPerPage === -1 ? rows.length : Math.min(rows.length, (page + 1) * rowsPerPage));
@@ -350,7 +340,7 @@ export default function ReportesAdmin() {
         variant="outlined"
         sx={{
           width: '100%',
-          maxWidth: '1100px',
+          maxWidth: '1200px', // Más ancho para que quepa todo
           mx: 'auto',
           boxShadow: 'sm',
           borderRadius: 'sm',
@@ -361,7 +351,6 @@ export default function ReportesAdmin() {
         <EnhancedTableToolbar 
             numSelected={selected.length} 
             onDeleteSelected={handleDeleteSelected}
-            // Props de filtrado
             filterPubId={filterPubId}
             setFilterPubId={setFilterPubId}
             onFilterSubmit={handleFilterSubmit}
@@ -401,22 +390,65 @@ export default function ReportesAdmin() {
                       />
                     </td>
                     <td><Typography level="body-xs">{row.id}</Typography></td>
+                    
+                    {/* MOTIVO */}
                     <td>
-                        <Chip color={getChipColor(row.tipo)} size="sm" variant="soft">
-                            {row.tipo}
+                        <Chip color={getMotivoColor(row.tipo_reporte)} size="sm" variant="soft">
+                            {row.tipo_reporte}
                         </Chip>
                     </td>
+
+                    {/* TIPO OBJETIVO (Publicacion/Usuario) */}
                     <td>
-                        <Typography level="body-sm" noWrap sx={{ maxWidth: '250px' }}>
-                            {row.descripcion}
+                        <Chip 
+                            color={getObjetivoColor(row.objetivo_tipo)} 
+                            startDecorator={getObjetivoIcon(row.objetivo_tipo)}
+                            size="sm" 
+                            variant="outlined"
+                        >
+                            {row.objetivo_tipo}
+                        </Chip>
+                    </td>
+
+                    {/* ID REF + LINK */}
+                    <td>
+                        {row.objetivo_tipo === 'Publicación' && (
+                            <Link href={`/publicacion/${row.objetivo_id}`} target="_blank" level="body-xs">
+                                {row.objetivo_id}
+                            </Link>
+                        )}
+                        {row.objetivo_tipo === 'Usuario' && (
+                            <Link href={`/perfil/${row.objetivo_slug}`} target="_blank" level="body-xs">
+                                {row.objetivo_id}
+                            </Link>
+                        )}
+                        {row.objetivo_tipo === 'Comentario' && (
+                            <Link 
+                                href={`/publicacion/${row.id_publicacion}`} 
+                                target="_blank" 
+                                level="body-xs"
+                                // Opcional: Añadir un color distinto o estilo para diferenciar que es un comentario
+                                sx={{ color: 'warning.plainColor' }} 
+                            >
+                                {row.objetivo_id}
+                            </Link>
+                        )}
+                    </td>
+
+                    {/* DESCRIPCIÓN */}
+                    <td>
+                        <Typography level="body-sm" noWrap sx={{ maxWidth: '200px' }} title={row.descripcion}>
+                            {row.descripcion || "-"}
                         </Typography>
                     </td>
-                    <td><Typography level="body-xs">{row.id_usuario || 'Anon'}</Typography></td>
+
+                    {/* DENUNCIANTE */}
                     <td>
-                        <Link href={`/publicacion/${row.id_publicacion}`} target="_blank" level="body-xs">
-                            {row.id_publicacion}
+                        <Link href={`/perfil/${row.id_usuario_denunciante}`} target="_blank" level="body-xs">
+                            User {row.id_usuario_denunciante}
                         </Link>
                     </td>
+
                     <td>
                         <Typography level="body-xs">
                             {/* Usamos fecha_creacion y formateamos incluyendo hora */}
@@ -431,8 +463,9 @@ export default function ReportesAdmin() {
                                 : '-'}
                         </Typography>
                     </td>
+
                     <td>
-                      <Tooltip title="Eliminar / Resolver">
+                      <Tooltip title="Eliminar reporte">
                         <IconButton size="sm" color="danger" variant="plain" onClick={(e) => {
                             e.stopPropagation();
                             handleDelete(row.id);
@@ -446,13 +479,13 @@ export default function ReportesAdmin() {
               })}
             
             {rows.length === 0 && !loading && (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '20px' }}>No hay reportes.</td></tr>
+                <tr><td colSpan={8} style={{ textAlign: 'center', padding: '20px' }}>No hay reportes.</td></tr>
             )}
-            {emptyRows > 0 && <tr style={{ height: `calc(${emptyRows} * 40px)` }}><td colSpan={7} /></tr>}
+            {emptyRows > 0 && <tr style={{ height: `calc(${emptyRows} * 40px)` }}><td colSpan={8} /></tr>}
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={7}>
+              <td colSpan={8}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'flex-end' }}>
                   <FormControl orientation="horizontal" size="sm">
                     <FormLabel>Filas:</FormLabel>
