@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchPublicacionesPorUsuario } from '../../services/perfilService'; // 🔹 nuevo servicio
+import { fetchPublicacionesPorUsuario } from '../../services/perfilService';
 import './cuserPublications.css';
 
 const UserPublications = ({ userId }) => {
@@ -15,7 +15,15 @@ const UserPublications = ({ userId }) => {
     setError(null);
 
     fetchPublicacionesPorUsuario(userId)
-      .then(setPublicaciones)
+      .then(data => {
+        // Aseguramos que data sea un array, por si el backend devuelve otra cosa
+        if (Array.isArray(data)) {
+            setPublicaciones(data);
+        } else {
+            console.error("Formato inesperado:", data);
+            setPublicaciones([]);
+        }
+      })
       .catch((e) => setError(e.message || 'Error al obtener publicaciones'))
       .finally(() => setLoading(false));
   }, [userId]);
@@ -31,7 +39,10 @@ const UserPublications = ({ userId }) => {
             <li>Este usuario todavía no tiene publicaciones.</li>
           )}
           {publicaciones.map((pub) => {
-            const imagenPrincipal = pub.imagenes.length > 0 ? pub.imagenes[0] : null;
+            // Validación segura de imágenes
+            const imagenPrincipal = (pub.imagenes && pub.imagenes.length > 0) 
+                ? pub.imagenes[0] 
+                : null;
 
             return (
               <li key={pub.id} className="publicacion-card-vertical">
@@ -45,9 +56,16 @@ const UserPublications = ({ userId }) => {
 
                 <div className="publicacion-contenido-vertical">
                   <h3 className="publicacion-titulo">{pub.titulo}</h3>
-                  <span className="publicacion-categoria">{pub.categoria}</span>
+                  
+                  {/* --- CORRECCIÓN AQUÍ --- */}
+                  {/* Accedemos a .nombre y validamos que exista */}
+                  <span className="publicacion-categoria">
+                    {pub.categoria ? pub.categoria.nombre : 'Sin categoría'}
+                  </span>
+
                   <div className="publicacion-etiquetas">
-                    {pub.etiquetas.map((etiqueta, idx) => (
+                    {/* Validamos que etiquetas sea un array antes de hacer map */}
+                    {Array.isArray(pub.etiquetas) && pub.etiquetas.map((etiqueta, idx) => (
                       <span key={idx} className="etiqueta-chip">
                         {etiqueta}
                       </span>
