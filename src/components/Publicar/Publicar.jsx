@@ -16,7 +16,7 @@ import Button from '@mui/joy/Button';
 import Input from '@mui/joy/Input';
 import Textarea from '@mui/joy/Textarea';
 import ToggleButtonGroup from '@mui/joy/ToggleButtonGroup';
-import Select, { selectClasses } from '@mui/joy/Select';
+import Select from '@mui/joy/Select';
 import Option from '@mui/joy/Option';
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
 import Autocomplete from '@mui/joy/Autocomplete';
@@ -32,14 +32,13 @@ import { getAuth } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
 import { mostrarAlerta } from '../../utils/confirmservice.js'; 
 
-// --- DICCIONARIO DE TRADUCCIÓN ---
-// Clave: El nombre EXACTO como está en tu Base de Datos (PostgreSQL)
-// Valor: El texto que quieres mostrar en el botón
-const TITULOS_AMIGABLES = {
-  "Adopción": "¡Busco un hogar!",
-  "Pérdida": "¡Me perdí!",
-  "Encuentro": "¡Me encontraron!",
-  "Estado crítico": "¡Necesito ayuda urgente!"
+// --- CONFIGURACIÓN POR ID (NUMÉRICO) ---
+// Esto asegura que el texto del botón dependa estrictamente del ID
+const CONFIG_CATEGORIAS = {
+  0: "¡Busco un hogar!",       // Adopción
+  1: "¡Me encontraron!",       // Encuentro
+  2: "¡Me perdí!",             // Pérdida
+  3: "¡Necesito ayuda urgente!" // Estado Crítico
 };
 
 const VisuallyHiddenInput = styled('input')`
@@ -139,7 +138,11 @@ export default function Publicar() {
     fetch(`${API_URL}/api/categorias`)
       .then(res => res.json())
       .then(data => {
-         setCategoriasDisponibles(data);
+         // Ordenamos por ID para mantener consistencia visual
+         const sorted = data.sort((a, b) => a.id - b.id);
+         setCategoriasDisponibles(sorted);
+         // DEBUG: Para ver qué IDs están llegando
+         console.log("Categorías cargadas:", sorted);
       })
       .catch(console.error);
   }, []);
@@ -150,7 +153,7 @@ export default function Publicar() {
       const data = JSON.parse(borrador);
       setTitulo(data.titulo || "");
       setDescripcion(data.descripcion || "");
-      setSeleccionado(data.seleccionado || null);
+      setSeleccionado(data.seleccionado !== undefined ? data.seleccionado : null);
       setProvinciaId(data.provinciaId || "");
       setDepartamentoId(data.departamentoId || "");
       setLocalidadId(data.localidadId || "");
@@ -184,7 +187,7 @@ export default function Publicar() {
 
   const validarCampos = () => {
     const nuevosErrores = [];
-    if (!seleccionado) nuevosErrores.push("Categoría");
+    if (seleccionado === null || seleccionado === "") nuevosErrores.push("Categoría");
     if (!titulo.trim()) nuevosErrores.push("Título");
     if (!descripcion.trim()) nuevosErrores.push("Descripción");
     if (descripcion.length > 500) nuevosErrores.push("Descripción excede 500 caracteres");
@@ -299,7 +302,7 @@ export default function Publicar() {
       const urlsImagenes = dataImagenes.urls;
 
       const datos = {
-        id_categoria: seleccionado, // Enviamos el ID
+        id_categoria: seleccionado, // Enviamos el ID numérico
         titulo,
         descripcion,
         id_locacion: localidadId,
@@ -360,11 +363,14 @@ export default function Publicar() {
       <Container maxWidth="md">
         <Typography level="h3" sx={{ mt: 2 }}>Crear publicación</Typography>
 
-        {/* --- AQUÍ ESTÁ EL CAMBIO CLAVE --- */}
+        {/* --- SELECCIÓN DE CATEGORÍA --- */}
         <ToggleButtonGroup
-          value={seleccionado}
+          // TRUCO: Convertimos a String aquí para que el "0" sea un valor válido ("0") y no falsy
+          value={seleccionado !== null ? String(seleccionado) : null} 
+          
           onChange={(event, newValue) => {
-             if(newValue !== null) setSeleccionado(newValue); 
+             // Cuando cambia, lo convertimos de vuelta a Número para tu lógica
+             if(newValue !== null) setSeleccionado(Number(newValue)); 
           }}
           sx={{ my: 2, gap: 1, flexWrap: 'wrap' }}
           type="single"
@@ -372,16 +378,22 @@ export default function Publicar() {
           {categoriasDisponibles.length === 0 ? (
               <Typography>Cargando categorías...</Typography>
           ) : (
-            categoriasDisponibles.map(cat => (
-                <Button
-                    key={cat.id}
-                    value={cat.id} // El valor interno sigue siendo el ID
-                    color={seleccionado === cat.id ? "success" : errores.includes("Categoría") ? "danger" : "neutral"}
-                >
-                {/* Mostramos el texto amigable si existe en el mapa, sino el de la BD */}
-                {TITULOS_AMIGABLES[cat.nombre] || cat.nombre}
-                </Button>
-            ))
+            categoriasDisponibles.map(cat => {
+                // Verificamos si este botón es el seleccionado para forzar el estilo
+                const isSelected = seleccionado === cat.id;
+                
+                return (
+                    <Button
+                        key={cat.id}
+                        value={String(cat.id)} // El valor del botón también debe ser String
+                        color={isSelected ? "success" : errores.includes("Categoría") ? "danger" : "neutral"}
+                        variant={isSelected ? "soft" : "outlined"} // Forzamos "solid" para que se note bien el verde
+                        aria-pressed={isSelected}
+                    >
+                        {CONFIG_CATEGORIAS[cat.id] || cat.nombre}
+                    </Button>
+                );
+            })
           )}
         </ToggleButtonGroup>
 
