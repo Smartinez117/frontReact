@@ -21,10 +21,9 @@ import L from "leaflet";
 import ShareIcon from "@mui/icons-material/Share";
 import DownloadIcon from "@mui/icons-material/Download";
 import DeleteIcon from "@mui/icons-material/Delete"; 
-// NUEVO ICONO PARA REPORTAR
 import FlagIcon from "@mui/icons-material/Flag"; 
 import IconButton from "@mui/material/IconButton"; 
-import Tooltip from "@mui/material/Tooltip"; // Para mejorar la UX
+import Tooltip from "@mui/material/Tooltip"; 
 
 import TextField from "@mui/material/TextField";
 import { getAuth } from "firebase/auth";
@@ -117,8 +116,8 @@ export default function Publicacion() {
   const [errorComentario, setErrorComentario] = useState(null);
   
   // Estados para reportes
-  const [mostrarModal, setMostrarModal] = useState(false); // Para reportar publicación
-  const [comentarioAReportar, setComentarioAReportar] = useState(null); // Para reportar comentario
+  const [mostrarModal, setMostrarModal] = useState(false); 
+  const [comentarioAReportar, setComentarioAReportar] = useState(null);
 
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
@@ -243,28 +242,22 @@ export default function Publicacion() {
   };
 
   const compartirPublicacion = (idPublicacion) => {
-    // Construir URL pública: priorizamos VITE_FRONTEND_URL si está configurada
     const baseUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
     const url = `${baseUrl.replace(/\/$/, '')}/publicacion/${encodeURIComponent(idPublicacion)}`;
     const title = publicacion?.titulo || "Publicación";
 
-    // Texto descriptivo corto para compartir
     const text = publicacion?.descripcion
       ? `${publicacion.titulo} — ${publicacion.descripcion.substring(0, 120)}...`
       : `Mirá esta publicación: ${title}`;
 
-    // Intentamos usar la Web Share API (mejor experiencia en móviles)
     if (navigator.share) {
       navigator.share({ title, text, url })
         .catch((error) => {
           console.error("Error al compartir mediante Web Share:", error);
-          // Si falla, caemos al fallback
           fallbackCopyUrl(url);
         });
       return;
     }
-
-    // Fallback: copiar al portapapeles y abrir diálogo de redes sociales en nueva pestaña
     fallbackCopyUrl(url);
   };
 
@@ -273,7 +266,6 @@ export default function Publicacion() {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(url);
       } else {
-        // Fallback clásico para navegadores viejos
         const tmp = document.createElement('input');
         document.body.appendChild(tmp);
         tmp.value = url;
@@ -281,7 +273,6 @@ export default function Publicacion() {
         document.execCommand('copy');
         tmp.remove();
       }
-      // Informar al usuario y ofrecer abrir opciones sociales en nueva pestaña
       alert('Enlace copiado al portapapeles. Podés compartirlo en tu red social preferida.');
     } catch (err) {
       console.error('No se pudo copiar el enlace:', err);
@@ -493,8 +484,9 @@ export default function Publicacion() {
             {titulo}
           </Typography>
 
+          {/* CORRECCIÓN AQUÍ: Mostrar el nombre de la categoría, no el objeto */}
           <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 1 }}>
-            Categoría: {categoria}
+            Categoría: {categoria ? categoria.nombre : 'Sin categoría'}
           </Typography>
 
           {/* Etiquetas */}
