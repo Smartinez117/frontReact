@@ -1,0 +1,93 @@
+.noti-container {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.noti-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #1a202c;
+}
+
+.noti-loading {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 16px;
+  color: #4a5568;
+}
+
+.noti-vacio {
+  text-align: center;
+  margin-top: 20px;
+  color: #718096;
+}
+
+.noti-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.noti-item {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  transition: background 0.2s ease;
+}
+
+.noti-nueva {
+  background: #ebf4ff;
+  border-color: #c3dafe;
+}
+
+.noti-leida {
+  background: #f7fafc;
+  opacity: 0.7;
+}
+
+.noti-info {
+  flex: 1;
+}
+
+.noti-titulo {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+}
+
+.noti-descripcion {
+  font-size: 13px;
+  color: #4a5568;
+  margin-top: 6px;
+}
+
+.noti-fecha {
+  font-size: 11px;
+  color: #718096;
+  margin-top: 8px;
+  display: block;
+}
+
+.noti-btn-leer {
+  background: #4c51bf;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.noti-btn-leer:hover {
+  background: #434190;
+}
