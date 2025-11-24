@@ -179,3 +179,47 @@
     border-top: 1px solid #edf2f7;
   }
 }
+
+/* ... (Tu CSS anterior) ... */
+
+/* Contenedor de botones de acción (Solicitudes) */
+.noti-actions-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.btn-accept, .btn-reject {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s ease, opacity 0.2s;
+}
+
+.btn-accept {
+  background-color: #48bb78; /* Verde */
+  color: white;
+}
+
+.btn-accept:hover {
+  background-color: #38a169;
+}
+
+.btn-reject {
+  background-color: #fc8181; /* Rojo suave */
+  color: white;
+}
+
+.btn-reject:hover {
+  background-color: #f56565;
+}
+
+.btn-accept:active, .btn-reject:active {
+  transform: scale(0.95);
+}
