@@ -52,7 +52,7 @@ const MainLayout = () => {
   return (
     <>
       <Navbar userName={userName} userPhoto={userPhoto} />
-      <main style={{ padding: '1rem' }}>
+      <main style={{ flex: 1, width: '100%', padding: 0 }}>
         <Outlet />
       </main>
     </>

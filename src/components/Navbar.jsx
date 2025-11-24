@@ -18,23 +18,20 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import {socketconnection,socketnotificationlisten} from '../utils/socket';
-import {Notificacion} from '../utils/toastUtil'
 import { Toaster } from 'react-hot-toast';
 import { socketNotificationsConnected } from '../utils/socket';
 import AddAlertIcon from '@mui/icons-material/AddAlert';
-import AlignItemsList from '../utils/listaNOt'; // import de la funcion para mostrar las notificaciones
+// import AlignItemsList from '../utils/listaNOt'; // ❌ YA NO LO NECESITAMOS
 import { registrarCallbackAgregar } from "../utils/toastUtil";
-
-
 
 const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
-  const [notificaciones, setNotificaciones] = useState([]);//lista para las notificaciones
-  const [open, setOpen] = useState(false);//para desplegar la lista
+  const [notificaciones, setNotificaciones] = useState([]);
+  // const [open, setOpen] = useState(false); // ❌ ELIMINADO: Ya no necesitamos abrir/cerrar lista
 
   function agregarNotificacion(noti) {
-  setNotificaciones(prev => [...prev, noti]);
+    setNotificaciones(prev => [...prev, noti]);
   }
 
   const handleOpenNavMenu = (event) => {
@@ -59,67 +56,63 @@ const Navbar = () => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-  // registra la función que recibirá las notificaciones
-  registrarCallbackAgregar(agregarNotificacion);
-}, []);
+    registrarCallbackAgregar(agregarNotificacion);
+  }, []);
 
-const pages = ['Inicio', 'Publicar', 'Buscar', 'Mapa'];
-const settings = ['Notificaciones', 'Mi perfil', 'Configuración', 'Cerrar sesión'];
+  const pages = ['Inicio', 'Publicar', 'Buscar', 'Mapa'];
+  const settings = ['Notificaciones', 'Mi perfil', 'Configuración', 'Cerrar sesión'];
 
-      useEffect(() => {
-      const auth = getAuth();
+  useEffect(() => {
+    const auth = getAuth();
 
-      const unsubscribe = onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-          setUserName('');
-          setUserPhoto('');
-          setIsAdmin(false);
-          localStorage.removeItem("userName");
-          localStorage.removeItem("userPhoto");
-          localStorage.removeItem("isAdmin");
-          navigate("/login");
-          return;
-        }
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setUserName('');
+        setUserPhoto('');
+        setIsAdmin(false);
+        localStorage.removeItem("userName");
+        localStorage.removeItem("userPhoto");
+        localStorage.removeItem("isAdmin");
+        navigate("/login");
+        return;
+      }
 
-        // 1️⃣ Cargar datos del usuario
-        const name = localStorage.getItem("userName");
-        const photo = localStorage.getItem("userPhoto");
-        if (name) setUserName(name);
-        if (photo) setUserPhoto(photo);
+      const name = localStorage.getItem("userName");
+      const photo = localStorage.getItem("userPhoto");
+      if (name) setUserName(name);
+      if (photo) setUserPhoto(photo);
 
-        // 2️⃣ Determinar si es admin ANTES de renderizar navbar
-        try {
-          const token = await user.getIdToken();
-          const res = await fetch(`http://localhost:5000/usuario/${user.uid}/is_admin`, {
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`,
-            },
-          });
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/usuario/${user.uid}/is_admin`, {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
 
-          if (res.ok) {
-            const data = await res.json();
-            const esAdmin = Boolean(data.is_admin);
-            setIsAdmin(esAdmin);
-            esAdmin ? localStorage.setItem("isAdmin", "true") : localStorage.removeItem("isAdmin");
-          } else {
-            console.error("Error verificando admin:", await res.text());
-            setIsAdmin(false);
-          }
-        } catch (err) {
-          console.error("Error admin:", err);
+        if (res.ok) {
+          const data = await res.json();
+          const esAdmin = Boolean(data.is_admin);
+          setIsAdmin(esAdmin);
+          esAdmin ? localStorage.setItem("isAdmin", "true") : localStorage.removeItem("isAdmin");
+        } else {
+          console.error("Error verificando admin");
           setIsAdmin(false);
         }
+      } catch (err) {
+        console.error("Error admin:", err);
+        setIsAdmin(false);
+      }
 
-        // 3️⃣ Después: sockets
-        socketconnection(user);
-        if (!socketNotificationsConnected) {
-          socketnotificationlisten(user.uid);
-        }
-      });
+      socketconnection(user);
+      if (!socketNotificationsConnected) {
+        socketnotificationlisten(user.uid);
+      }
+    });
 
-      return () => unsubscribe();
-    }, [navigate]);
+    return () => unsubscribe();
+  }, [navigate]);
 
 
   const handleUserMenuClick = (setting) => {
@@ -170,8 +163,8 @@ const settings = ['Notificaciones', 'Mi perfil', 'Configuración', 'Cerrar sesi�
   return (
     <>
     <Toaster 
-    position="top-right"
-    reverseOrder={false}
+      position="top-right"
+      reverseOrder={false}
     />
     <AppBar position="static" sx={{ backgroundColor: '#edece1ff' }}>
       <Container maxWidth="xl">
@@ -274,20 +267,21 @@ const settings = ['Notificaciones', 'Mi perfil', 'Configuración', 'Cerrar sesi�
             <Button onClick={() => navigate('/mapa')} sx={{ my: 2, color: 'black' }}>Mapa</Button>
           </Box>
 
-          <Box sx={{ flexGrow: 0,display: 'flex', alignItems: 'center', gap: 1  }}>
+          <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center', gap: 1  }}>
             {userName && (
               <Typography variant="body2" sx={{ display: { xs: 'none', md: 'block' }, color: '#111' }}>{userName}</Typography>
             )}
-            <Tooltip title="Notificaciones">
-               <IconButton color="blue" onClick={()=> setOpen(!open)}>
+            
+            {/* --- CAMBIO PRINCIPAL AQUÍ --- */}
+            <Tooltip title="Ver Notificaciones">
+               <IconButton 
+                 onClick={() => navigate('/notificaciones')} // 1. Navegar directamente
+                 sx={{ color: 'black' }} // 2. Ajuste de color para que se vea bien sobre el fondo crema
+               >
                  <AddAlertIcon />
                </IconButton>
-              </Tooltip>
-              {open && (
-              <Box sx={{ position: "absolute", top: "60px", right: "20px",bgcolor:"white" }}>
-              <AlignItemsList notificaciones={notificaciones} />
-             </Box>
-              )}
+            </Tooltip>
+            {/* Se eliminó el bloque {open && ...} */}
 
             <Tooltip title="Abrir opciones">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
@@ -316,44 +310,21 @@ const settings = ['Notificaciones', 'Mi perfil', 'Configuración', 'Cerrar sesi�
                       </MenuItem>
                     )}
                     <MenuItem key={setting} onClick={() => handleUserMenuClick(setting)}>
-                      {setting === "Configuración" && (
-                        <SettingsIcon sx={{ mr: 1 }} />
-                      )}
-
-                      {setting === "Notificaciones" && (
-                        <AddAlertIcon sx={{ mr: 1 }} />
-                      )}
-
-                      {setting === "Mi perfil" && (
-                        <Avatar sx={{ width: 20, height: 20, mr: 1 }} />
-                      )}
-                      {setting === "Cerrar sesión" && (
-                        <LogoutIcon sx={{ width: 20, height: 20, mr: 1 }} />
-                      )}
+                      {setting === "Configuración" && <SettingsIcon sx={{ mr: 1 }} />}
+                      {setting === "Notificaciones" && <AddAlertIcon sx={{ mr: 1 }} />}
+                      {setting === "Mi perfil" && <Avatar sx={{ width: 20, height: 20, mr: 1 }} />}
+                      {setting === "Cerrar sesión" && <LogoutIcon sx={{ width: 20, height: 20, mr: 1 }} />}
                       <Typography textAlign="center">{setting}</Typography>
                     </MenuItem>
-
                   </React.Fragment>
                 ) : (
                   <MenuItem key={setting} onClick={() => handleUserMenuClick(setting)}>
-                    {setting === "Configuración" && (
-                      <SettingsIcon sx={{ mr: 1 }} />
-                    )}
-
-                    {setting === "Notificaciones" && (
-                      <AddAlertIcon sx={{ mr: 1 }} />
-                    )}
-
-                    {setting === "Mi perfil" && (
-                      <Avatar sx={{ width: 20, height: 20, mr: 1 }} />
-                    )}
-                    {setting === "Cerrar sesión" && (
-                      <LogoutIcon sx={{ width: 20, height: 20, mr: 1 }} />
-                    )}
-
+                    {setting === "Configuración" && <SettingsIcon sx={{ mr: 1 }} />}
+                    {setting === "Notificaciones" && <AddAlertIcon sx={{ mr: 1 }} />}
+                    {setting === "Mi perfil" && <Avatar sx={{ width: 20, height: 20, mr: 1 }} />}
+                    {setting === "Cerrar sesión" && <LogoutIcon sx={{ width: 20, height: 20, mr: 1 }} />}
                     <Typography textAlign="center">{setting}</Typography>
                   </MenuItem>
-
                 )
               ))}
             </Menu>
@@ -361,7 +332,6 @@ const settings = ['Notificaciones', 'Mi perfil', 'Configuración', 'Cerrar sesi�
         </Toolbar>
       </Container>
     </AppBar>
-
  </>
   );
 };

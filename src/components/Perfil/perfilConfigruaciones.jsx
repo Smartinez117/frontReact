@@ -1,11 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { actualizarUsuario, configUsuarioActual } from '../../services/perfilService';
-import './cperfilConfiguraciones.css';
 
-// Importaciones de Joy UI
-import Select from '@mui/joy/Select';
-import Option from '@mui/joy/Option';
+// --- IMPORTACIONES JOY UI ---
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  Card, 
+  Divider, 
+  Button, 
+  Input, 
+  Textarea, 
+  Select, 
+  Option, 
+  Stack, 
+  FormControl, 
+  FormLabel, 
+  CircularProgress,
+  Avatar,
+  IconButton
+} from '@mui/joy';
+
+// --- ICONOS ---
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
+import EditIcon from '@mui/icons-material/Edit';
+import PersonIcon from '@mui/icons-material/Person';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import PhoneIcon from '@mui/icons-material/Phone';
+import InfoIcon from '@mui/icons-material/Info';
+import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -13,6 +37,7 @@ export default function PerfilConfiguracion() {
   const [usuario, setUsuario] = useState(null);
   const [seccionEditando, setSeccionEditando] = useState(null);
   const [formData, setFormData] = useState({});
+  const [loading, setLoading] = useState(true);
 
   // Estados para la cascada de ubicación
   const [provincias, setProvincias] = useState([]);
@@ -31,26 +56,20 @@ export default function PerfilConfiguracion() {
 
   async function cargarUsuario() {
     try {
-      // 1. Traemos el usuario crudo (con id_localidad)
+      setLoading(true);
       const datos = await configUsuarioActual();
-      console.log("=== DEBUG CARGAR USUARIO ===");
-      console.log("Datos recibidos del backend:", datos);
-      console.log("ID Localidad:", datos.id_localidad);
-      console.log("Objeto Ubicacion:", datos.ubicacion);
       
-      // 2. Si tiene id_localidad pero no tiene el objeto 'ubicacion', lo construimos
+      // Hidratación de ubicación si falta el objeto pero está el ID
       if (datos.id_localidad && !datos.ubicacion) {
         try {
-          // Usamos el mismo endpoint que usas en prellenarUbicacion
           const resLoc = await fetch(`${API_URL}/api/ubicacion/localidades/${datos.id_localidad}`);
           if (resLoc.ok) {
             const dataLoc = await resLoc.json();
-            // Inyectamos el objeto 'ubicacion' que tu render espera
             datos.ubicacion = {
               id: dataLoc.id,
               nombre: dataLoc.nombre,
-              provincia_id: dataLoc.id_provincia,     // Opcional, útil para consistencia
-              departamento_id: dataLoc.id_departamento // Opcional
+              provincia_id: dataLoc.id_provincia,
+              departamento_id: dataLoc.id_departamento
             };
           }
         } catch (errLoc) {
@@ -58,16 +77,17 @@ export default function PerfilConfiguracion() {
         }
       }
 
-      // 3. Ahora sí seteamos el usuario con la estructura correcta
       setUsuario(datos);
       setSeccionEditando(null);
       setFormData({});
     } catch (error) {
       console.error('Error al cargar usuario:', error);
+    } finally {
+      setLoading(false);
     }
   }
 
-  // --- API Calls para Ubicación ---
+  // --- API Calls ---
   const fetchProvincias = async () => {
     try {
         const res = await fetch(`${API_URL}/api/ubicacion/provincias`);
@@ -89,7 +109,6 @@ export default function PerfilConfiguracion() {
     } catch (e) { console.error(e); }
   };
 
-  // --- Pre-llenar datos ---
   const prellenarUbicacion = async (idLocalidadUsuario) => {
     if (!idLocalidadUsuario) {
         resetSelects();
@@ -110,18 +129,15 @@ export default function PerfilConfiguracion() {
     }
   };
 
-  // --- Manejo de cambios en Selects ---
   useEffect(() => {
     if (provinciaId && seccionEditando === 'ubicacion') {
-        // Solo limpiar si el usuario está cambiando manualmente la provincia
-        // y no es la carga inicial automática
         if (!usuario.ubicacion || provinciaId != usuario.ubicacion.provincia_id) {
              setDepartamentoId(null);
              setLocalidadId(null);
         }
         fetchDepartamentos(provinciaId);
     }
-  }, [provinciaId]);
+  }, [provinciaId, seccionEditando]); // Agregado seccionEditando a deps
 
   useEffect(() => {
     if (departamentoId && seccionEditando === 'ubicacion') {
@@ -130,7 +146,7 @@ export default function PerfilConfiguracion() {
          }
         fetchLocalidades(departamentoId);
     }
-  }, [departamentoId]);
+  }, [departamentoId, seccionEditando]);
 
 
   async function handleModificar(seccion) {
@@ -147,7 +163,6 @@ export default function PerfilConfiguracion() {
     } else if (seccion === 'otros') {
         setFormData({ descripcion: usuario.descripcion || '' });
     } else if (seccion === 'ubicacion') {
-        // Si ya tiene ubicación, la cargamos. Si no, limpiamos.
         if (usuario.ubicacion && usuario.ubicacion.id) {
             await prellenarUbicacion(usuario.ubicacion.id);
         } else {
@@ -189,38 +204,31 @@ export default function PerfilConfiguracion() {
         dataToSend = { descripcion: formData.descripcion };
       } else if (seccionEditando === 'ubicacion') {
         if (!localidadId) {
+            // Podrías usar un toast aquí
             alert("Debes seleccionar una localidad");
             return;
         }
         dataToSend = { id_localidad: localidadId };
       }
 
-      // 1. Enviar al backend
       await actualizarUsuario(usuario.id, dataToSend);
 
-      // 2. Actualizar el estado local MANUALMENTE (Esto evita que desaparezca el dato)
       setUsuario(prev => {
-          // Copiamos el usuario anterior y sobrescribimos los campos editados
           const nuevoEstado = { ...prev, ...dataToSend };
-
-          // Lógica especial para reconstruir el objeto visual 'ubicacion'
           if (seccionEditando === 'ubicacion') {
-             const localidadObj = localidades.find(l => l.id.toString() === localidadId.toString());
-             if (localidadObj) {
-                 nuevoEstado.ubicacion = {
-                     id: localidadObj.id,
-                     nombre: localidadObj.nombre,
-                     // Guardamos estos IDs auxiliares para que si vuelves a editar, el select sepa dónde estaba
-                     provincia_id: provinciaId, 
-                     departamento_id: departamentoId
-                 };
-             }
+              const localidadObj = localidades.find(l => l.id.toString() === localidadId.toString());
+              if (localidadObj) {
+                  nuevoEstado.ubicacion = {
+                      id: localidadObj.id,
+                      nombre: localidadObj.nombre,
+                      provincia_id: provinciaId, 
+                      departamento_id: departamentoId
+                  };
+              }
           }
-          
           return nuevoEstado;
       });
 
-      // 3. Cerrar edición (IMPORTANTE: QUITE LA LLAMADA A cargarUsuario())
       setSeccionEditando(null);
 
     } catch (error) {
@@ -228,165 +236,229 @@ export default function PerfilConfiguracion() {
     }
   }
 
-  if (!usuario) return <div>Cargando usuario...</div>;
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+        <CircularProgress size="lg" />
+      </Box>
+    );
+  }
+
+  if (!usuario) return <Typography>Error cargando usuario.</Typography>;
 
   return (
-    <div className="perfil-configuracion">
-      <h2>Configuración del perfil</h2>
+    <Box sx={{ bgcolor: '#f9f9f9', minHeight: '100vh', py: 4 }}>
+      <Container maxWidth="md">
+        <Stack spacing={4}>
+          
+          {/* ENCABEZADO */}
+          <Box>
+            <Typography level="h2" sx={{ mb: 1 }}>Configuración del Perfil</Typography>
+            <Typography level="body-md" textColor="text.secondary">
+              Administra tu información personal y preferencias.
+            </Typography>
+          </Box>
 
-      {/* SECCIÓN PERSONAL */}
-      <section className="seccion usuario-personal">
-        <h3>Datos personales</h3>
-        {seccionEditando === 'personal' ? (
-          <form onSubmit={e => { e.preventDefault(); handleGuardar(); }} className="formulario">
-            <label>
-              Nombre:
-              <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} required />
-            </label>
-            <label>
-              Email:
-              <input type="email" value={usuario.email} disabled />
-            </label>
-            <div className="botones">
-              <button type="submit">Guardar</button>
-              <button type="button" onClick={handleCancelar}>Cancelar</button>
-            </div>
-          </form>
-        ) : (
-          <>
-            <p><strong>Nombre:</strong> {usuario.nombre}</p>
-            <p><strong>Email:</strong> {usuario.email}</p>
-            <button onClick={() => handleModificar('personal')}>Modificar</button>
-          </>
-        )}
-      </section>
-
-      {/* SECCIÓN UBICACIÓN (MODIFICADA) */}
-      <section className="seccion usuario-ubicacion">
-        <h3>Ubicación / Localidad</h3>
-        {seccionEditando === 'ubicacion' ? (
-          <div className="formulario" style={{display: 'block'}}>
-            <p style={{marginBottom: '10px', fontSize: '0.9rem', color: '#666'}}>Selecciona tu ubicación preferida:</p>
+          {/* === SECCIÓN DATOS PERSONALES === */}
+          <Card variant="outlined" sx={{ boxShadow: 'sm', borderRadius: 'lg' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                <Avatar color="primary" variant="soft"><PersonIcon /></Avatar>
+                <Typography level="h4">Datos Personales</Typography>
+              </Stack>
+              {seccionEditando !== 'personal' && (
+                <Button variant="plain" color="neutral" startDecorator={<EditIcon />} onClick={() => handleModificar('personal')}>
+                  Editar
+                </Button>
+              )}
+            </Box>
+            <Divider sx={{ mb: 2 }} />
             
-            <Select
-                placeholder="Seleccioná una provincia"
-                value={provinciaId}
-                onChange={(e, val) => setProvinciaId(val)}
-                indicator={<KeyboardArrowDown />}
-                sx={{ width: '100%', mb: 2 }}
-            >
-                {provincias.map((prov) => (
-                    <Option key={prov.id} value={prov.id.toString()}>{prov.nombre}</Option>
-                ))}
-            </Select>
+            {seccionEditando === 'personal' ? (
+              <form onSubmit={e => { e.preventDefault(); handleGuardar(); }}>
+                <Stack spacing={2}>
+                  <FormControl>
+                    <FormLabel>Nombre completo</FormLabel>
+                    <Input name="nombre" value={formData.nombre} onChange={handleChange} required />
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel>Email</FormLabel>
+                    <Input value={usuario.email} disabled sx={{ bgcolor: '#f0f0f0' }} />
+                  </FormControl>
+                  <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 2 }}>
+                    <Button variant="outlined" color="neutral" onClick={handleCancelar}>Cancelar</Button>
+                    <Button type="submit" startDecorator={<SaveIcon />}>Guardar</Button>
+                  </Stack>
+                </Stack>
+              </form>
+            ) : (
+              <Stack spacing={1}>
+                <Typography level="body-sm" fontWeight="lg">Nombre</Typography>
+                <Typography level="body-md">{usuario.nombre}</Typography>
+                <Typography level="body-sm" fontWeight="lg" sx={{ mt: 1 }}>Email</Typography>
+                <Typography level="body-md">{usuario.email}</Typography>
+              </Stack>
+            )}
+          </Card>
 
-            <Select
-                placeholder="Seleccioná un departamento"
-                value={departamentoId}
-                onChange={(e, val) => setDepartamentoId(val)}
-                disabled={!provinciaId}
-                indicator={<KeyboardArrowDown />}
-                sx={{ width: '100%', mb: 2 }}
-            >
-                {departamentos.map((d) => (
-                    <Option key={d.id} value={d.id.toString()}>{d.nombre}</Option>
-                ))}
-            </Select>
+          {/* === SECCIÓN UBICACIÓN === */}
+          <Card variant="outlined" sx={{ boxShadow: 'sm', borderRadius: 'lg' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                <Avatar color="success" variant="soft"><LocationOnIcon /></Avatar>
+                <Typography level="h4">Ubicación</Typography>
+              </Stack>
+              {seccionEditando !== 'ubicacion' && (
+                <Button variant="plain" color="neutral" startDecorator={<EditIcon />} onClick={() => handleModificar('ubicacion')}>
+                  Modificar
+                </Button>
+              )}
+            </Box>
+            <Divider sx={{ mb: 2 }} />
 
-            <Select
-                placeholder="Seleccioná una localidad"
-                value={localidadId}
-                onChange={(e, val) => setLocalidadId(val)}
-                disabled={!departamentoId}
-                indicator={<KeyboardArrowDown />}
-                sx={{ width: '100%', mb: 2 }}
-            >
-                {localidades.map((l) => (
-                    <Option key={l.id} value={l.id.toString()}>{l.nombre}</Option>
-                ))}
-            </Select>
+            {seccionEditando === 'ubicacion' ? (
+              <Box>
+                <Typography level="body-sm" mb={2}>Selecciona tu ubicación preferida para ver contenido relevante cerca de ti.</Typography>
+                <Stack spacing={2}>
+                  <Select
+                    placeholder="Seleccioná una provincia"
+                    value={provinciaId}
+                    onChange={(e, val) => setProvinciaId(val)}
+                    indicator={<KeyboardArrowDown />}
+                  >
+                    {provincias.map((prov) => (
+                      <Option key={prov.id} value={prov.id.toString()}>{prov.nombre}</Option>
+                    ))}
+                  </Select>
 
-            <div className="botones" style={{marginTop: '20px'}}>
-              {/* BOTÓN CON ESTILO DINÁMICO */}
-              <button 
-                type="button" 
-                onClick={handleGuardar} 
-                disabled={!localidadId}
-                style={{
-                    backgroundColor: localidadId ? '#1976d2' : '#e0e0e0', // Azul si listo, Gris si no
-                    color: localidadId ? '#fff' : '#a0a0a0',
-                    cursor: localidadId ? 'pointer' : 'not-allowed',
-                    border: 'none',
-                    padding: '10px 20px',
-                    borderRadius: '4px',
-                    fontWeight: 'bold'
-                }}
-              >
-                Guardar
-              </button>
-              <button type="button" onClick={handleCancelar}>Cancelar</button>
-            </div>
-          </div>
-        ) : (
-          <>
-            <p>
-              <strong>Localidad:</strong> {usuario.ubicacion ? usuario.ubicacion.nombre : 'No especificada'}
-            </p>
-            <button onClick={() => handleModificar('ubicacion')}>
-                {usuario.ubicacion ? 'Cambiar ubicación' : 'Agregar ubicación'}
-            </button>
-          </>
-        )}
-      </section>
+                  <Select
+                    placeholder="Seleccioná un departamento"
+                    value={departamentoId}
+                    onChange={(e, val) => setDepartamentoId(val)}
+                    disabled={!provinciaId}
+                    indicator={<KeyboardArrowDown />}
+                  >
+                    {departamentos.map((d) => (
+                      <Option key={d.id} value={d.id.toString()}>{d.nombre}</Option>
+                    ))}
+                  </Select>
 
-      {/* SECCIÓN CONTACTO */}
-      <section className="seccion usuario-contacto">
-        <h3>Datos de contacto</h3>
-        {seccionEditando === 'contacto' ? (
-          <form onSubmit={e => { e.preventDefault(); handleGuardar(); }} className="formulario">
-            <label>
-              Teléfono país:
-              <input type="text" name="telefono_pais" value={formData.telefono_pais} onChange={handleChange} placeholder="+54" />
-            </label>
-            <label>
-              Teléfono número local:
-              <input type="text" name="telefono_numero_local" value={formData.telefono_numero_local} onChange={handleChange} />
-            </label>
-            <div className="botones">
-              <button type="submit">Guardar</button>
-              <button type="button" onClick={handleCancelar}>Cancelar</button>
-            </div>
-          </form>
-        ) : (
-          <>
-            <p><strong>Teléfono país:</strong> {usuario.telefono_pais || '-'}</p>
-            <p><strong>Teléfono local:</strong> {usuario.telefono_numero_local || '-'}</p>
-            <button onClick={() => handleModificar('contacto')}>Modificar</button>
-          </>
-        )}
-      </section>
+                  <Select
+                    placeholder="Seleccioná una localidad"
+                    value={localidadId}
+                    onChange={(e, val) => setLocalidadId(val)}
+                    disabled={!departamentoId}
+                    indicator={<KeyboardArrowDown />}
+                  >
+                    {localidades.map((l) => (
+                      <Option key={l.id} value={l.id.toString()}>{l.nombre}</Option>
+                    ))}
+                  </Select>
 
-      {/* SECCIÓN OTROS */}
-      <section className="seccion usuario-otros">
-        <h3>Otros datos</h3>
-        {seccionEditando === 'otros' ? (
-          <form onSubmit={e => { e.preventDefault(); handleGuardar(); }} className="formulario">
-            <label>
-              Descripción:
-              <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} rows={4} />
-            </label>
-            <div className="botones">
-              <button type="submit">Guardar</button>
-              <button type="button" onClick={handleCancelar}>Cancelar</button>
-            </div>
-          </form>
-        ) : (
-          <>
-            <p><strong>Descripción:</strong> {usuario.descripcion || '-'}</p>
-            <button onClick={() => handleModificar('otros')}>Modificar</button>
-          </>
-        )}
-      </section>
-    </div>
+                  <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 2 }}>
+                    <Button variant="outlined" color="neutral" onClick={handleCancelar}>Cancelar</Button>
+                    <Button onClick={handleGuardar} disabled={!localidadId} startDecorator={<SaveIcon />}>Guardar</Button>
+                  </Stack>
+                </Stack>
+              </Box>
+            ) : (
+              <Stack spacing={1}>
+                <Typography level="body-sm" fontWeight="lg">Localidad actual</Typography>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                    <LocationOnIcon color="action" fontSize="small"/>
+                    <Typography level="body-md">
+                        {usuario.ubicacion ? usuario.ubicacion.nombre : 'No especificada'}
+                    </Typography>
+                </Stack>
+              </Stack>
+            )}
+          </Card>
+
+          {/* === SECCIÓN CONTACTO === */}
+          <Card variant="outlined" sx={{ boxShadow: 'sm', borderRadius: 'lg' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                <Avatar color="warning" variant="soft"><PhoneIcon /></Avatar>
+                <Typography level="h4">Datos de Contacto</Typography>
+              </Stack>
+              {seccionEditando !== 'contacto' && (
+                <Button variant="plain" color="neutral" startDecorator={<EditIcon />} onClick={() => handleModificar('contacto')}>
+                  Editar
+                </Button>
+              )}
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+
+            {seccionEditando === 'contacto' ? (
+              <form onSubmit={e => { e.preventDefault(); handleGuardar(); }}>
+                <Stack spacing={2} direction="row">
+                  <FormControl sx={{ width: '120px' }}>
+                    <FormLabel>Cód. País</FormLabel>
+                    <Input name="telefono_pais" value={formData.telefono_pais} onChange={handleChange} placeholder="+54" />
+                  </FormControl>
+                  <FormControl sx={{ flex: 1 }}>
+                    <FormLabel>Número local</FormLabel>
+                    <Input name="telefono_numero_local" value={formData.telefono_numero_local} onChange={handleChange} placeholder="Ej: 1112345678" />
+                  </FormControl>
+                </Stack>
+                <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 3 }}>
+                    <Button variant="outlined" color="neutral" onClick={handleCancelar}>Cancelar</Button>
+                    <Button type="submit" startDecorator={<SaveIcon />}>Guardar</Button>
+                </Stack>
+              </form>
+            ) : (
+              <Stack spacing={1}>
+                <Typography level="body-sm" fontWeight="lg">Teléfono</Typography>
+                <Typography level="body-md">
+                  {usuario.telefono_pais} {usuario.telefono_numero_local || '-'}
+                </Typography>
+              </Stack>
+            )}
+          </Card>
+
+          {/* === SECCIÓN OTROS / BIO === */}
+          <Card variant="outlined" sx={{ boxShadow: 'sm', borderRadius: 'lg' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                <Avatar color="neutral" variant="soft"><InfoIcon /></Avatar>
+                <Typography level="h4">Sobre mí</Typography>
+              </Stack>
+              {seccionEditando !== 'otros' && (
+                <Button variant="plain" color="neutral" startDecorator={<EditIcon />} onClick={() => handleModificar('otros')}>
+                  Editar
+                </Button>
+              )}
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+
+            {seccionEditando === 'otros' ? (
+              <form onSubmit={e => { e.preventDefault(); handleGuardar(); }}>
+                <FormControl>
+                  <FormLabel>Descripción</FormLabel>
+                  <Textarea 
+                    name="descripcion" 
+                    value={formData.descripcion} 
+                    onChange={handleChange} 
+                    minRows={4} 
+                    placeholder="Escribe algo sobre ti..." 
+                  />
+                </FormControl>
+                <Stack direction="row" spacing={2} justifyContent="flex-end" sx={{ mt: 3 }}>
+                    <Button variant="outlined" color="neutral" onClick={handleCancelar}>Cancelar</Button>
+                    <Button type="submit" startDecorator={<SaveIcon />}>Guardar</Button>
+                </Stack>
+              </form>
+            ) : (
+              <Box>
+                <Typography level="body-md" sx={{ fontStyle: usuario.descripcion ? 'normal' : 'italic', color: usuario.descripcion ? 'text.primary' : 'text.tertiary' }}>
+                  {usuario.descripcion || 'No has añadido una descripción.'}
+                </Typography>
+              </Box>
+            )}
+          </Card>
+
+        </Stack>
+      </Container>
+    </Box>
   );
 }

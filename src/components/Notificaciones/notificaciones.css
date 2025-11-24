@@ -1,93 +1,181 @@
+/* notificaciones.css */
+
+/* Contenedor principal */
 .noti-container {
   max-width: 700px;
   margin: 40px auto;
-  padding: 20px;
+  padding: 0 20px;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 .noti-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 16px;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
   color: #1a202c;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 10px;
 }
 
-.noti-loading {
+/* Mensajes de carga y vacío */
+.noti-loading, .noti-vacio {
   text-align: center;
-  margin-top: 40px;
-  font-size: 16px;
-  color: #4a5568;
-}
-
-.noti-vacio {
-  text-align: center;
-  margin-top: 20px;
+  padding: 40px;
   color: #718096;
+  background: #f7fafc;
+  border-radius: 12px;
+  border: 1px dashed #cbd5e0;
+  font-size: 16px;
 }
 
+/* Lista */
 .noti-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* Espacio entre tarjetas */
 }
 
+/* Tarjeta de notificación */
 .noti-item {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 14px;
-  border: 1px solid #e2e8f0;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
-  transition: background 0.2s ease;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 12px;
+  background: #ffffff;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  overflow: hidden;
 }
 
+/* ESTADO: NO LEÍDA (Nueva) */
+/* Le damos un borde izquierdo azul y una sombra más prominente */
 .noti-nueva {
-  background: #ebf4ff;
-  border-color: #c3dafe;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-left: 5px solid #3182ce; /* Azul fuerte */
 }
 
+.noti-nueva:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* ESTADO: LEÍDA */
+/* Más plana, grisácea y sin borde de color */
 .noti-leida {
-  background: #f7fafc;
-  opacity: 0.7;
+  background: #f8f9fa;
+  box-shadow: none;
+  border: 1px solid #e2e8f0;
+  border-left: 5px solid transparent; /* Para mantener alineación */
+  color: #718096;
 }
 
+.noti-leida .noti-titulo {
+  color: #4a5568;
+  font-weight: 600;
+}
+
+/* Información de texto */
 .noti-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .noti-titulo {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   color: #2d3748;
-  margin: 0;
+  margin: 0 0 4px 0;
+  line-height: 1.4;
+}
+
+/* Pequeño punto azul para indicar visualmente que es nueva dentro del texto (opcional) */
+.noti-nueva .noti-titulo::after {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #3182ce;
+  border-radius: 50%;
+  margin-left: 8px;
+  vertical-align: middle;
 }
 
 .noti-descripcion {
-  font-size: 13px;
+  font-size: 14px;
   color: #4a5568;
-  margin-top: 6px;
+  margin: 0 0 8px 0;
+  line-height: 1.5;
 }
 
 .noti-fecha {
-  font-size: 11px;
-  color: #718096;
-  margin-top: 8px;
-  display: block;
-}
-
-.noti-btn-leer {
-  background: #4c51bf;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
   font-size: 12px;
-  cursor: pointer;
-  transition: background 0.2s ease;
+  color: #a0aec0;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
 }
 
-.noti-btn-leer:hover {
-  background: #434190;
+/* Botones de acción */
+.noti-buttons {
+  display: flex;
+  flex-direction: column; /* Botones uno encima del otro en desktop */
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Estilo base de los botones circulares */
+.noti-btn-icon {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #718096;
+  transition: all 0.2s ease;
+}
+
+/* Botón Ver (Ojo) */
+.noti-btn-icon:hover {
+  background-color: #ebf8ff;
+  color: #3182ce; /* Azul al pasar el mouse */
+}
+
+/* Botón Eliminar (Tacho) */
+.noti-btn-icon.remove:hover {
+  background-color: #fff5f5;
+  color: #e53e3e; /* Rojo al pasar el mouse */
+}
+
+/* Iconos SVG dentro de los botones */
+.noti-btn-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}
+
+/* Responsive para móviles */
+@media (max-width: 480px) {
+  .noti-item {
+    flex-direction: column;
+  }
+  
+  .noti-buttons {
+    flex-direction: row; /* En móviles los botones van abajo en fila */
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #edf2f7;
+  }
 }

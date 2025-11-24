@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 
 import CssBaseline from '@mui/material/CssBaseline';
-import Box from '@mui/material/Box';
+import Box from '@mui/material/Box'; // Importamos Box de MUI
 import Container from '@mui/material/Container';
 import * as React from 'react';
 
@@ -32,12 +32,11 @@ import { useNavigate, useParams} from 'react-router-dom';
 import CircularProgress from '@mui/material/CircularProgress';
 import { mostrarAlerta } from '../../utils/confirmservice.js'; 
 
-// Usamos la configuración por ID para asegurar coincidencia exacta
-const CONFIG_CATEGORIAS = {
-  0: "¡Busco un hogar!",       
-  1: "¡Me encontraron!",       
-  2: "¡Me perdí!",             
-  3: "¡Necesito ayuda urgente!" 
+const TITULOS_AMIGABLES = {
+  "Adopción": "¡Busco un hogar!",
+  "Pérdida": "¡Me perdí!",
+  "Encuentro": "¡Me encontraron!",
+  "Estado crítico": "¡Necesito ayuda urgente!"
 };
 
 const VisuallyHiddenInput = styled('input')`
@@ -99,8 +98,8 @@ export default function Editar() {
   const [coordenadas, setCoordenadas] = useState({ lat: 0, lng: 0 });
   const [etiquetas, setEtiquetas] = useState([]);
   const [etiquetasSeleccionadas, setEtiquetasSeleccionadas] = useState([]);
-  const [imagenesSeleccionadas, setImagenesSeleccionadas] = useState([]); // Nuevas (Files)
-  const [imagenesExistentes, setImagenesExistentes] = useState([]); // Viejas (URLs)
+  const [imagenesSeleccionadas, setImagenesSeleccionadas] = useState([]); 
+  const [imagenesExistentes, setImagenesExistentes] = useState([]); 
   const [errores, setErrores] = useState([]);
   
   const [etiquetasDesdePublicacion, setEtiquetasDesdePublicacion] = useState([]);
@@ -177,7 +176,6 @@ export default function Editar() {
         setTitulo(data.titulo || '');
         setDescripcion(data.descripcion || '');
         
-        // Extraer ID de categoría
         if (data.categoria && typeof data.categoria === 'object') {
             setSeleccionado(data.categoria.id);
         } else if (typeof data.categoria === 'number') {
@@ -192,7 +190,6 @@ export default function Editar() {
           if (resLoc.ok) {
             const localidad = await resLoc.json();
             setProvinciaId(localidad.id_provincia.toString());
-            // Esperamos un momento para que se carguen deptos/localidades
             setDepartamentoId(localidad.id_departamento.toString());
             setLocalidadId(localidad.id.toString());
           }
@@ -239,12 +236,10 @@ export default function Editar() {
     setImagenesSeleccionadas(files);
   };
 
-  // --- NUEVA FUNCIÓN: Eliminar imagen existente (URL) ---
   const eliminarImagenExistente = (index) => {
     setImagenesExistentes(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Eliminar imagen nueva (File)
   const eliminarImagenNueva = (index) => {
     setImagenesSeleccionadas(prev => prev.filter((_, i) => i !== index));
   };
@@ -257,10 +252,8 @@ export default function Editar() {
     setCargando(true);
 
     try {
-      // 1. Empezamos con las imágenes que quedaron en el estado "existentes"
       let urlsImagenes = [...imagenesExistentes]; 
 
-      // 2. Subimos las nuevas
       if (imagenesSeleccionadas.length > 0) {
         const formData = new FormData();
         imagenesSeleccionadas.forEach((img) => {
@@ -275,7 +268,6 @@ export default function Editar() {
         if (!resImagenes.ok) throw new Error("Error al subir imágenes");
 
         const dataImagenes = await resImagenes.json();
-        // 3. Combinamos: las que no borró el usuario + las nuevas subidas
         urlsImagenes = [...urlsImagenes, ...dataImagenes.urls];
       }
 
@@ -286,7 +278,7 @@ export default function Editar() {
         id_locacion: localidadId,
         coordenadas: [parseFloat(coordenadas.lat), parseFloat(coordenadas.lng)],
         etiquetas: etiquetasSeleccionadas.map(e => e.id),
-        imagenes: urlsImagenes // enviamos la lista final combinada
+        imagenes: urlsImagenes 
       };
 
       const auth = getAuth();
@@ -334,10 +326,10 @@ export default function Editar() {
   return (
     <React.Fragment>
       <CssBaseline />
-      <Container maxWidth="md">
+      {/* CAMBIO: Padding bottom extra al container principal */}
+      <Container maxWidth="md" sx={{ pb: 8 }}>
         <Typography level="h3" sx={{ mt: 2 }}>Editar Publicación</Typography>
 
-        {/* Selección de Categoría (Corregida para IDs numéricos y textos amigables) */}
         <ToggleButtonGroup
           value={seleccionado !== null ? String(seleccionado) : null}
           onChange={(event, newValue) => {
@@ -360,7 +352,7 @@ export default function Editar() {
                         aria-pressed={isSelected}
                         sx={{ fontWeight: isSelected ? 'bold' : 'normal' }}
                     >
-                        {CONFIG_CATEGORIAS[cat.id] || cat.nombre}
+                        {TITULOS_AMIGABLES[cat.nombre] || cat.nombre}
                     </Button>
                 );
             })
@@ -484,9 +476,9 @@ export default function Editar() {
           </Typography>
         )}
 
-        {/* --- SECCIÓN DE IMÁGENES PREVIAS CON BOTÓN BORRAR --- */}
+        {/* CAMBIO: Añadido margen vertical al bloque de imágenes previas */}
         {imagenesExistentes.length > 0 && (
-          <Box sx={{ mt: 2 }}>
+          <Box sx={{ my: 3 }}>
             <Typography level="body2" sx={{ mb: 1 }}>Imágenes previas:</Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
               {imagenesExistentes.map((url, i) => (
@@ -521,7 +513,7 @@ export default function Editar() {
 
         {/* --- SECCIÓN DE IMÁGENES NUEVAS --- */}
         {imagenesSeleccionadas.length > 0 && (
-          <Box sx={{ mt: 2 }}>
+          <Box sx={{ my: 3 }}> {/* Margen vertical */}
              <Typography level="body2" sx={{ mb: 1 }}>Imágenes nuevas:</Typography>
              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
                 {imagenesSeleccionadas.map((img, index) => (
@@ -563,39 +555,40 @@ export default function Editar() {
           </Box>
         )}
 
-
         {errores.length > 0 && (
           <Alert color="danger" variant="soft" sx={{ my: 2 }}>
             Faltan completar los siguientes campos: {errores.join(", ")}
           </Alert>
         )}
 
-        <Button
-          size="lg"
-          variant="solid"
-          disabled={cargando}
-          sx={{
-            width: '100%',
-            mt: 4,
-            backgroundColor: '#F1B400',
-            color: '#0D171C',
-            '&:hover': { backgroundColor: '#d9a900' },
-            '&.JoyButton-root[disabled]': {
-              opacity: 0.7,
-              pointerEvents: 'none'
-            }
-          }}
-          onClick={handlePublicar}
-        >
-          {cargando ? (
-            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-              <CircularProgress size={18} />
-              <span>Guardando cambios…</span>
-            </Box>
-          ) : (
-            "Guardar cambios"
-          )}
-        </Button>
+        {/* CAMBIO: Box envolvente para margen inferior y superior al botón */}
+        <Box sx={{ my: 4 }}>
+            <Button
+              size="lg"
+              variant="solid"
+              disabled={cargando}
+              sx={{
+                width: '100%',
+                backgroundColor: '#F1B400',
+                color: '#0D171C',
+                '&:hover': { backgroundColor: '#d9a900' },
+                '&.JoyButton-root[disabled]': {
+                  opacity: 0.7,
+                  pointerEvents: 'none'
+                }
+              }}
+              onClick={handlePublicar}
+            >
+              {cargando ? (
+                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                  <CircularProgress size={18} />
+                  <span>Guardando cambios…</span>
+                </Box>
+              ) : (
+                "Guardar cambios"
+              )}
+            </Button>
+        </Box>
       </Container>
     </React.Fragment>
   );

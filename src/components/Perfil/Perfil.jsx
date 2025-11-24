@@ -1,19 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+
+// Componentes propios
 import SelfPublications from './selfPublications';
 import UserPublications from './userPublications';
 import MyBanner from './myBanner';
 import PublicBanner from './publicBanner'; 
-import CssBaseline from '@mui/material/CssBaseline';
-import Container from '@mui/material/Container';
+
+// Material UI
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  CircularProgress, 
+  Divider 
+} from '@mui/material';
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-
 const Perfil = () => {
-  const { slug } = useParams();  // ahora viene el slug de la URL
+  const { slug } = useParams(); 
   const currentUserId = localStorage.getItem("userId"); 
-  const [user, setUser] = useState(null); // acá se guarda el usuario
+  const [user, setUser] = useState(null); 
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -28,35 +36,55 @@ const Perfil = () => {
     fetchUser();
   }, [slug]);
 
+  // 1. Loading State mejorado
   if (!user) {
-    return <p>Cargando perfil...</p>; // ⏳ Evita el error mientras carga
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   const isOwner = String(user.id) === String(currentUserId);
 
   return (
-    <>
-      <CssBaseline />
-      <main style={{ padding: '20px' }}>
+    <Box sx={{ bgcolor: '#fafafa', minHeight: '100vh', pb: 4 }}>
+      
+      {/* 2. Sección del Banner (Full Width o Contenido según tu componente Banner) */}
+      <Box sx={{ mb: 4 }}>
         {isOwner ? (
-          <>
-            <MyBanner userId={user.id} />
-            <Container maxWidth="sm">
-              <h4>Mis publicaciones</h4>
-              <SelfPublications userId={user.id} isOwner={true} />
-            </Container>
-          </>
+          <MyBanner userId={user.id} />
         ) : (
-          <>
-            <PublicBanner userId={user.id} />
-            <Container maxWidth="sm">
-              <h4>Publicaciones</h4>
-              <UserPublications userId={user.id} />
-            </Container>
-          </>
+          <PublicBanner userId={user.id} />
         )}
-      </main>
-    </>
+      </Box>
+
+      {/* 3. Sección de Publicaciones */}
+      <Container maxWidth="md"> 
+        
+        {/* Título de sección con estilo */}
+        <Typography 
+          variant="h5" 
+          component="h2" 
+          fontWeight="bold" 
+          color="text.primary"
+          gutterBottom
+          sx={{ borderLeft: '4px solid #1976d2', pl: 2 }} // Pequeño detalle estético
+        >
+          {isOwner ? "Mis publicaciones" : "Publicaciones"}
+        </Typography>
+        
+        <Divider sx={{ mb: 3 }} />
+
+        {/* Lista de Publicaciones */}
+        {isOwner ? (
+          <SelfPublications userId={user.id} isOwner={true} />
+        ) : (
+          <UserPublications userId={user.id} />
+        )}
+
+      </Container>
+    </Box>
   );
 };
 

@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 
 import CssBaseline from '@mui/material/CssBaseline';
-import Box from '@mui/material/Box';
+import Box from '@mui/material/Box'; // Importamos Box de MUI
 import Container from '@mui/material/Container';
 import * as React from 'react';
 
@@ -33,7 +33,6 @@ import { useNavigate } from 'react-router-dom';
 import { mostrarAlerta } from '../../utils/confirmservice.js'; 
 
 // --- CONFIGURACIÓN POR ID (NUMÉRICO) ---
-// Esto asegura que el texto del botón dependa estrictamente del ID
 const CONFIG_CATEGORIAS = {
   0: "¡Busco un hogar!",       // Adopción
   1: "¡Me encontraron!",       // Encuentro
@@ -138,11 +137,8 @@ export default function Publicar() {
     fetch(`${API_URL}/api/categorias`)
       .then(res => res.json())
       .then(data => {
-         // Ordenamos por ID para mantener consistencia visual
          const sorted = data.sort((a, b) => a.id - b.id);
          setCategoriasDisponibles(sorted);
-         // DEBUG: Para ver qué IDs están llegando
-         console.log("Categorías cargadas:", sorted);
       })
       .catch(console.error);
   }, []);
@@ -360,7 +356,8 @@ export default function Publicar() {
   return (
     <React.Fragment>
       <CssBaseline />
-      <Container maxWidth="md">
+      {/* CAMBIO: Añadido pb (padding-bottom) al Container para margen final */}
+      <Container maxWidth="md" sx={{ pb: 8 }}> 
         <Typography level="h3" sx={{ mt: 2 }}>Crear publicación</Typography>
 
         {/* --- SELECCIÓN DE CATEGORÍA --- */}
@@ -565,32 +562,34 @@ export default function Publicar() {
           </Alert>
         )}
 
-        <Button
-          size="lg"
-          variant="solid"
-          disabled={cargando}
-          sx={{
-            width: '100%',
-            mt: 4,
-            backgroundColor: '#F1B400',
-            color: '#0D171C',
-            '&:hover': { backgroundColor: '#d9a900' },
-            '&.JoyButton-root[disabled]': {
-              opacity: 0.7,
-              pointerEvents: 'none'
-            }
-          }}
-          onClick={handlePublicar}
-        >
-          {cargando ? (
-            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-              <CircularProgress size={18} />
-              <span>Publicando…</span>
-            </Box>
-          ) : (
-            "Publicar"
-          )}
-        </Button>
+        
+        <Box sx={{ my: 4 }}>
+            <Button
+              size="lg"
+              variant="solid"
+              disabled={cargando}
+              sx={{
+                width: '100%',
+                backgroundColor: '#F1B400',
+                color: '#0D171C',
+                '&:hover': { backgroundColor: '#d9a900' },
+                '&.JoyButton-root[disabled]': {
+                  opacity: 0.7,
+                  pointerEvents: 'none'
+                }
+              }}
+              onClick={handlePublicar}
+            >
+              {cargando ? (
+                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                  <CircularProgress size={18} />
+                  <span>Publicando…</span>
+                </Box>
+              ) : (
+                "Publicar"
+              )}
+            </Button>
+        </Box>
 
       </Container>
     </React.Fragment>

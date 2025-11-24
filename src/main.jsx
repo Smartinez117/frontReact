@@ -7,12 +7,16 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { getAuth } from "firebase/auth"; 
 
+// 1. Importar CssBaseline
+import CssBaseline from '@mui/material/CssBaseline';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <BrowserRouter>
+    <CssBaseline /> 
     <RouterApp />
   </BrowserRouter>
 );
+
 
 window.getToken = async () => {
   const user = getAuth().currentUser;

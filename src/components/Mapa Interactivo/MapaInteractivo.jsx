@@ -3,16 +3,29 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
+// Importaciones de Material UI para diseño profesional
+import { 
+  Box, 
+  Paper, 
+  FormControl, 
+  InputLabel, 
+  Select, 
+  MenuItem, 
+  Typography, 
+  Chip,
+  Stack
+} from "@mui/material";
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import PetsIcon from '@mui/icons-material/Pets';
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 // --- CONFIGURACIÓN MAESTRA POR ID ---
-// Clave: ID de la categoría en tu Base de Datos.
-// Valor: Configuración visual (Texto amigable y color del icono).
 const CATEGORIAS_CONFIG = {
-  0: { label: "¡Busco un hogar!", color: "blue" },    // Adopción
-  1: { label: "¡Me encontraron!", color: "orange" },  // Encuentro
-  2: { label: "¡Me perdí!",       color: "green" },   // Pérdida
-  3: { label: "¡Ayuda urgente!",  color: "violet" }   // Estado Crítico
+  0: { label: "¡Busco un hogar!", color: "blue" },    
+  1: { label: "¡Me encontraron!", color: "orange" },  
+  2: { label: "¡Me perdí!",       color: "green" },   
+  3: { label: "¡Ayuda urgente!",  color: "violet" }   
 };
 
 // Función auxiliar para generar iconos dinámicamente
@@ -28,29 +41,26 @@ const createIcon = (color) => {
   });
 };
 
-// Generamos el objeto de iconos mapeados por ID
-// Resultado: { 0: IconoAzul, 1: IconoNaranja, ... }
 const ICONS_BY_ID = Object.keys(CATEGORIAS_CONFIG).reduce((acc, id) => {
   acc[id] = createIcon(CATEGORIAS_CONFIG[id].color);
   return acc;
 }, {});
 
-// Icono por defecto (por si viene un ID desconocido)
 const defaultIcon = createIcon("blue");
 
-// Icono para refugios
 const shelterIcon = new L.Icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
   iconRetinaUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
   shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-  iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41],
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
 });
 
 const MapaInteractivo = () => {
   const [publicaciones, setPublicaciones] = useState([]);
   const [refugios, setRefugios] = useState([]);
-  
-  // El estado del filtro ahora guardará el ID (como string o número)
   const [filtroId, setFiltroId] = useState("");
 
   useEffect(() => {
@@ -95,112 +105,149 @@ const MapaInteractivo = () => {
   }, []);
 
   return (
-    <div style={{ width: "100%", height: "600px" }}>
+    <Box sx={{ width: "100%", height: "600px", position: "relative" }}>
       
-      {/* --- BARRA DE FILTROS --- */}
-      <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 24 }}>
-        <div>
-          <label htmlFor="categoria-select" style={{ marginRight: 8 }}>Filtrar por categoría:</label>
-          <select
-            id="categoria-select"
+      {/* --- BARRA SUPERIOR FLOTANTE (DISEÑO MEJORADO) --- */}
+      <Paper 
+        sx={{ 
+          p: 2, 
+          mb: 2, 
+          background: 'rgba(255, 255, 255, 0.95)', // Ligeramente transparente
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 2
+        }}
+      >
+        {/* Selector de Categoría */}
+        <FormControl size="small" sx={{ minWidth: 200 }}>
+          <InputLabel id="filtro-label">Filtrar por categoría</InputLabel>
+          <Select
+            labelId="filtro-label"
             value={filtroId}
-            onChange={e => setFiltroId(e.target.value)}
-            style={{ padding: "4px 8px", fontSize: "16px" }}
+            label="Filtrar por categoría"
+            onChange={(e) => setFiltroId(e.target.value)}
           >
-            <option value="">Todas</option>
-            {/* Iteramos sobre la configuración para crear las opciones */}
+            <MenuItem value=""><em>Mostrar todas</em></MenuItem>
             {Object.entries(CATEGORIAS_CONFIG).map(([id, config]) => (
-              <option key={id} value={id}>
-                {config.label}
-              </option>
+              <MenuItem key={id} value={id}>
+                <Stack direction="row" alignItems="center" gap={1}>
+                  {/* Círculo de color indicativo */}
+                  <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: config.color === 'violet' ? 'purple' : config.color }} />
+                  {config.label}
+                </Stack>
+              </MenuItem>
             ))}
-          </select>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png" alt="Refugio" style={{ width: 20, height: 32, verticalAlign: "middle" }} />
-          <span style={{ fontSize: "15px", color: "#b71c1c" }}>Marcadores rojos: Refugios de mascotas</span>
-        </div>
-      </div>
+          </Select>
+        </FormControl>
+
+        {/* Leyenda de Refugios (Chip estético) */}
+        <Chip 
+          icon={<LocationOnIcon sx={{ color: '#d32f2f !important' }} />} 
+          label="Refugios y Veterinarias" 
+          variant="outlined"
+          sx={{ 
+            borderColor: '#ef9a9a', 
+            bgcolor: '#ffebee',
+            color: '#c62828',
+            fontWeight: 'bold'
+          }} 
+        />
+      </Paper>
       
       {/* --- MAPA --- */}
-      <MapContainer
-        center={[-34.6037, -58.3816]}
-        zoom={13}
-        style={{ width: "100%", height: "100%" }}
-      >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        
-        {/* MARCADORES DE PUBLICACIONES */}
-        {publicaciones
-          .map((pub, idx) => {
-            // A. Validaciones de seguridad
-            if (!Array.isArray(pub.coordenadas) || pub.coordenadas.length !== 2) return null;
-            const lat = parseFloat(pub.coordenadas[0]);
-            const lng = parseFloat(pub.coordenadas[1]);
-            if (isNaN(lat) || isNaN(lng)) return null;
-
-            // B. Obtener el ID de la categoría
-            // Dependiendo de tu backend, puede venir en pub.categoria.id o pub.id_categoria
-            // Asumimos pub.categoria.id porque 'categoria' es un objeto según vimos antes
-            const catId = pub.categoria ? pub.categoria.id : null;
-
-            // C. Aplicar Filtro
-            // Si hay filtro activo Y el ID no coincide, no renderizamos
-            if (filtroId !== "" && String(catId) !== String(filtroId)) {
-                return null;
-            }
-
-            // D. Obtener Icono y Texto usando el ID
-            const icon = ICONS_BY_ID[catId] || defaultIcon;
-            const labelAmigable = CATEGORIAS_CONFIG[catId] ? CATEGORIAS_CONFIG[catId].label : "Sin categoría";
-            const imagenUrl = pub.imagen_principal;
-
-            return (
-              <Marker key={"pub-"+idx} position={[lat, lng]} icon={icon}>
-                <Popup>
-                  <a
-                    href={`/publicacion/${pub.id}`}
-                    style={{ textDecoration: "none", color: "inherit" }}
-                  >
-                    <strong style={{ color: "#1976d2", cursor: "pointer" }}>{pub.titulo}</strong>
-                  </a><br />
-                  {pub.descripcion}<br />
-                  {imagenUrl && (
-                    <a href={`/publicacion/${pub.id}`} style={{ display: "inline-block" }}>
-                      <img src={imagenUrl} alt={pub.titulo} style={{ width: "150px", maxHeight: "120px", objectFit: "cover", marginTop: "8px", borderRadius: "8px", cursor: "pointer" }} />
-                    </a>
-                  )}
-                  <br />
-                  <span style={{ fontWeight: "bold", color: "#555" }}>
-                    Categoría: {labelAmigable}
-                  </span>
-                </Popup>
-              </Marker>
-            );
-          })}
+      <Paper elevation={2} sx={{ height: "100%", borderRadius: 2, overflow: 'hidden' }}>
+        <MapContainer
+          center={[-34.6037, -58.3816]}
+          zoom={13}
+          style={{ width: "100%", height: "100%" }}
+        >
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           
-        {/* MARCADORES DE REFUGIOS */}
-        {refugios.map((ref, idx) => {
-            const rLat = ref.lat || (ref.center ? ref.center.lat : null);
-            const rLon = ref.lon || (ref.center ? ref.center.lon : null);
-            if (!rLat || !rLon) return null;
+          {/* MARCADORES DE PUBLICACIONES */}
+          {publicaciones.map((pub, idx) => {
+              if (!Array.isArray(pub.coordenadas) || pub.coordenadas.length !== 2) return null;
+              const lat = parseFloat(pub.coordenadas[0]);
+              const lng = parseFloat(pub.coordenadas[1]);
+              if (isNaN(lat) || isNaN(lng)) return null;
 
-            return (
-              <Marker
-                key={"ref-"+idx}
-                position={[rLat, rLon]}
-                icon={shelterIcon}
-              >
-                <Popup>
-                  <strong>{ref.tags && ref.tags.name ? ref.tags.name : "Refugio de mascotas"}</strong><br />
-                  {ref.tags && ref.tags.phone && (<span>Tel: {ref.tags.phone}<br /></span>)}
-                  {ref.tags && ref.tags.website && (<a href={ref.tags.website} target="_blank" rel="noopener noreferrer">Sitio web</a>)}
-                </Popup>
-              </Marker>
-            );
-        })}
-      </MapContainer>
-    </div>
+              const catId = pub.categoria ? pub.categoria.id : null;
+
+              if (filtroId !== "" && String(catId) !== String(filtroId)) {
+                  return null;
+              }
+
+              const icon = ICONS_BY_ID[catId] || defaultIcon;
+              const labelAmigable = CATEGORIAS_CONFIG[catId] ? CATEGORIAS_CONFIG[catId].label : "Sin categoría";
+              const imagenUrl = pub.imagen_principal;
+
+              return (
+                <Marker key={"pub-"+idx} position={[lat, lng]} icon={icon}>
+                  <Popup>
+                    <div style={{ textAlign: 'center' }}>
+                        {imagenUrl && (
+                            <img 
+                                src={imagenUrl} 
+                                alt={pub.titulo} 
+                                style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "8px", marginBottom: "8px" }} 
+                            />
+                        )}
+                        <a
+                        href={`/publicacion/${pub.id}`}
+                        style={{ textDecoration: "none", color: "#1976d2", fontSize: '1.1em', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}
+                        >
+                        {pub.titulo}
+                        </a>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                            {pub.descripcion ? pub.descripcion.substring(0, 60) + '...' : ''}
+                        </Typography>
+                        <Chip label={labelAmigable} size="small" color="primary" variant="outlined" />
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
+            
+          {/* MARCADORES DE REFUGIOS */}
+          {refugios.map((ref, idx) => {
+              const rLat = ref.lat || (ref.center ? ref.center.lat : null);
+              const rLon = ref.lon || (ref.center ? ref.center.lon : null);
+              if (!rLat || !rLon) return null;
+
+              return (
+                <Marker
+                  key={"ref-"+idx}
+                  position={[rLat, rLon]}
+                  icon={shelterIcon}
+                >
+                  <Popup>
+                    <div style={{ textAlign: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1, color: '#d32f2f' }}>
+                            <PetsIcon fontSize="small" />
+                            <strong>Refugio / Veterinaria</strong>
+                        </Box>
+                        <strong>{ref.tags && ref.tags.name ? ref.tags.name : "Sin nombre registrado"}</strong><br />
+                        
+                        {ref.tags && ref.tags.phone && (
+                            <Typography variant="body2" sx={{ mt: 1 }}>
+                                📞 {ref.tags.phone}
+                            </Typography>
+                        )}
+                        
+                        {ref.tags && ref.tags.website && (
+                            <a href={ref.tags.website} target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: '8px' }}>
+                                Visitar Sitio Web
+                            </a>
+                        )}
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+          })}
+        </MapContainer>
+      </Paper>
+    </Box>
   );
 };
 
