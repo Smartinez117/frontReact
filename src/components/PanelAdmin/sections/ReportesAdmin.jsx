@@ -444,9 +444,9 @@ export default function ReportesAdmin() {
 
                     {/* DENUNCIANTE */}
                     <td>
-                        <Link href={`/perfil/${row.id_usuario_denunciante}`} target="_blank" level="body-xs">
-                            User {row.id_usuario_denunciante}
-                        </Link>
+                        <Typography level="body-sm">
+                            {row.id_usuario_denunciante}
+                        </Typography>
                     </td>
 
                     <td>
