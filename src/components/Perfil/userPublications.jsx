@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchPublicacionesPorUsuario } from '../../services/perfilService';
+import { fetchPublicacionesPorUsuarioFiltradas } from '../../services/perfilService';
 import './cuserPublications.css';
 
 const UserPublications = ({ userId }) => {
@@ -14,7 +14,7 @@ const UserPublications = ({ userId }) => {
     setLoading(true);
     setError(null);
 
-    fetchPublicacionesPorUsuario(userId)
+    fetchPublicacionesPorUsuarioFiltradas(userId)
       .then(data => {
         // Aseguramos que data sea un array, por si el backend devuelve otra cosa
         if (Array.isArray(data)) {

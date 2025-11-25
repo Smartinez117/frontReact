@@ -290,3 +290,27 @@ export async function fetchPublicacionesPorUsuario(idUsuario) {
     throw error;
   }
 }
+
+
+export async function fetchPublicacionesPorUsuarioFiltradas(idUsuario) {
+  try {
+    const response = await fetch(`${BASE_URL}/usuarios/${idUsuario}/publicaciones/filtrado`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error al obtener publicaciones del usuario');
+    }
+
+    const data = await response.json();
+    // Igual que en fetchMisPublicaciones, devolvemos instancias de Publicacion
+    return data.map(pub => new Publicacion(pub));
+  } catch (error) {
+    console.error('Error en fetchPublicacionesPorUsuario:', error.message);
+    throw error;
+  }
+}
