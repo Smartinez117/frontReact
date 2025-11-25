@@ -162,10 +162,6 @@ const Navbar = () => {
 
   return (
     <>
-    <Toaster 
-      position="top-right"
-      reverseOrder={false}
-    />
     <AppBar position="static" sx={{ backgroundColor: '#edece1ff' }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>

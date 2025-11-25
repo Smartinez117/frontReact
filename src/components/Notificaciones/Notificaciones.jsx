@@ -3,7 +3,7 @@ import "./notificaciones.css";
 import { useNavigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { socketconnection, socketnotificationlisten, registerNotificationHandler } from '../../utils/socket';
-import { Toaster, toast } from 'react-hot-toast'; // Agregamos Feedback visual
+import { Toaster, toast } from 'react-hot-toast'; 
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -46,6 +46,7 @@ export default function Notificaciones() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Función auxiliar para obtener token de manera segura
   const getFirebaseToken = async () => {
     const auth = getAuth();
     const user = auth.currentUser;
@@ -53,24 +54,37 @@ export default function Notificaciones() {
     return await user.getIdToken();
   };
 
-  const fetchNotificaciones = useCallback(async () => {
+  // Función de carga (Memoizada)
+  const fetchNotificaciones = useCallback(async (usuarioObj = null) => {
     try {
-      const token = await getFirebaseToken();
-      if (!token) return;
+      // Si nos pasan el usuario (desde onAuthStateChanged), usamos ese para sacar el token
+      // Si no, intentamos buscarlo globalmente
+      let token = null;
+      if (usuarioObj) {
+         token = await usuarioObj.getIdToken();
+      } else {
+         token = await getFirebaseToken();
+      }
+
+      if (!token) {
+          // Si tras intentar todo no hay token, paramos carga
+          setLoading(false);
+          return;
+      }
 
       const res = await fetch(`${API_URL}notificaciones/usuario`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const data = await res.json();
-
-      data.sort(
-        (a, b) =>
-          new Date(b.fecha_creacion).getTime() -
-          new Date(a.fecha_creacion).getTime()
-      );
-
-      setNotificaciones(data);
+      if (res.ok) {
+        const data = await res.json();
+        data.sort(
+            (a, b) =>
+            new Date(b.fecha_creacion).getTime() -
+            new Date(a.fecha_creacion).getTime()
+        );
+        setNotificaciones(data);
+      }
     } catch (err) {
       console.error("Error al obtener notificaciones:", err);
     } finally {
@@ -78,7 +92,81 @@ export default function Notificaciones() {
     }
   }, []);
 
-  // --- LÓGICA NUEVA: Responder Solicitud ---
+  // --- CORRECCIÓN AQUÍ: Carga Inicial Robusta ---
+  useEffect(() => {
+    const auth = getAuth();
+    
+    // Escuchamos el estado de autenticación.
+    // Esto se dispara automáticamente cuando Firebase termina de cargar al recargar la página.
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Si hay usuario, cargamos notificaciones
+        fetchNotificaciones(user);
+        
+        // Y conectamos los sockets
+        socketconnection(user);
+        socketnotificationlisten(user.uid);
+      } else {
+        // Si no hay usuario, dejamos de cargar y redirigimos si quieres
+        setLoading(false);
+      }
+    });
+
+    // Intervalo para refrescar (Polling) cada 20s por seguridad
+    const interval = setInterval(() => {
+        const user = auth.currentUser;
+        if(user) fetchNotificaciones(user);
+    }, 20000);
+
+    return () => {
+        unsubscribeAuth();
+        clearInterval(interval);
+    };
+  }, [fetchNotificaciones]);
+
+
+  // Handler de Sockets (Separado para claridad)
+  useEffect(() => {
+    let unsubscribeHandler = null;
+    const auth = getAuth();
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) return;
+      
+      // 1. Conectar socket
+      socketconnection(user);
+      socketnotificationlisten(user.uid);
+
+      // 2. Registrar handler (Asegúrate de que tu utilidad 'registerNotificationHandler' 
+      // devuelva una función para desuscribirse o limpiar el evento)
+      unsubscribeHandler = registerNotificationHandler((data) => {
+        
+        // --- CORRECCIÓN: Evitar duplicados por ID ---
+        setNotificaciones(prev => {
+          // Si la notificación ya existe en la lista (por ID), no la agregamos de nuevo
+          if (prev.some(n => n.id === data.id)) return prev;
+          
+          const arr = [data, ...prev];
+          arr.sort((a, b) => new Date(b.fecha_creacion).getTime() - new Date(a.fecha_creacion).getTime());
+          return arr;
+        });
+
+        // Mostrar Toast
+        toast('Nueva notificación', { icon: '🔔', id: `noti-${data.id}` }); // 'id' evita toasts duplicados visuales
+      });
+    });
+
+    // Función de limpieza al desmontar el componente
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeHandler) unsubscribeHandler();
+      // Opcional: desconectar listeners de socket si tu librería lo permite
+    };
+  }, []);
+
+
+  // ... (Resto de funciones responderSolicitud, verPublicacion, etc. IGUAL QUE ANTES) ...
+  
   const responderSolicitud = async (idNotificacion, idSolicitud, accion) => {
     const token = await getFirebaseToken();
     if (!token) return;
@@ -98,10 +186,9 @@ export default function Notificaciones() {
         const data = await res.json();
 
         if (accion === 'aceptar') {
-            // data.dato_contacto viene del backend con el tel o email
+             // data.dato_contacto viene del backend
             if (data.tipo_contacto === 'whatsapp') {
                  toast.success(`¡Aceptado! Su WhatsApp es: ${data.dato_contacto}`, { duration: 6000 });
-                 // Opcional: abrir whatsapp directamente si quieres
             } else {
                  toast.success(`¡Aceptado! Su Email es: ${data.dato_contacto}`, { duration: 6000 });
             }
@@ -121,7 +208,6 @@ export default function Notificaciones() {
     const token = await getFirebaseToken();
     if (!token) return;
 
-    // Marcar como leída si no lo está
     if (!noti.leido) {
         await fetch(`${API_URL}notificaciones/leida/${noti.id}`, {
         method: "PATCH",
@@ -129,12 +215,10 @@ export default function Notificaciones() {
         });
     }
 
-    // Redirigir
     if (noti.id_publicacion) {
       navigate(`/publicacion/${noti.id_publicacion}`);
     }
     
-    // Actualizar lista localmente para que se vea leída
     setNotificaciones(prev => prev.map(n => n.id === noti.id ? {...n, leido: true} : n));
   };
 
@@ -146,40 +230,8 @@ export default function Notificaciones() {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
-    // Actualizamos estado local para que sea instantáneo
     setNotificaciones(prev => prev.filter(n => n.id !== id));
   };
-
-  useEffect(() => {
-    fetchNotificaciones();
-    const interval = setInterval(fetchNotificaciones, 20000);
-    return () => clearInterval(interval);
-  }, [fetchNotificaciones]);
-
-  // Sockets
-  useEffect(() => {
-    let unsubscribeHandler = null;
-    const auth = getAuth();
-    const remove = onAuthStateChanged(auth, (user) => {
-      if (!user) return;
-      socketconnection(user);
-      socketnotificationlisten(user.uid);
-
-      unsubscribeHandler = registerNotificationHandler((data) => {
-        setNotificaciones(prev => {
-          const arr = [data, ...(prev || [])];
-          arr.sort((a, b) => new Date(b.fecha_creacion).getTime() - new Date(a.fecha_creacion).getTime());
-          return arr;
-        });
-        toast('Nueva notificación', { icon: '🔔' });
-      });
-    });
-
-    return () => {
-      remove();
-      if (unsubscribeHandler) unsubscribeHandler();
-    };
-  }, []);
 
   if (loading) return <p className="noti-loading">Cargando notificaciones...</p>;
 
@@ -204,10 +256,8 @@ export default function Notificaciones() {
                   {new Date(n.fecha_creacion).toLocaleString()}
                 </small>
                 
-                {/* --- MOSTRAR BOTONES SI ES SOLICITUD --- */}
                 {n.tipo === 'solicitud_contacto' && (
                     <div className="noti-actions-row">
-                        {/* IMPORTANTE: n.id_referencia debe venir del backend con el ID de la solicitud */}
                         <button 
                             className="btn-accept" 
                             onClick={() => responderSolicitud(n.id, n.id_referencia || n.id_publicacion, 'aceptar')}
@@ -225,7 +275,6 @@ export default function Notificaciones() {
               </div>
 
               <div className="noti-buttons">
-                {/* Si es solicitud, no mostramos el ojo, solo borrar. Si es normal, mostramos ojo */}
                 {n.tipo !== 'solicitud_contacto' && !n.leido && (
                   <button className="noti-btn-icon" onClick={() => verPublicacion(n)} title="Ver detalle">
                     <EyeIcon />

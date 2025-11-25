@@ -9,7 +9,6 @@ import {
   CssBaseline, Box, Container, Modal, Backdrop, Fade, 
   Typography, Button, Chip, Divider, CircularProgress, 
   TextField, IconButton, Tooltip, Paper, Avatar, Stack,
-  // NUEVOS IMPORTS PARA EL SELECTOR
   FormControl, FormLabel, RadioGroup, FormControlLabel, Radio 
 } from "@mui/material";
 
@@ -23,7 +22,8 @@ import SendIcon from "@mui/icons-material/Send";
 import ReportProblemOutlinedIcon from '@mui/icons-material/ReportProblemOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp'; 
-import MailIcon from '@mui/icons-material/Mail'; // Icono Email
+import MailIcon from '@mui/icons-material/Mail';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 
 // Mapa
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -33,8 +33,7 @@ import L from "leaflet";
 import { getAuth } from "firebase/auth";
 import ReporteForm from "../Reportes/Reportes.jsx";
 
-// ... (Configuraciones de Leaflet y Estilos de Modal se mantienen igual) ...
-// (Omití las configuraciones repetidas para ahorrar espacio, mantenlas como estaban)
+// Config Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png",
@@ -42,6 +41,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png",
 });
 
+// Estilos Modal Imagen
 const styleModalImage = {
   position: "absolute",
   top: "50%",
@@ -59,6 +59,7 @@ const styleModalImage = {
   overflow: "hidden"
 };
 
+// Estilos Modal Contacto
 const styleContactModal = {
   position: "absolute",
   top: "50%",
@@ -138,7 +139,6 @@ export default function Publicacion() {
   // --- ESTADOS PARA CONTACTO ---
   const [openContactModal, setOpenContactModal] = useState(false);
   const [mensajeContacto, setMensajeContacto] = useState("Hola, vi tu publicación y me interesa ponerme en contacto.");
-  // NUEVO: Estado para el tipo de contacto
   const [tipoContacto, setTipoContacto] = useState('whatsapp'); 
 
   // --- CARGA DE DATOS ---
@@ -186,7 +186,6 @@ export default function Publicacion() {
       .catch(console.error);
   }, [id, API_URL]);
 
-  // --- SLIDER ---
   const [sliderRef, instanceRef] = useKeenSlider({
     initial: 0,
     slideChanged(s) { setCurrentSlide(s.track.details.rel); },
@@ -226,7 +225,6 @@ export default function Publicacion() {
     }
   };
 
-  // --- FUNCIÓN MODIFICADA: Enviar Solicitud ---
   const handleEnviarSolicitud = async () => {
     if (!currentUser) return alert("Debes iniciar sesión para contactar");
     
@@ -241,7 +239,7 @@ export default function Publicacion() {
             body: JSON.stringify({
                 id_publicacion: id,
                 mensaje: mensajeContacto,
-                tipo_contacto: tipoContacto // <--- AHORA ENVIAMOS EL TIPO
+                tipo: tipoContacto 
             })
         });
 
@@ -260,8 +258,7 @@ export default function Publicacion() {
   };
 
   const enviarComentario = async () => {
-    // ... (igual que antes)
-     if (!currentUser) return alert("Inicia sesión para comentar");
+    if (!currentUser) return alert("Inicia sesión para comentar");
     setPublicandoComentario(true);
     try {
       const token = await currentUser.getIdToken();
@@ -286,8 +283,7 @@ export default function Publicacion() {
   };
 
   const borrarComentario = async (cid) => {
-      // ... (igual que antes)
-       if (!currentUser || !window.confirm("¿Borrar comentario?")) return;
+    if (!currentUser || !window.confirm("¿Borrar comentario?")) return;
     try {
         const token = await currentUser.getIdToken();
         const res = await fetch(`${API_URL}/comentarios/${cid}`, {
@@ -303,7 +299,6 @@ export default function Publicacion() {
 
   const { titulo, descripcion, fecha_creacion, coordenadas = [], imagenes = [], etiquetas = [], categoria } = publicacion;
   
-  // Definimos si es mi publicación (con protección opcional chaining)
   const esMiPublicacion = currentUser && (String(publicacion?.id_usuario) === String(currentUserId));
 
   return (
@@ -313,7 +308,7 @@ export default function Publicacion() {
         
         <Paper elevation={0} sx={{ borderRadius: 4, overflow: "hidden", bgcolor: "white", border: '1px solid #e0e0e0' }}>
           
-          {/* Carrusel */}
+          {/* --- CARRUSEL --- */}
           {imagenes.length > 0 ? (
             <Box ref={sliderRef} className="keen-slider" sx={{ height: { xs: 350, md: 500 }, bgcolor: "#000", position: "relative" }}>
               {imagenes.map((src, i) => (
@@ -334,9 +329,10 @@ export default function Publicacion() {
              </Box>
           )}
 
-          {/* Contenido Principal */}
+          {/* --- CONTENIDO --- */}
           <Box sx={{ p: { xs: 3, md: 5 } }}> 
             
+            {/* Header */}
             <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={2}>
                 <Chip 
                     label={categoria ? categoria.nombre : 'Sin categoría'} 
@@ -344,6 +340,7 @@ export default function Publicacion() {
                     variant="soft" 
                     sx={{ fontWeight: 'bold', fontSize: '0.95rem' }} 
                 />
+                
                 <Button
                     startIcon={<ReportProblemOutlinedIcon />}
                     size="small"
@@ -406,19 +403,31 @@ export default function Publicacion() {
                 </Box>
             )}
 
-            {/* Botones Acción (Contactar, PDF, Compartir) */}
+            {/* Botones Acción */}
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 5 }}>
                 
-                {/* --- BOTÓN CONTACTAR --- */}
+                {/* Botón Contactar (Estilo Marca) */}
                 {!esMiPublicacion && (
                   <Button 
                     variant="contained" 
-                    color="success" 
                     size="large"
                     fullWidth
-                    startIcon={<WhatsAppIcon />} 
+                    startIcon={<ChatBubbleOutlineIcon />} // Icono de burbuja de chat neutro
                     onClick={() => setOpenContactModal(true)}
-                    sx={{ borderRadius: 3, py: 1.5, fontSize: '1rem', fontWeight: 'bold' }}
+                    sx={{ 
+                        borderRadius: 3, 
+                        py: 1.5, 
+                        fontSize: '1rem', 
+                        fontWeight: 'bold',
+                        // Estilos de tu marca (Mismo que botón Publicar)
+                        backgroundColor: '#F1B400', 
+                        color: '#0D171C',
+                        boxShadow: '0 4px 14px rgba(241, 180, 0, 0.4)', // Sombra suave amarilla
+                        '&:hover': { 
+                            backgroundColor: '#d9a900',
+                            boxShadow: '0 6px 20px rgba(241, 180, 0, 0.6)'
+                        }
+                    }}
                   >
                     Contactar
                   </Button>
@@ -431,22 +440,95 @@ export default function Publicacion() {
                     startIcon={downloadingPdf ? <CircularProgress size={24} color="inherit" /> : <DownloadIcon />}
                     disabled={downloadingPdf}
                     onClick={() => descargarPDF(id)}
-                    sx={{ borderRadius: 3, py: 1.5, fontSize: '1rem', bgcolor: '#1976d2', '&:hover':{ bgcolor:'#115293'} }}
+                    sx={{ borderRadius: 3, py: 1.5, fontSize: '1rem', bgcolor: '#d8301aff', '&:hover':{ bgcolor:'#931010ff'} }}
                 >
                     {downloadingPdf ? "Generando..." : "PDF"}
                 </Button>
 
-                <Button variant="outlined" fullWidth size="large" startIcon={<ShareIcon />} onClick={() => compartirPublicacion(id)} sx={{ borderRadius: 3, py: 1.5, fontSize: '1rem' }}>
-                    Compartir
+                <Button 
+                  variant="outlined" 
+                  fullWidth 
+                  size="large" 
+                  startIcon={<ShareIcon />} 
+                  onClick={() => compartirPublicacion(id)} 
+                  sx={{ 
+                    borderRadius: 3, 
+                    py: 1.5, 
+                    fontSize: '1rem',
+                    // --- ESTILOS PARA EVITAR EL AMARILLO ---
+                    color: 'text.primary',       // Texto negro/gris oscuro
+                    borderColor: '#bdbdbd',      // Borde gris suave inicial
+                    '&:hover': { 
+                      borderColor: 'text.primary',       // Borde oscuro al pasar el mouse
+                      backgroundColor: 'rgba(0,0,0,0.05)' // Fondo gris muy clarito (no amarillo)
+                    }
+                  }}
+                >
+                  Compartir
                 </Button>
             </Stack>
 
           </Box>
         </Paper>
 
-        {/* SECCIÓN COMENTARIOS (Omitida por brevedad, es la misma) */}
+        {/* SECCIÓN COMENTARIOS RESTAURADA */}
         <Box sx={{ mt: 5 }}>
-            {/* ... (Igual que tu código anterior) ... */}
+            <Typography variant="h5" fontWeight="bold" gutterBottom>Comentarios</Typography>
+            
+            <Paper sx={{ p: 3, mb: 4, display: 'flex', gap: 2, borderRadius: 3 }} elevation={0} variant="outlined">
+                <Avatar src={currentUser?.photoURL} sx={{ width: 48, height: 48 }} />
+                <Box sx={{ flexGrow: 1 }}>
+                    <TextField 
+                        fullWidth 
+                        placeholder="Escribe un comentario..." 
+                        multiline 
+                        variant="standard" 
+                        InputProps={{ disableUnderline: true, style: { fontSize: '1.1rem' } }}
+                        value={nuevoComentario}
+                        onChange={(e) => setNuevoComentario(e.target.value)}
+                    />
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                        <Button 
+                            variant="contained"
+                            disabled={!nuevoComentario.trim() || publicandoComentario} 
+                            onClick={enviarComentario} 
+                            endIcon={<SendIcon />}
+                            sx={{ borderRadius: 20, px: 3 }}
+                        >
+                            Publicar
+                        </Button>
+                    </Box>
+                </Box>
+            </Paper>
+
+            <Stack spacing={3}>
+                {comentarios.map((c) => {
+                    const author = usuariosComentarios[c.id_usuario];
+                    const isMine = currentUser?.email === author?.email;
+                    return (
+                        <Paper key={c.id} sx={{ p: 3, borderRadius: 3, bgcolor: 'white' }} elevation={0} variant="outlined">
+                            <Stack direction="row" spacing={2}>
+                                <Avatar src={author?.foto_perfil_url} sx={{ width: 48, height: 48 }} />
+                                <Box sx={{ flexGrow: 1 }}>
+                                    <Stack direction="row" justifyContent="space-between">
+                                        <Typography variant="subtitle1" fontWeight="bold">{author?.nombre}</Typography>
+                                        <Stack direction="row">
+                                            {!isMine && currentUser && (
+                                                <Tooltip title="Reportar"><IconButton size="small" onClick={() => setComentarioAReportar(c)}><FlagIcon fontSize="small" sx={{ color: '#bdbdbd' }} /></IconButton></Tooltip>
+                                            )}
+                                            {isMine && (
+                                                <Tooltip title="Borrar"><IconButton size="small" color="error" onClick={() => borrarComentario(c.id)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
+                                            )}
+                                        </Stack>
+                                    </Stack>
+                                    <Typography variant="body1" sx={{ mt: 1, fontSize: '1.05rem', lineHeight: 1.6 }}>{c.descripcion}</Typography>
+                                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>{new Date(c.fecha_creacion).toLocaleDateString()}</Typography>
+                                </Box>
+                            </Stack>
+                        </Paper>
+                    );
+                })}
+            </Stack>
         </Box>
 
         {/* MODALES */}
@@ -463,7 +545,7 @@ export default function Publicacion() {
             </Fade>
         </Modal>
 
-        {/* --- MODAL CONTACTO ACTUALIZADO --- */}
+        {/* Modal Contacto con Selector */}
         <Modal open={openContactModal} onClose={() => setOpenContactModal(false)}>
           <Box sx={styleContactModal}> 
             <Typography variant="h6" component="h2" fontWeight="bold" gutterBottom>
@@ -515,6 +597,7 @@ export default function Publicacion() {
           </Box>
         </Modal>
 
+        {/* Modales Reporte */}
         {mostrarModal && <ReporteForm idPublicacion={id} idUsuario={publicacion.id_usuario} onClose={() => setMostrarModal(false)} />}
         {comentarioAReportar && <ReporteForm idComentario={comentarioAReportar.id} idUsuario={comentarioAReportar.id_usuario} idPublicacion={id} onClose={() => setComentarioAReportar(null)} />}
 
