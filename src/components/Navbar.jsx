@@ -83,27 +83,21 @@ const Navbar = () => {
       if (photo) setUserPhoto(photo);
 
       try {
-        const token = await user.getIdToken();
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/usuario/${user.uid}/is_admin`, {
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-          },
-        });
+        const idTokenResult = await user.getIdTokenResult();
+        const esAdmin = !!idTokenResult.claims.admin; // <-- claim admin directo
+        setIsAdmin(esAdmin);
 
-        if (res.ok) {
-          const data = await res.json();
-          const esAdmin = Boolean(data.is_admin);
-          setIsAdmin(esAdmin);
-          esAdmin ? localStorage.setItem("isAdmin", "true") : localStorage.removeItem("isAdmin");
+        if (esAdmin) {
+          localStorage.setItem("isAdmin", "true");
         } else {
-          console.error("Error verificando admin");
-          setIsAdmin(false);
+          localStorage.removeItem("isAdmin");
         }
+
       } catch (err) {
-        console.error("Error admin:", err);
+        console.error("Error leyendo claims de Firebase:", err);
         setIsAdmin(false);
       }
+
 
       socketconnection(user);
       if (!socketNotificationsConnected) {
@@ -113,6 +107,7 @@ const Navbar = () => {
 
     return () => unsubscribe();
   }, [navigate]);
+
 
 
   const handleUserMenuClick = (setting) => {

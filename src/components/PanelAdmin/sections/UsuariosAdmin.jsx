@@ -10,6 +10,7 @@ import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import { getFreshToken } from "../../../utils/getFreshToken";
 import { Snackbar, Alert } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import {
@@ -24,6 +25,8 @@ import {
 } from "@mui/material";
 
 const API_URL = import.meta.env.VITE_API_URL;
+
+const token = await getFreshToken();
 
 export default function UsuariosAdmin() {
   const [roles, setRoles] = useState([]);
@@ -141,7 +144,7 @@ export default function UsuariosAdmin() {
         `${API_URL}/api/admin/usuario/${usuarioSeleccionado.id}`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify({
             nombre: usuarioSeleccionado.nombre,
             role_id: Number(usuarioSeleccionado.role_id),
@@ -186,7 +189,9 @@ export default function UsuariosAdmin() {
     try {
       const res = await fetch(
         `${API_URL}/api/admin/usuarios/${row.id}/${accion}`,
-        { method: "PATCH" }
+        { method: "PATCH" ,
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+        }
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error en la acción");
@@ -225,7 +230,9 @@ export default function UsuariosAdmin() {
     try {
       const res = await fetch(
         `${API_URL}/api/admin/usuarios/${borrarUsuario.id}`,
-        { method: "DELETE" }
+        { method: "DELETE", 
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+        }
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al eliminar usuario");

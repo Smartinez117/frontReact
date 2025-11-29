@@ -9,6 +9,7 @@ import Navigator from './Navigator';
 import Header from './Header';
 import { useEffect, useState } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import Typography from '@mui/material/Typography';
 import ModalGeneral from './ModalGeneral'; 
 
 
@@ -157,39 +158,62 @@ theme = {
 
 const drawerWidth = 256;
 
+// … Todo tu código actual arriba sigue igual …
+
 export default function PanelAdmin() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const isSmUp = useMediaQuery(theme.breakpoints.up('sm'));
-  const location = useLocation(); // 👈 para el título dinámico
+  const location = useLocation(); 
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
+  // Datos del usuario:
+  const [userName, setUserName] = useState('');
+  const [userPhoto, setUserPhoto] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false); // <-- NUEVO
 
-  //Datos del usuario:
-    const [userName, setUserName] = useState('');
-    const [userPhoto, setUserPhoto] = useState('');
-  
-    useEffect(() => {
-      const auth = getAuth();
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user) {
-          setUserName(user.displayName);
-          setUserPhoto(user.photoURL);
-          localStorage.setItem("userName", user.displayName);
-          localStorage.setItem("userPhoto", user.photoURL);
-        } else {
-          setUserName('');
-          setUserPhoto('');
-          localStorage.removeItem("userName");
-          localStorage.removeItem("userPhoto");
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUserName(user.displayName);
+        setUserPhoto(user.photoURL);
+        localStorage.setItem("userName", user.displayName);
+        localStorage.setItem("userPhoto", user.photoURL);
+
+        // <-- validación admin
+        try {
+          const tokenResult = await user.getIdTokenResult();
+          setIsAdmin(!!tokenResult.claims.admin);
+        } catch (err) {
+          console.error("Error leyendo claims de admin:", err);
+          setIsAdmin(false);
         }
-      });
-  
-      return () => unsubscribe();
-    }, []);
 
+      } else {
+        setUserName('');
+        setUserPhoto('');
+        setIsAdmin(false);
+        localStorage.removeItem("userName");
+        localStorage.removeItem("userPhoto");
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Si el usuario no es admin, mostramos mensaje y no renderizamos el panel
+  if (!isAdmin) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Typography variant="h6" color="error">
+          No tenés permisos de administrador
+        </Typography>
+      </Box>
+    );
+  }
 
   // 👇 opcional: título dinámico según la ruta
   const getTitle = () => {
@@ -201,9 +225,10 @@ export default function PanelAdmin() {
     if (location.pathname.includes("etiquetas")) return "Etiquetas";
     if (location.pathname.includes("reportes")) return "Reportes";
     if (location.pathname.includes("actividad")) return "Actividad";
-    return "Inicio"; // default
+    return "Inicio";
   };
 
+  // … resto de tu código actual sigue igual …
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -234,8 +259,8 @@ export default function PanelAdmin() {
               py: 6,
               px: 4,
               bgcolor: '#eaeff1',
-              maxWidth: '100vw',       // 👈 evita que se estire más que la pantalla
-              overflow: 'hidden',      // 👈 corta desbordes globales
+              maxWidth: '100vw',
+              overflow: 'hidden',
             }}
           >
             <Paper
@@ -248,17 +273,12 @@ export default function PanelAdmin() {
                 gap: 2,
               }}
             >
-              {/*SOLO acá permito el scroll horizontal */}
               <Box sx={{ width: '100%', overflowX: 'auto' }}>
                 <Outlet/>
               </Box>
             </Paper>
-
-
           </Box>
-          <Box component="footer" sx={{ p: 2, bgcolor: '#eaeff1' }}>
-            
-          </Box>
+          <Box component="footer" sx={{ p: 2, bgcolor: '#eaeff1' }}></Box>
         </Box>
       </Box>
     </ThemeProvider>
