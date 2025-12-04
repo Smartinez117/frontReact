@@ -44,6 +44,7 @@ function XIcon() {
 export default function Notificaciones() {
   const [notificaciones, setNotificaciones] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingRespuesta, setLoadingRespuesta] = useState(null); // { idNotificacion, accion } | null
   const navigate = useNavigate();
 
   // Función auxiliar para obtener token de manera segura
@@ -171,6 +172,8 @@ export default function Notificaciones() {
     const token = await getFirebaseToken();
     if (!token) return;
 
+    setLoadingRespuesta({ idNotificacion, accion }); // Rastrear qué botón está procesando
+
     try {
         const res = await fetch(`${API_URL}/api/contactar/${idSolicitud}/responder`, {
             method: 'PATCH',
@@ -201,6 +204,7 @@ export default function Notificaciones() {
     } catch (error) {
         console.error(error);
         toast.error("Ocurrió un error al procesar la solicitud");
+        setLoadingRespuesta(null); // Desbloqueamos los botones en caso de error
     }
   };
 
@@ -261,14 +265,32 @@ export default function Notificaciones() {
                         <button 
                             className="btn-accept" 
                             onClick={() => responderSolicitud(n.id, n.id_referencia || n.id_publicacion, 'aceptar')}
+                            disabled={loadingRespuesta !== null}
                         >
-                            <CheckIcon /> Aceptar
+                            {loadingRespuesta?.idNotificacion === n.id && loadingRespuesta?.accion === 'aceptar' ? (
+                                <>
+                                    <span className="spinner-small"></span> Procesando...
+                                </>
+                            ) : (
+                                <>
+                                    <CheckIcon /> Aceptar
+                                </>
+                            )}
                         </button>
                         <button 
                             className="btn-reject"
                             onClick={() => responderSolicitud(n.id, n.id_referencia || n.id_publicacion, 'rechazar')}
+                            disabled={loadingRespuesta !== null}
                         >
-                            <XIcon /> Rechazar
+                            {loadingRespuesta?.idNotificacion === n.id && loadingRespuesta?.accion === 'rechazar' ? (
+                                <>
+                                    <span className="spinner-small"></span> Procesando...
+                                </>
+                            ) : (
+                                <>
+                                    <XIcon /> Rechazar
+                                </>
+                            )}
                         </button>
                     </div>
                 )}

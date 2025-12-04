@@ -153,3 +153,32 @@
 .boton-desarchivar:hover {
   background-color: #2f8a59; /* verde más oscuro */
 }
+
+.boton-eliminar:disabled,
+.boton-archivar:disabled,
+.boton-desarchivar:disabled,
+.boton-editar:disabled,
+.boton-detalle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spinner-small {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 6px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
