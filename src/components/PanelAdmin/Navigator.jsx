@@ -9,7 +9,8 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Collapse from '@mui/material/Collapse';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { getAuth, signOut } from 'firebase/auth';
 
 /* iconos */
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
@@ -24,8 +25,6 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HomeMaxIcon from '@mui/icons-material/HomeMax';
 import DvrIcon from '@mui/icons-material/Dvr';
 import LogoutIcon from '@mui/icons-material/Logout';
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandMore from '@mui/icons-material/ExpandMore';
 
 const APP_URL = import.meta.env.VITE_FRONTEND_URL;
 
@@ -75,10 +74,20 @@ const itemCategory = {
 
 export default function Navigator(props) {
   const { ...other } = props;
-  const [openAdmin, setOpenAdmin] = React.useState(false);
+  const navigate = useNavigate();
 
-  const handleToggleAdmin = () => {
-    setOpenAdmin(!openAdmin);
+  const handleLogout = async () => {
+    try {
+      const auth = getAuth();
+      await signOut(auth);
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userPhoto");
+      localStorage.removeItem("isAdmin");
+      console.log("🔒 Sesión cerrada");
+      navigate("/login");
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
   };
 
   return (
@@ -96,10 +105,11 @@ export default function Navigator(props) {
 
         {categories.map(({ id, children }) => (
           <Box key={id} sx={{ bgcolor: '#101F33' }}>
-            <ListItemButton onClick={id === "Admin" ? handleToggleAdmin : undefined}>
-              <ListItemText sx={{ color: '#fff' }}>{id}</ListItemText>
-              {id === "Admin" && (openAdmin ? <ExpandLess /> : <ExpandMore />)}
-            </ListItemButton>
+            {id !== "Admin" && (
+              <ListItemButton>
+                <ListItemText sx={{ color: '#fff' }}>{id}</ListItemText>
+              </ListItemButton>
+            )}
 
             {id !== "Admin" ? (
               <>
@@ -130,38 +140,36 @@ export default function Navigator(props) {
                 })}
               </>
             ) : (
-              <Collapse in={openAdmin} timeout="auto" unmountOnExit>
-                <List component="div" disablePadding>
-                  {children.map(({ id: childId, icon, route }) => {
-                    if (route === "APP_URL") {
-                      return (
-                        <ListItem disablePadding key={childId}>
-                          <ListItemButton
-                            sx={item}
-                            onClick={() => window.location.href = APP_URL}
-                          >
-                            <ListItemIcon>{icon}</ListItemIcon>
-                            <ListItemText>{childId}</ListItemText>
-                          </ListItemButton>
-                        </ListItem>
-                      );
-                    }
+              <>
+                {children.map(({ id: childId, icon, route }) => {
+                  if (route === "APP_URL") {
+                    return (
+                      <ListItem disablePadding key={childId}>
+                        <ListItemButton
+                          sx={item}
+                          onClick={() => window.location.href = APP_URL}
+                        >
+                          <ListItemIcon>{icon}</ListItemIcon>
+                          <ListItemText>{childId}</ListItemText>
+                        </ListItemButton>
+                      </ListItem>
+                    );
+                  }
 
-                    if (route === "logout") {
-                      return (
-                        <ListItem disablePadding key={childId}>
-                          <ListItemButton sx={item} onClick={() => console.log("Cerrar sesión")}>
-                            <ListItemIcon>{icon}</ListItemIcon>
-                            <ListItemText>{childId}</ListItemText>
-                          </ListItemButton>
-                        </ListItem>
-                      );
-                    }
+                  if (route === "logout") {
+                    return (
+                      <ListItem disablePadding key={childId}>
+                        <ListItemButton sx={item} onClick={handleLogout}>
+                          <ListItemIcon>{icon}</ListItemIcon>
+                          <ListItemText>{childId}</ListItemText>
+                        </ListItemButton>
+                      </ListItem>
+                    );
+                  }
 
-                    return null;
-                  })}
-                </List>
-              </Collapse>
+                  return null;
+                })}
+              </>
             )}
             <Divider sx={{ mt: 2 }} />
           </Box>
