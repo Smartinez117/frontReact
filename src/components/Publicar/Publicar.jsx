@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 
 import CssBaseline from '@mui/material/CssBaseline';
-import Box from '@mui/material/Box'; // Importamos Box de MUI
+import Box from '@mui/material/Box'; 
 import Container from '@mui/material/Container';
 import * as React from 'react';
 
@@ -32,11 +32,11 @@ import { getAuth } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
 import { mostrarAlerta } from '../../utils/confirmservice.js'; 
 
-// --- CONFIGURACIÓN POR ID (NUMÉRICO) ---
+// --- CONFIGURACIÓN POR ID (Tus etiquetas personalizadas) ---
 const CONFIG_CATEGORIAS = {
-  0: "¡Busco un hogar!",       // Adopción
-  1: "¡Me encontraron!",       // Encuentro
-  2: "¡Me perdí!",             // Pérdida
+  0: "¡Busco un hogar!",        // Adopción
+  1: "¡Me encontraron!",        // Encuentro
+  2: "¡Me perdí!",              // Pérdida
   3: "¡Necesito ayuda urgente!" // Estado Crítico
 };
 
@@ -116,15 +116,23 @@ export default function Publicar() {
   const [titulo, setTitulo] = useState('');
   const [descripcion, setDescripcion] = useState('');
   
-  const [categoriasDisponibles, setCategoriasDisponibles] = useState([]);
-  const [seleccionado, setSeleccionado] = useState(null); // Guarda el ID (Integer)
+  // Estado inicial basado en la constante local (Carga Instantánea)
+  const estadoInicialCategorias = Object.entries(CONFIG_CATEGORIAS).map(([id, label]) => ({
+    id: Number(id),
+    nombre: label
+  }));
+
+  const [categoriasDisponibles, setCategoriasDisponibles] = useState(estadoInicialCategorias);
+  const [seleccionado, setSeleccionado] = useState(null); 
 
   const [provincias, setProvincias] = useState([]);
   const [departamentos, setDepartamentos] = useState([]);
   const [localidades, setLocalidades] = useState([]);
+  
   const [provinciaId, setProvinciaId] = useState('');
   const [departamentoId, setDepartamentoId] = useState('');
   const [localidadId, setLocalidadId] = useState('');
+  
   const [coordenadas, setCoordenadas] = useState({ lat: -34.6, lng: -58.4 });
   const [etiquetas, setEtiquetas] = useState([]);
   const [etiquetasSeleccionadas, setEtiquetasSeleccionadas] = useState([]);
@@ -132,7 +140,7 @@ export default function Publicar() {
   const [errores, setErrores] = useState([]);
   const [cargando, setCargando] = useState(false);
 
-  // Cargar categorías desde el backend
+  // Cargar categorías desde el backend (Actualización silenciosa)
   useEffect(() => {
     fetch(`${API_URL}/api/categorias`)
       .then(res => res.json())
@@ -143,6 +151,7 @@ export default function Publicar() {
       .catch(console.error);
   }, []);
 
+  // Cargar Borrador
   useEffect(() => {
     const borrador = localStorage.getItem("borrador_publicacion");
     if (borrador) {
@@ -150,9 +159,12 @@ export default function Publicar() {
       setTitulo(data.titulo || "");
       setDescripcion(data.descripcion || "");
       setSeleccionado(data.seleccionado !== undefined ? data.seleccionado : null);
-      setProvinciaId(data.provinciaId || "");
-      setDepartamentoId(data.departamentoId || "");
-      setLocalidadId(data.localidadId || "");
+      
+      // Conversión a String para asegurar que los Selects los lean bien
+      setProvinciaId(data.provinciaId ? String(data.provinciaId) : "");
+      setDepartamentoId(data.departamentoId ? String(data.departamentoId) : "");
+      setLocalidadId(data.localidadId ? String(data.localidadId) : "");
+      
       setCoordenadas(data.coordenadas || { lat: -34.6, lng: -58.4 });
       setEtiquetasSeleccionadas(data.etiquetasSeleccionadas || []);
     }
@@ -195,6 +207,7 @@ export default function Publicar() {
     return nuevosErrores;
   };
 
+  // Cargar Provincias
   useEffect(() => {
     fetch(`${API_URL}/api/ubicacion/provincias`)
       .then(res => res.json())
@@ -202,26 +215,42 @@ export default function Publicar() {
       .catch(console.error);
   }, []);
 
+  // Cargar Departamentos con PROTECCIÓN (Race Conditions)
   useEffect(() => {
+    let active = true; 
+
     if (provinciaId) {
       fetch(`${API_URL}/api/ubicacion/departamentos?provincia_id=${provinciaId}`)
         .then(res => res.json())
-        .then(setDepartamentos);
+        .then((data) => {
+            if (active) setDepartamentos(data);
+        })
+        .catch(console.error);
     } else {
       setDepartamentos([]);
       setDepartamentoId('');
     }
+
+    return () => { active = false; }; 
   }, [provinciaId]);
 
+  // Cargar Localidades con PROTECCIÓN (Race Conditions)
   useEffect(() => {
+    let active = true;
+
     if (departamentoId) {
       fetch(`${API_URL}/api/ubicacion/localidades?departamento_id=${departamentoId}`)
         .then(res => res.json())
-        .then(setLocalidades);
+        .then((data) => {
+            if(active) setLocalidades(data);
+        })
+        .catch(console.error);
     } else {
       setLocalidades([]);
       setLocalidadId('');
     }
+
+    return () => { active = false; };
   }, [departamentoId]);
 
   useEffect(() => {
@@ -233,10 +262,25 @@ export default function Publicar() {
       });
   }, []);
 
+  // Handlers de cambio con limpieza en cascada
+  const handleProvinciaChange = (val) => {
+    setProvinciaId(val);
+    setDepartamentos([]);
+    setDepartamentoId('');
+    setLocalidades([]);
+    setLocalidadId('');
+  };
+
+  const handleDepartamentoChange = (val) => {
+    setDepartamentoId(val);
+    setLocalidades([]);
+    setLocalidadId('');
+  };
+
   const handleLocalidadChange = (id) => {
     setLocalidadId(id);
     const loc = localidades.find(l => l.id.toString() === id);
-    if (loc) {
+    if (loc && loc.latitud && loc.longitud) {
       setCoordenadas({ lat: parseFloat(loc.latitud), lng: parseFloat(loc.longitud) });
     }
   };
@@ -298,7 +342,7 @@ export default function Publicar() {
       const urlsImagenes = dataImagenes.urls;
 
       const datos = {
-        id_categoria: seleccionado, // Enviamos el ID numérico
+        id_categoria: seleccionado, 
         titulo,
         descripcion,
         id_locacion: localidadId,
@@ -356,42 +400,34 @@ export default function Publicar() {
   return (
     <React.Fragment>
       <CssBaseline />
-      {/* CAMBIO: Añadido pb (padding-bottom) al Container para margen final */}
       <Container maxWidth="md" sx={{ pb: 8 }}> 
         <Typography level="h3" sx={{ mt: 2 }}>Crear publicación</Typography>
 
         {/* --- SELECCIÓN DE CATEGORÍA --- */}
         <ToggleButtonGroup
-          // TRUCO: Convertimos a String aquí para que el "0" sea un valor válido ("0") y no falsy
           value={seleccionado !== null ? String(seleccionado) : null} 
-          
           onChange={(event, newValue) => {
-             // Cuando cambia, lo convertimos de vuelta a Número para tu lógica
              if(newValue !== null) setSeleccionado(Number(newValue)); 
           }}
           sx={{ my: 2, gap: 1, flexWrap: 'wrap' }}
           type="single"
         >
-          {categoriasDisponibles.length === 0 ? (
-              <Typography>Cargando categorías...</Typography>
-          ) : (
-            categoriasDisponibles.map(cat => {
-                // Verificamos si este botón es el seleccionado para forzar el estilo
+          {categoriasDisponibles.map(cat => {
                 const isSelected = seleccionado === cat.id;
-                
                 return (
                     <Button
                         key={cat.id}
-                        value={String(cat.id)} // El valor del botón también debe ser String
+                        value={String(cat.id)}
                         color={isSelected ? "success" : errores.includes("Categoría") ? "danger" : "neutral"}
-                        variant={isSelected ? "soft" : "outlined"} // Forzamos "solid" para que se note bien el verde
+                        variant={isSelected ? "soft" : "outlined"}
                         aria-pressed={isSelected}
                     >
+                        {/* CAMBIO CLAVE: Priorizamos CONFIG_CATEGORIAS sobre el nombre del backend */}
                         {CONFIG_CATEGORIAS[cat.id] || cat.nombre}
                     </Button>
                 );
             })
-          )}
+          }
         </ToggleButtonGroup>
 
         <Input
@@ -412,10 +448,11 @@ export default function Publicar() {
           sx={{ mb: 2 }}
         />
 
+        {/* SELECT PROVINCIA */}
         <Select
           placeholder="Seleccioná una provincia"
-          value={provinciaId || null}
-          onChange={(e, val) => setProvinciaId(val)}
+          value={provinciaId ? String(provinciaId) : null}
+          onChange={(e, val) => handleProvinciaChange(val)}
           indicator={<KeyboardArrowDown />}
           color={provinciaId ? "success" : errores.includes("Provincia") ? "danger" : "neutral"}
           sx={{ width: '100%', mb: 2 }}
@@ -425,10 +462,11 @@ export default function Publicar() {
           ))}
         </Select>
 
+        {/* SELECT DEPARTAMENTO */}
         <Select
           placeholder="Seleccioná un partido/departamento/comuna"
-          value={departamentoId || null}
-          onChange={(e, val) => setDepartamentoId(val)}
+          value={departamentoId ? String(departamentoId) : null}
+          onChange={(e, val) => handleDepartamentoChange(val)}
           disabled={!provinciaId}
           indicator={<KeyboardArrowDown />}
           color={departamentoId ? "success" : errores.includes("Departamento") ? "danger" : "neutral"}
@@ -439,9 +477,10 @@ export default function Publicar() {
           ))}
         </Select>
 
+        {/* SELECT LOCALIDAD */}
         <Select
           placeholder="Seleccioná una localidad/barrio"
-          value={localidadId || null}
+          value={localidadId ? String(localidadId) : null}
           onChange={(e, val) => handleLocalidadChange(val)}
           disabled={!departamentoId}
           indicator={<KeyboardArrowDown />}
