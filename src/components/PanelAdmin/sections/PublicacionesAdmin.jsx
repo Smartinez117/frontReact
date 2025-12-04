@@ -18,6 +18,7 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box'; 
 import TextField from '@mui/material/TextField'; 
 import Checkbox from '@mui/material/Checkbox'; 
+import CircularProgress from '@mui/material/CircularProgress';
 import { red, grey } from '@mui/material/colors';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete'; 
@@ -62,6 +63,9 @@ export default function PublicacionesAdmin() {
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const [snackbarMessage, setSnackbarMessage] = React.useState('');
   const [snackbarSeverity, setSnackbarSeverity] = React.useState('success');
+  const [loadingArchivar, setLoadingArchivar] = React.useState({});
+  const [loadingBorrar, setLoadingBorrar] = React.useState({});
+  const [loadingBorrarModal, setLoadingBorrarModal] = React.useState(false);
 
   const limit = 9;
 
@@ -152,6 +156,7 @@ export default function PublicacionesAdmin() {
     const isArchived = pub.estado === 1; 
     const endpoint = isArchived ? 'desarchivar' : 'archivar';
     
+    setLoadingArchivar(prev => ({ ...prev, [pub.id]: true }));
     try {
       const res = await fetch(`${API_URL}/publicaciones/${pub.id}/${endpoint}`, { method: 'PATCH' });
       if (!res.ok) throw new Error(`Error al ${endpoint}`);
@@ -168,6 +173,8 @@ export default function PublicacionesAdmin() {
       setSnackbarMessage(`Error: ${error.message}`);
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
+    } finally {
+      setLoadingArchivar(prev => ({ ...prev, [pub.id]: false }));
     }
   };
 
@@ -178,6 +185,7 @@ export default function PublicacionesAdmin() {
 
   const ejecutarBorradoPublicacion = async () => {
     if (!publicacionSeleccionada) return;
+    setLoadingBorrarModal(true);
     try {
       const res = await fetch(`${API_URL}/publicaciones/${publicacionSeleccionada.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Error al eliminar");
@@ -194,6 +202,8 @@ export default function PublicacionesAdmin() {
       setSnackbarMessage(`Error: ${error.message}`);
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
+    } finally {
+      setLoadingBorrarModal(false);
     }
   };
 
@@ -343,7 +353,14 @@ export default function PublicacionesAdmin() {
                   </CardContent>
                   
                   <CardActions disableSpacing sx={{flexWrap: 'wrap', gap: 1}}>
-                    <Button variant="contained" size="small" color="primary" href={`/publicacion/${pub.id}`} target="_blank">
+                    <Button 
+                      variant="contained" 
+                      size="small" 
+                      color="primary" 
+                      href={`/publicacion/${pub.id}`} 
+                      target="_blank"
+                      disabled={loadingArchivar[pub.id] || loadingBorrar[pub.id]}
+                    >
                       Ver
                     </Button>
 
@@ -352,12 +369,29 @@ export default function PublicacionesAdmin() {
                       size="small"
                       color={isArchived ? "success" : "warning"} 
                       onClick={() => handleArchivar(pub)}
+                      disabled={loadingArchivar[pub.id] || loadingBorrar[pub.id]}
+                      sx={{ position: "relative" }}
                     >
-                      {isArchived ? "Desarchivar" : "Archivar"}
+                      {loadingArchivar[pub.id] ? (
+                        <CircularProgress size={20} sx={{ position: "absolute" }} />
+                      ) : (
+                        (isArchived ? "Desarchivar" : "Archivar")
+                      )}
                     </Button>
 
-                    <Button variant="contained" size="small" color="error" onClick={() => handleBorrarPublicacionModal(pub)}>
-                      Borrar
+                    <Button 
+                      variant="contained" 
+                      size="small" 
+                      color="error" 
+                      onClick={() => handleBorrarPublicacionModal(pub)}
+                      disabled={loadingArchivar[pub.id] || loadingBorrar[pub.id]}
+                      sx={{ position: "relative" }}
+                    >
+                      {loadingBorrar[pub.id] ? (
+                        <CircularProgress size={20} sx={{ position: "absolute" }} />
+                      ) : (
+                        "Borrar"
+                      )}
                     </Button>
 
                     <ExpandMore
@@ -365,6 +399,7 @@ export default function PublicacionesAdmin() {
                       onClick={() => handleExpandClick(pub.id)}
                       aria-expanded={expanded[pub.id]}
                       aria-label="show more"
+                      disabled={loadingArchivar[pub.id] || loadingBorrar[pub.id]}
                     >
                       <ExpandMoreIcon />
                     </ExpandMore>
@@ -397,9 +432,19 @@ export default function PublicacionesAdmin() {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmBorrarPubOpen(false)}>Cancelar</Button>
-          <Button variant="contained" color="error" onClick={ejecutarBorradoPublicacion}>
-            Eliminar
+          <Button onClick={() => setConfirmBorrarPubOpen(false)} disabled={loadingBorrarModal}>Cancelar</Button>
+          <Button 
+            variant="contained" 
+            color="error" 
+            onClick={ejecutarBorradoPublicacion}
+            disabled={loadingBorrarModal}
+            sx={{ position: "relative" }}
+          >
+            {loadingBorrarModal ? (
+              <CircularProgress size={20} sx={{ position: "absolute" }} />
+            ) : (
+              "Eliminar"
+            )}
           </Button>
         </DialogActions>
       </Dialog>

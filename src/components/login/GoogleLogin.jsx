@@ -1,5 +1,6 @@
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { auth } from '../../firebase';
 import './GoogleLogin.css';
 import '../../styles/global.css';
@@ -11,8 +12,10 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 function Login() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    setLoading(true);
     try {
       const customProvider = new GoogleAuthProvider();
       customProvider.setCustomParameters({ prompt: 'select_account' });
@@ -45,6 +48,7 @@ function Login() {
           title: 'Cuenta suspendida',
           text: 'Tu cuenta ha sido baneada por un administrador.',
         });
+        setLoading(false);
         return;
       }
 
@@ -58,6 +62,7 @@ function Login() {
           title: 'Error de autenticación',
           text: 'No se pudo completar la autenticación con el servidor.',
         });
+        setLoading(false);
       }
 
     } catch (error) {
@@ -71,6 +76,7 @@ function Login() {
           title: 'Cuenta deshabilitada',
           text: 'Esta cuenta ha sido suspendida. Contactá al administrador.',
         });
+        setLoading(false);
         return;
       }
 
@@ -80,6 +86,7 @@ function Login() {
         title: "Error",
         text: "No se pudo iniciar sesión. Intentalo nuevamente.",
       });
+      setLoading(false);
     }
   };
 
@@ -91,9 +98,18 @@ function Login() {
           <h1 className="nombre-redema">Redema</h1>
         </div>
         <p className="bienvenida">Bienvenido a Redema</p>
-        <button className="google-button" onClick={handleLogin}>
-          <img src={iconoGOOGLE} alt="Google" className="google-icon" />
-          Iniciar sesión con Google
+        <button className="google-button" onClick={handleLogin} disabled={loading}>
+          {loading ? (
+            <>
+              <span className="spinner"></span>
+              Iniciando sesión...
+            </>
+          ) : (
+            <>
+              <img src={iconoGOOGLE} alt="Google" className="google-icon" />
+              Iniciar sesión con Google
+            </>
+          )}
         </button>
       </div>
     </div>

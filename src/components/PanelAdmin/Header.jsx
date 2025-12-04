@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import AppBar from '@mui/material/AppBar';
 import Avatar from '@mui/material/Avatar';
@@ -11,6 +12,7 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
 function Header({ userName, userPhoto, onDrawerToggle, title }) {
+  const navigate = useNavigate();
   return (
     <AppBar color="primary" position="sticky" elevation={0}>
       <Toolbar
@@ -48,8 +50,8 @@ function Header({ userName, userPhoto, onDrawerToggle, title }) {
 
         {/* Lado derecho: notificaciones y avatar */}
         <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-          <Tooltip title="Alerts • No alerts">
-            <IconButton color="inherit">
+          <Tooltip title="Notificaciones">
+            <IconButton color="inherit" onClick={() => navigate('/notificaciones')} aria-label="ir a notificaciones">
               <NotificationsIcon />
             </IconButton>
           </Tooltip>

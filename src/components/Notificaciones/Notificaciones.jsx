@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import "./notificaciones.css";
 import { useNavigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { socketconnection, socketnotificationlisten, registerNotificationHandler } from '../../utils/socket';
+// Se han eliminado los imports de sockets
 import { Toaster, toast } from 'react-hot-toast'; 
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -44,6 +44,7 @@ function XIcon() {
 export default function Notificaciones() {
   const [notificaciones, setNotificaciones] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingRespuesta, setLoadingRespuesta] = useState(null); // { idNotificacion, accion } | null
   const navigate = useNavigate();
 
   // Función auxiliar para obtener token de manera segura
@@ -57,8 +58,6 @@ export default function Notificaciones() {
   // Función de carga (Memoizada)
   const fetchNotificaciones = useCallback(async (usuarioObj = null) => {
     try {
-      // Si nos pasan el usuario (desde onAuthStateChanged), usamos ese para sacar el token
-      // Si no, intentamos buscarlo globalmente
       let token = null;
       if (usuarioObj) {
          token = await usuarioObj.getIdToken();
@@ -67,7 +66,6 @@ export default function Notificaciones() {
       }
 
       if (!token) {
-          // Si tras intentar todo no hay token, paramos carga
           setLoading(false);
           return;
       }
@@ -92,27 +90,22 @@ export default function Notificaciones() {
     }
   }, []);
 
-  // --- CORRECCIÓN AQUÍ: Carga Inicial Robusta ---
+  // --- Carga Inicial y Polling (Sin sockets) ---
   useEffect(() => {
     const auth = getAuth();
     
-    // Escuchamos el estado de autenticación.
-    // Esto se dispara automáticamente cuando Firebase termina de cargar al recargar la página.
+    // 1. Detección de usuario al cargar
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // Si hay usuario, cargamos notificaciones
+        // Carga inicial
         fetchNotificaciones(user);
-        
-        // Y conectamos los sockets
-        socketconnection(user);
-        socketnotificationlisten(user.uid);
       } else {
-        // Si no hay usuario, dejamos de cargar y redirigimos si quieres
         setLoading(false);
       }
     });
 
-    // Intervalo para refrescar (Polling) cada 20s por seguridad
+    // 2. Intervalo para refrescar (Polling) cada 20s
+    // Al no tener sockets, esto es lo que mantendrá la lista actualizada
     const interval = setInterval(() => {
         const user = auth.currentUser;
         if(user) fetchNotificaciones(user);
@@ -124,52 +117,13 @@ export default function Notificaciones() {
     };
   }, [fetchNotificaciones]);
 
+  // Se eliminó el useEffect que manejaba la conexión y listeners de sockets
 
-  // Handler de Sockets (Separado para claridad)
-  useEffect(() => {
-    let unsubscribeHandler = null;
-    const auth = getAuth();
-
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      if (!user) return;
-      
-      // 1. Conectar socket
-      socketconnection(user);
-      socketnotificationlisten(user.uid);
-
-      // 2. Registrar handler (Asegúrate de que tu utilidad 'registerNotificationHandler' 
-      // devuelva una función para desuscribirse o limpiar el evento)
-      unsubscribeHandler = registerNotificationHandler((data) => {
-        
-        // --- CORRECCIÓN: Evitar duplicados por ID ---
-        setNotificaciones(prev => {
-          // Si la notificación ya existe en la lista (por ID), no la agregamos de nuevo
-          if (prev.some(n => n.id === data.id)) return prev;
-          
-          const arr = [data, ...prev];
-          arr.sort((a, b) => new Date(b.fecha_creacion).getTime() - new Date(a.fecha_creacion).getTime());
-          return arr;
-        });
-
-        // Mostrar Toast
-        toast('Nueva notificación', { icon: '🔔', id: `noti-${data.id}` }); // 'id' evita toasts duplicados visuales
-      });
-    });
-
-    // Función de limpieza al desmontar el componente
-    return () => {
-      unsubscribeAuth();
-      if (unsubscribeHandler) unsubscribeHandler();
-      // Opcional: desconectar listeners de socket si tu librería lo permite
-    };
-  }, []);
-
-
-  // ... (Resto de funciones responderSolicitud, verPublicacion, etc. IGUAL QUE ANTES) ...
-  
   const responderSolicitud = async (idNotificacion, idSolicitud, accion) => {
     const token = await getFirebaseToken();
     if (!token) return;
+
+    setLoadingRespuesta({ idNotificacion, accion });
 
     try {
         const res = await fetch(`${API_URL}/api/contactar/${idSolicitud}/responder`, {
@@ -186,7 +140,6 @@ export default function Notificaciones() {
         const data = await res.json();
 
         if (accion === 'aceptar') {
-             // data.dato_contacto viene del backend
             if (data.tipo_contacto === 'whatsapp') {
                  toast.success(`¡Aceptado! Su WhatsApp es: ${data.dato_contacto}`, { duration: 6000 });
             } else {
@@ -201,6 +154,7 @@ export default function Notificaciones() {
     } catch (error) {
         console.error(error);
         toast.error("Ocurrió un error al procesar la solicitud");
+        setLoadingRespuesta(null);
     }
   };
 
@@ -261,14 +215,32 @@ export default function Notificaciones() {
                         <button 
                             className="btn-accept" 
                             onClick={() => responderSolicitud(n.id, n.id_referencia || n.id_publicacion, 'aceptar')}
+                            disabled={loadingRespuesta !== null}
                         >
-                            <CheckIcon /> Aceptar
+                            {loadingRespuesta?.idNotificacion === n.id && loadingRespuesta?.accion === 'aceptar' ? (
+                                <>
+                                    <span className="spinner-small"></span> Procesando...
+                                </>
+                            ) : (
+                                <>
+                                    <CheckIcon /> Aceptar
+                                </>
+                            )}
                         </button>
                         <button 
                             className="btn-reject"
                             onClick={() => responderSolicitud(n.id, n.id_referencia || n.id_publicacion, 'rechazar')}
+                            disabled={loadingRespuesta !== null}
                         >
-                            <XIcon /> Rechazar
+                            {loadingRespuesta?.idNotificacion === n.id && loadingRespuesta?.accion === 'rechazar' ? (
+                                <>
+                                    <span className="spinner-small"></span> Procesando...
+                                </>
+                            ) : (
+                                <>
+                                    <XIcon /> Rechazar
+                                </>
+                            )}
                         </button>
                     </div>
                 )}

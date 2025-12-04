@@ -1,4 +1,4 @@
-import * as React from "react";
+
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Toolbar from "@mui/material/Toolbar";
@@ -10,6 +10,9 @@ import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import CircularProgress from "@mui/material/CircularProgress";
+// Asegúrate de que esta utilidad funcione correctamente, si falla usa auth.currentUser.getIdToken()
+import { getFreshToken } from "../../../utils/getFreshToken"; 
 import { Snackbar, Alert } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import {
@@ -25,6 +28,10 @@ import {
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+// ------------------------------------------------------------------
+// CORRECCIÓN: Eliminamos la variable 'token' global.
+// ------------------------------------------------------------------
+
 export default function UsuariosAdmin() {
   const [roles, setRoles] = useState([]);
   const [rows, setRows] = useState([]);
@@ -32,7 +39,6 @@ export default function UsuariosAdmin() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
 
-  // CAMBIO CLAVE 1: Usar paginationModel unificado
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
@@ -47,6 +53,9 @@ export default function UsuariosAdmin() {
   const [accionUsuario, setAccionUsuario] = useState({ row: null, accion: "" });
   const [borrarUsuario, setBorrarUsuario] = useState(null);
   const [confirmBorrarOpen, setConfirmBorrarOpen] = useState(false);
+  const [loadingAccion, setLoadingAccion] = useState(false);
+  const [loadingBorrado, setLoadingBorrado] = useState(false);
+  const [loadingGuardar, setLoadingGuardar] = useState(false);
 
   // Cargar roles
   useEffect(() => {
@@ -67,11 +76,11 @@ export default function UsuariosAdmin() {
   const fetchUsuarios = useCallback(async () => {
     setLoading(true);
     try {
-      // DataGrid usa página 0-based, el backend espera 1-based (generalmente)
-      // Ajustamos aquí: paginationModel.page + 1
       const queryPage = paginationModel.page + 1;
       const queryLimit = paginationModel.pageSize;
       
+      // Nota: Si tus rutas GET también son protegidas, deberías añadir el header Authorization aquí también.
+      // Si son públicas, déjalo así.
       const response = await fetch(
         `${API_URL}/api/usuarios?page=${queryPage}&per_page=${queryLimit}&search=${encodeURIComponent(
           search
@@ -83,11 +92,9 @@ export default function UsuariosAdmin() {
         ? data.usuarios
         : data.data || data.usuarios || [];
       
-      // Normalizar total
       const totalRaw = data.total ?? data.totalCount ?? data.count ?? usuarios.length;
       const total = Number(totalRaw) || 0;
 
-      // Asegurar IDs para DataGrid
       const normalized = usuarios.map((u, idx) => ({
         ...u,
         id: typeof u.id !== "undefined" ? u.id : u._id ?? idx,
@@ -101,22 +108,18 @@ export default function UsuariosAdmin() {
     } finally {
       setLoading(false);
     }
-  }, [paginationModel, search]); // Dependencias limpias
+  }, [paginationModel, search]);
 
-  // CAMBIO CLAVE 2: Resetear página a 0 SOLO cuando cambia el texto de búsqueda
-  // Esto evita el conflicto de botones bloqueados
   useEffect(() => {
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
   }, [search]);
 
-  // CAMBIO CLAVE 3: Ejecutar fetch cuando cambia la paginación o la búsqueda (con debounce implícito si se desea, o directo)
   useEffect(() => {
-    // Pequeño timeout para no saturar si escribes rápido, igual que tenías antes
     const timeout = setTimeout(() => {
       fetchUsuarios();
     }, 300);
     return () => clearTimeout(timeout);
-  }, [fetchUsuarios]); // fetchUsuarios ya depende de paginationModel y search
+  }, [fetchUsuarios]);
 
   // Abrir modal EDICIÓN DE USUARIO
   const handleEditUsuario = (row) => {
@@ -137,11 +140,15 @@ export default function UsuariosAdmin() {
   // Guardar cambios
   const handleGuardar = async () => {
     try {
+      setLoadingGuardar(true);
+      // CORRECCIÓN: Obtenemos el token AQUÍ, justo antes de usarlo
+      const token = await getFreshToken();
+
       const res = await fetch(
         `${API_URL}/api/admin/usuario/${usuarioSeleccionado.id}`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify({
             nombre: usuarioSeleccionado.nombre,
             role_id: Number(usuarioSeleccionado.role_id),
@@ -153,7 +160,6 @@ export default function UsuariosAdmin() {
       const data = await res.json();
       const actualizado = data.usuario || data;
 
-      // Actualizar localmente
       setRows((prev) =>
         prev.map((u) => (u.id === actualizado.id ? { ...u, ...actualizado } : u))
       );
@@ -162,7 +168,6 @@ export default function UsuariosAdmin() {
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
       
-      // Opcional: recargar datos reales
       fetchUsuarios();
 
     } catch (error) {
@@ -170,6 +175,8 @@ export default function UsuariosAdmin() {
       setSnackbarMessage("Error al guardar cambios");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
+    } finally {
+      setLoadingGuardar(false);
     }
   };
 
@@ -183,15 +190,20 @@ export default function UsuariosAdmin() {
   const ejecutarAccion = async () => {
     if (!accionUsuario) return;
     const { row, accion } = accionUsuario;
+    setLoadingAccion(true);
     try {
+      // CORRECCIÓN: Obtenemos el token AQUÍ, justo antes de usarlo
+      const token = await getFreshToken();
+
       const res = await fetch(
         `${API_URL}/api/admin/usuarios/${row.id}/${accion}`,
-        { method: "PATCH" }
+        { method: "PATCH" ,
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+        }
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error en la acción");
 
-      // Actualizar fila
       setRows((prev) =>
         prev.map((u) =>
           u.id === row.id ? { ...u, estado: data.usuario.estado } : u
@@ -201,7 +213,7 @@ export default function UsuariosAdmin() {
       setSnackbarMessage(
         accion === "suspender" ? "Usuario suspendido" : "Usuario activado"
       );
-      setSnackbarSeverity(accion === "suspender" ? "warning" : "success"); // Warning queda mejor visualmente para suspender
+      setSnackbarSeverity(accion === "suspender" ? "warning" : "success");
       setSnackbarOpen(true);
     } catch (error) {
       console.error(error);
@@ -209,6 +221,7 @@ export default function UsuariosAdmin() {
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {
+      setLoadingAccion(false);
       setConfirmOpen(false);
       setAccionUsuario(null);
     }
@@ -222,16 +235,22 @@ export default function UsuariosAdmin() {
 
   const ejecutarBorrado = async () => {
     if (!borrarUsuario) return;
+    setLoadingBorrado(true);
     try {
+      // CORRECCIÓN: Obtenemos el token AQUÍ, justo antes de usarlo
+      const token = await getFreshToken();
+
       const res = await fetch(
         `${API_URL}/api/admin/usuarios/${borrarUsuario.id}`,
-        { method: "DELETE" }
+        { method: "DELETE", 
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+        }
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al eliminar usuario");
 
       setRows((prev) => prev.filter((u) => u.id !== borrarUsuario.id));
-      setRowCount((prev) => prev - 1); // Ajustar contador visualmente
+      setRowCount((prev) => prev - 1);
 
       setSnackbarMessage(`Usuario borrado`);
       setSnackbarSeverity("error");
@@ -242,6 +261,7 @@ export default function UsuariosAdmin() {
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {
+      setLoadingBorrado(false);
       setConfirmBorrarOpen(false);
       setBorrarUsuario(null);
     }
@@ -273,8 +293,9 @@ export default function UsuariosAdmin() {
                 size="small"
                 sx={{ mr: 1 }}
                 component={Link}
-                to={`/perfil/${row.slug || row.id}`} // Fallback si no hay slug
+                to={`/perfil/${row.slug || row.id}`}
                 target="_blank"
+                disabled={loadingAccion || loadingBorrado}
               >
                 Ver
               </Button>
@@ -285,6 +306,7 @@ export default function UsuariosAdmin() {
                 size="small"
                 sx={{ mr: 1 }}
                 onClick={() => handleEditUsuario(row)}
+                disabled={loadingAccion || loadingBorrado}
               >
                 Editar
               </Button>
@@ -304,10 +326,15 @@ export default function UsuariosAdmin() {
                   variant="contained"
                   color={row.estado === "activo" ? "secondary" : "success"}
                   size="small"
-                  sx={{ mr: 1, width: 90 }}
+                  sx={{ mr: 1, width: 90, position: "relative" }}
                   onClick={() => handleAccionUsuario(row)}
+                  disabled={loadingAccion || loadingBorrado}
                 >
-                  {row.estado === "activo" ? "Suspender" : "Activar"}
+                  {loadingAccion ? (
+                    <CircularProgress size={20} sx={{ position: "absolute" }} />
+                  ) : (
+                    (row.estado === "activo" ? "Suspender" : "Activar")
+                  )}
                 </Button>
               )}
 
@@ -317,8 +344,14 @@ export default function UsuariosAdmin() {
                   color="error"
                   size="small"
                   onClick={() => handleBorrarUsuario(row)}
+                  disabled={loadingAccion || loadingBorrado}
+                  sx={{ position: "relative" }}
                 >
-                  Borrar
+                  {loadingBorrado ? (
+                    <CircularProgress size={20} sx={{ position: "absolute" }} />
+                  ) : (
+                    "Borrar"
+                  )}
                 </Button>
               ) : (
                 <Button
@@ -372,21 +405,14 @@ export default function UsuariosAdmin() {
         <DataGrid
           rows={rows}
           columns={columns}
-          
-          // MODO SERVIDOR ACTIVADO
           paginationMode="server"
           rowCount={rowCount}
-          
-          // NUEVA GESTIÓN DE PAGINACIÓN (v6+)
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          
           pageSizeOptions={[5, 10, 20]}
           autoHeight
           loading={loading}
           sx={{ border: 0 }}
-          
-          // Desactivar selección de filas si no se usa
           disableRowSelectionOnClick
         />
       </Box>
@@ -401,12 +427,15 @@ export default function UsuariosAdmin() {
             onChange={(e) =>
               setUsuarioSeleccionado({
                 ...usuarioSeleccionado,
-                nombre: e.target.value,
+                nombre: e.target.value.slice(0, 40),
               })
             }
             fullWidth
+            disabled={loadingGuardar}
+            inputProps={{ maxLength: 40 }}
+            helperText={`${usuarioSeleccionado?.nombre?.length || 0}/40 caracteres`}
           />
-          <FormControl fullWidth>
+          <FormControl fullWidth disabled={loadingGuardar}>
             <InputLabel id="rol-label">Rol</InputLabel>
             <Select
               labelId="rol-label"
@@ -428,9 +457,20 @@ export default function UsuariosAdmin() {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button variant="contained" onClick={handleGuardar}>
-            Guardar
+          <Button onClick={() => setOpen(false)} disabled={loadingGuardar}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleGuardar}
+            disabled={loadingGuardar}
+            sx={{ position: "relative" }}
+          >
+            {loadingGuardar ? (
+              <CircularProgress size={20} sx={{ position: "absolute" }} />
+            ) : (
+              "Guardar"
+            )}
           </Button>
         </DialogActions>
       </Dialog>
@@ -451,13 +491,21 @@ export default function UsuariosAdmin() {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)}>Cancelar</Button>
+          <Button onClick={() => setConfirmOpen(false)} disabled={loadingAccion}>
+            Cancelar
+          </Button>
           <Button
             variant="contained"
             onClick={ejecutarAccion}
             color={accionUsuario?.accion === "suspender" ? "secondary" : "success"}
+            disabled={loadingAccion}
+            sx={{ position: "relative" }}
           >
-            {accionUsuario?.accion === "suspender" ? "Suspender" : "Activar"}
+            {loadingAccion ? (
+              <CircularProgress size={20} sx={{ position: "absolute" }} />
+            ) : (
+              (accionUsuario?.accion === "suspender" ? "Suspender" : "Activar")
+            )}
           </Button>
         </DialogActions>
       </Dialog>
@@ -473,9 +521,21 @@ export default function UsuariosAdmin() {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmBorrarOpen(false)}>Cancelar</Button>
-          <Button variant="contained" color="error" onClick={ejecutarBorrado}>
-            Eliminar
+          <Button onClick={() => setConfirmBorrarOpen(false)} disabled={loadingBorrado}>
+            Cancelar
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={ejecutarBorrado}
+            disabled={loadingBorrado}
+            sx={{ position: "relative" }}
+          >
+            {loadingBorrado ? (
+              <CircularProgress size={20} sx={{ position: "absolute" }} />
+            ) : (
+              "Eliminar"
+            )}
           </Button>
         </DialogActions>
       </Dialog>

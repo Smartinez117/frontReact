@@ -31,6 +31,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
 import { getAuth } from "firebase/auth";
+import { confirmarAccion } from '../../utils/confirmservice';
 import ReporteForm from "../Reportes/Reportes.jsx";
 
 // Config Leaflet
@@ -140,6 +141,7 @@ export default function Publicacion() {
   const [openContactModal, setOpenContactModal] = useState(false);
   const [mensajeContacto, setMensajeContacto] = useState("Hola, vi tu publicación y me interesa ponerme en contacto.");
   const [tipoContacto, setTipoContacto] = useState('whatsapp'); 
+  const [sendingSolicitud, setSendingSolicitud] = useState(false);
 
   // --- CARGA DE DATOS ---
   useEffect(() => {
@@ -227,33 +229,35 @@ export default function Publicacion() {
 
   const handleEnviarSolicitud = async () => {
     if (!currentUser) return alert("Debes iniciar sesión para contactar");
-    
+    setSendingSolicitud(true);
     try {
-        const token = await currentUser.getIdToken();
-        const res = await fetch(`${API_URL}/api/contactar`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                id_publicacion: id,
-                mensaje: mensajeContacto,
-                tipo: tipoContacto 
-            })
-        });
+      const token = await currentUser.getIdToken();
+      const res = await fetch(`${API_URL}/api/contactar`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          id_publicacion: id,
+          mensaje: mensajeContacto,
+          tipo: tipoContacto 
+        })
+      });
 
-        const data = await res.json();
+      const data = await res.json();
 
-        if (res.ok) {
-            alert("Solicitud enviada con éxito. Te avisaremos cuando el dueño acepte.");
-            setOpenContactModal(false);
-        } else {
-            alert(data.error || "Error al enviar solicitud");
-        }
+      if (res.ok) {
+        alert("Solicitud enviada con éxito. Te avisaremos cuando el dueño acepte.");
+        setOpenContactModal(false);
+      } else {
+        alert(data.error || "Error al enviar solicitud");
+      }
     } catch (error) {
-        console.error(error);
-        alert("Error de conexión al enviar solicitud");
+      console.error(error);
+      alert("Error de conexión al enviar solicitud");
+    } finally {
+      setSendingSolicitud(false);
     }
   };
 
@@ -282,16 +286,21 @@ export default function Publicacion() {
     finally { setPublicandoComentario(false); }
   };
 
-  const borrarComentario = async (cid) => {
-    if (!currentUser || !window.confirm("¿Borrar comentario?")) return;
-    try {
-        const token = await currentUser.getIdToken();
-        const res = await fetch(`${API_URL}/comentarios/${cid}`, {
+  const borrarComentario = (cid) => {
+    confirmarAccion({
+      tipo: 'publicacion',
+      onConfirm: async () => {
+        if (!currentUser) return;
+        try {
+          const token = await currentUser.getIdToken();
+          const res = await fetch(`${API_URL}/comentarios/${cid}`, {
             method: "DELETE",
             headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (res.ok) setComentarios(prev => prev.filter(c => c.id !== cid));
-    } catch(e) { alert("Error al eliminar"); }
+          });
+          if (res.ok) setComentarios(prev => prev.filter(c => c.id !== cid));
+        } catch (e) { alert("Error al eliminar"); }
+      }
+    });
   };
 
   if (loading) return <Box sx={{ display:'flex', justifyContent:'center', mt:10 }}><CircularProgress /></Box>;
@@ -489,13 +498,13 @@ export default function Publicacion() {
                     />
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                         <Button 
-                            variant="contained"
-                            disabled={!nuevoComentario.trim() || publicandoComentario} 
-                            onClick={enviarComentario} 
-                            endIcon={<SendIcon />}
-                            sx={{ borderRadius: 20, px: 3 }}
+                          variant="contained"
+                          disabled={!nuevoComentario.trim() || publicandoComentario} 
+                          onClick={enviarComentario} 
+                          endIcon={publicandoComentario ? <CircularProgress size={18} color="inherit" /> : <SendIcon />}
+                          sx={{ borderRadius: 20, px: 3 }}
                         >
-                            Publicar
+                          {publicandoComentario ? 'Publicando...' : 'Publicar'}
                         </Button>
                     </Box>
                 </Box>
@@ -589,9 +598,9 @@ export default function Publicacion() {
             />
             
             <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ mt: 3 }}>
-                <Button onClick={() => setOpenContactModal(false)} color="inherit">Cancelar</Button>
-                <Button onClick={handleEnviarSolicitud} variant="contained" color="primary">
-                  Enviar Solicitud
+                <Button onClick={() => setOpenContactModal(false)} color="inherit" disabled={sendingSolicitud}>Cancelar</Button>
+                <Button onClick={handleEnviarSolicitud} variant="contained" color="primary" disabled={sendingSolicitud} startIcon={sendingSolicitud ? <CircularProgress size={18} color="inherit" /> : null}>
+                  {sendingSolicitud ? 'Enviando...' : 'Enviar Solicitud'}
                 </Button>
             </Stack>
           </Box>

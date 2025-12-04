@@ -10,14 +10,20 @@ const SelfPublications = ({ userId, isOwner }) => {
   const [publicaciones, setPublicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [loadingAccion, setLoadingAccion] = useState(null); // { idPublicacion, accion } | null
 
   // Eliminar con confirmación
   const handleEliminar = (id) => {
     confirmarAccion({
       tipo: 'publicacion',
       onConfirm: async () => {
-        await eliminarPublicacion(id);
-        setPublicaciones((prev) => prev.filter((pub) => pub.id !== id));
+        setLoadingAccion({ idPublicacion: id, accion: 'eliminar' });
+        try {
+          await eliminarPublicacion(id);
+          setPublicaciones((prev) => prev.filter((pub) => pub.id !== id));
+        } finally {
+          setLoadingAccion(null);
+        }
       },
     });
   };
@@ -27,12 +33,17 @@ const SelfPublications = ({ userId, isOwner }) => {
     confirmarAccion({
       tipo: 'archivar',
       onConfirm: async () => {
-        await archivarPublicacion(id);
-        setPublicaciones(prev =>
-          prev.map(pub =>
-            pub.id === id ? { ...pub, estado: 1 } : pub
-          )
-        );
+        setLoadingAccion({ idPublicacion: id, accion: 'archivar' });
+        try {
+          await archivarPublicacion(id);
+          setPublicaciones(prev =>
+            prev.map(pub =>
+              pub.id === id ? { ...pub, estado: 1 } : pub
+            )
+          );
+        } finally {
+          setLoadingAccion(null);
+        }
       },
     });
   };
@@ -41,12 +52,17 @@ const SelfPublications = ({ userId, isOwner }) => {
     confirmarAccion({
       tipo: 'desarchivar',
       onConfirm: async () => {
-        await desarchivarPublicacion(id);
-        setPublicaciones(prev =>
-          prev.map(pub =>
-            pub.id === id ? { ...pub, estado: 0 } : pub
-          )
-        );
+        setLoadingAccion({ idPublicacion: id, accion: 'desarchivar' });
+        try {
+          await desarchivarPublicacion(id);
+          setPublicaciones(prev =>
+            prev.map(pub =>
+              pub.id === id ? { ...pub, estado: 0 } : pub
+            )
+          );
+        } finally {
+          setLoadingAccion(null);
+        }
       },
     });
   };
@@ -142,6 +158,7 @@ const SelfPublications = ({ userId, isOwner }) => {
                     type="button"
                     className="boton-crear boton-detalle"
                     onClick={() => navigate(`/publicacion/${pub.id}`)}
+                    disabled={loadingAccion !== null}
                   >
                     Ver detalle
                   </button>
@@ -153,6 +170,7 @@ const SelfPublications = ({ userId, isOwner }) => {
                         type="button"
                         className="boton-crear boton-editar"
                         onClick={() => navigate(`/editar/${pub.id}`)}
+                        disabled={loadingAccion !== null}
                       >
                         Editar
                       </button>
@@ -160,16 +178,30 @@ const SelfPublications = ({ userId, isOwner }) => {
                         type="button"
                         className="boton-eliminar"
                         onClick={() => handleEliminar(pub.id)}
+                        disabled={loadingAccion !== null}
                       >
-                        Eliminar
+                        {loadingAccion?.idPublicacion === pub.id && loadingAccion?.accion === 'eliminar' ? (
+                          <>
+                            <span className="spinner-small"></span> Eliminando...
+                          </>
+                        ) : (
+                          'Eliminar'
+                        )}
                       </button>
                       {pub.estado !== 1 && (
                         <button
                           type="button"
                           className="boton-archivar"
                           onClick={() => handleArchivar(pub.id)}
+                          disabled={loadingAccion !== null}
                         >
-                          Archivar
+                          {loadingAccion?.idPublicacion === pub.id && loadingAccion?.accion === 'archivar' ? (
+                            <>
+                              <span className="spinner-small"></span> Archivando...
+                            </>
+                          ) : (
+                            'Archivar'
+                          )}
                         </button>
                       )}
 
@@ -179,8 +211,15 @@ const SelfPublications = ({ userId, isOwner }) => {
                           type="button"
                           className="boton-desarchivar"
                           onClick={() => handleDesarchivar(pub.id)}
+                          disabled={loadingAccion !== null}
                         >
-                          Desarchivar
+                          {loadingAccion?.idPublicacion === pub.id && loadingAccion?.accion === 'desarchivar' ? (
+                            <>
+                              <span className="spinner-small"></span> Desarchivando...
+                            </>
+                          ) : (
+                            'Desarchivar'
+                          )}
                         </button>
                       )}
                     </>
