@@ -1,4 +1,4 @@
-import * as React from "react";
+
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Toolbar from "@mui/material/Toolbar";
@@ -10,7 +10,8 @@ import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { getFreshToken } from "../../../utils/getFreshToken";
+// Asegúrate de que esta utilidad funcione correctamente, si falla usa auth.currentUser.getIdToken()
+import { getFreshToken } from "../../../utils/getFreshToken"; 
 import { Snackbar, Alert } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import {
@@ -26,7 +27,9 @@ import {
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const token = await getFreshToken();
+// ------------------------------------------------------------------
+// CORRECCIÓN: Eliminamos la variable 'token' global.
+// ------------------------------------------------------------------
 
 export default function UsuariosAdmin() {
   const [roles, setRoles] = useState([]);
@@ -35,7 +38,6 @@ export default function UsuariosAdmin() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
 
-  // CAMBIO CLAVE 1: Usar paginationModel unificado
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
@@ -70,11 +72,11 @@ export default function UsuariosAdmin() {
   const fetchUsuarios = useCallback(async () => {
     setLoading(true);
     try {
-      // DataGrid usa página 0-based, el backend espera 1-based (generalmente)
-      // Ajustamos aquí: paginationModel.page + 1
       const queryPage = paginationModel.page + 1;
       const queryLimit = paginationModel.pageSize;
       
+      // Nota: Si tus rutas GET también son protegidas, deberías añadir el header Authorization aquí también.
+      // Si son públicas, déjalo así.
       const response = await fetch(
         `${API_URL}/api/usuarios?page=${queryPage}&per_page=${queryLimit}&search=${encodeURIComponent(
           search
@@ -86,11 +88,9 @@ export default function UsuariosAdmin() {
         ? data.usuarios
         : data.data || data.usuarios || [];
       
-      // Normalizar total
       const totalRaw = data.total ?? data.totalCount ?? data.count ?? usuarios.length;
       const total = Number(totalRaw) || 0;
 
-      // Asegurar IDs para DataGrid
       const normalized = usuarios.map((u, idx) => ({
         ...u,
         id: typeof u.id !== "undefined" ? u.id : u._id ?? idx,
@@ -104,22 +104,18 @@ export default function UsuariosAdmin() {
     } finally {
       setLoading(false);
     }
-  }, [paginationModel, search]); // Dependencias limpias
+  }, [paginationModel, search]);
 
-  // CAMBIO CLAVE 2: Resetear página a 0 SOLO cuando cambia el texto de búsqueda
-  // Esto evita el conflicto de botones bloqueados
   useEffect(() => {
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
   }, [search]);
 
-  // CAMBIO CLAVE 3: Ejecutar fetch cuando cambia la paginación o la búsqueda (con debounce implícito si se desea, o directo)
   useEffect(() => {
-    // Pequeño timeout para no saturar si escribes rápido, igual que tenías antes
     const timeout = setTimeout(() => {
       fetchUsuarios();
     }, 300);
     return () => clearTimeout(timeout);
-  }, [fetchUsuarios]); // fetchUsuarios ya depende de paginationModel y search
+  }, [fetchUsuarios]);
 
   // Abrir modal EDICIÓN DE USUARIO
   const handleEditUsuario = (row) => {
@@ -140,6 +136,9 @@ export default function UsuariosAdmin() {
   // Guardar cambios
   const handleGuardar = async () => {
     try {
+      // CORRECCIÓN: Obtenemos el token AQUÍ, justo antes de usarlo
+      const token = await getFreshToken();
+
       const res = await fetch(
         `${API_URL}/api/admin/usuario/${usuarioSeleccionado.id}`,
         {
@@ -156,7 +155,6 @@ export default function UsuariosAdmin() {
       const data = await res.json();
       const actualizado = data.usuario || data;
 
-      // Actualizar localmente
       setRows((prev) =>
         prev.map((u) => (u.id === actualizado.id ? { ...u, ...actualizado } : u))
       );
@@ -165,7 +163,6 @@ export default function UsuariosAdmin() {
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
       
-      // Opcional: recargar datos reales
       fetchUsuarios();
 
     } catch (error) {
@@ -187,16 +184,18 @@ export default function UsuariosAdmin() {
     if (!accionUsuario) return;
     const { row, accion } = accionUsuario;
     try {
+      // CORRECCIÓN: Obtenemos el token AQUÍ, justo antes de usarlo
+      const token = await getFreshToken();
+
       const res = await fetch(
         `${API_URL}/api/admin/usuarios/${row.id}/${accion}`,
         { method: "PATCH" ,
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
         }
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error en la acción");
 
-      // Actualizar fila
       setRows((prev) =>
         prev.map((u) =>
           u.id === row.id ? { ...u, estado: data.usuario.estado } : u
@@ -206,7 +205,7 @@ export default function UsuariosAdmin() {
       setSnackbarMessage(
         accion === "suspender" ? "Usuario suspendido" : "Usuario activado"
       );
-      setSnackbarSeverity(accion === "suspender" ? "warning" : "success"); // Warning queda mejor visualmente para suspender
+      setSnackbarSeverity(accion === "suspender" ? "warning" : "success");
       setSnackbarOpen(true);
     } catch (error) {
       console.error(error);
@@ -228,6 +227,9 @@ export default function UsuariosAdmin() {
   const ejecutarBorrado = async () => {
     if (!borrarUsuario) return;
     try {
+      // CORRECCIÓN: Obtenemos el token AQUÍ, justo antes de usarlo
+      const token = await getFreshToken();
+
       const res = await fetch(
         `${API_URL}/api/admin/usuarios/${borrarUsuario.id}`,
         { method: "DELETE", 
@@ -238,7 +240,7 @@ export default function UsuariosAdmin() {
       if (!res.ok) throw new Error(data.error || "Error al eliminar usuario");
 
       setRows((prev) => prev.filter((u) => u.id !== borrarUsuario.id));
-      setRowCount((prev) => prev - 1); // Ajustar contador visualmente
+      setRowCount((prev) => prev - 1);
 
       setSnackbarMessage(`Usuario borrado`);
       setSnackbarSeverity("error");
@@ -280,7 +282,7 @@ export default function UsuariosAdmin() {
                 size="small"
                 sx={{ mr: 1 }}
                 component={Link}
-                to={`/perfil/${row.slug || row.id}`} // Fallback si no hay slug
+                to={`/perfil/${row.slug || row.id}`}
                 target="_blank"
               >
                 Ver
@@ -379,21 +381,14 @@ export default function UsuariosAdmin() {
         <DataGrid
           rows={rows}
           columns={columns}
-          
-          // MODO SERVIDOR ACTIVADO
           paginationMode="server"
           rowCount={rowCount}
-          
-          // NUEVA GESTIÓN DE PAGINACIÓN (v6+)
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
-          
           pageSizeOptions={[5, 10, 20]}
           autoHeight
           loading={loading}
           sx={{ border: 0 }}
-          
-          // Desactivar selección de filas si no se usa
           disableRowSelectionOnClick
         />
       </Box>
