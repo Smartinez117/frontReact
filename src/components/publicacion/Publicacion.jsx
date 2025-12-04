@@ -141,6 +141,7 @@ export default function Publicacion() {
   const [openContactModal, setOpenContactModal] = useState(false);
   const [mensajeContacto, setMensajeContacto] = useState("Hola, vi tu publicación y me interesa ponerme en contacto.");
   const [tipoContacto, setTipoContacto] = useState('whatsapp'); 
+  const [sendingSolicitud, setSendingSolicitud] = useState(false);
 
   // --- CARGA DE DATOS ---
   useEffect(() => {
@@ -228,33 +229,35 @@ export default function Publicacion() {
 
   const handleEnviarSolicitud = async () => {
     if (!currentUser) return alert("Debes iniciar sesión para contactar");
-    
+    setSendingSolicitud(true);
     try {
-        const token = await currentUser.getIdToken();
-        const res = await fetch(`${API_URL}/api/contactar`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                id_publicacion: id,
-                mensaje: mensajeContacto,
-                tipo: tipoContacto 
-            })
-        });
+      const token = await currentUser.getIdToken();
+      const res = await fetch(`${API_URL}/api/contactar`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          id_publicacion: id,
+          mensaje: mensajeContacto,
+          tipo: tipoContacto 
+        })
+      });
 
-        const data = await res.json();
+      const data = await res.json();
 
-        if (res.ok) {
-            alert("Solicitud enviada con éxito. Te avisaremos cuando el dueño acepte.");
-            setOpenContactModal(false);
-        } else {
-            alert(data.error || "Error al enviar solicitud");
-        }
+      if (res.ok) {
+        alert("Solicitud enviada con éxito. Te avisaremos cuando el dueño acepte.");
+        setOpenContactModal(false);
+      } else {
+        alert(data.error || "Error al enviar solicitud");
+      }
     } catch (error) {
-        console.error(error);
-        alert("Error de conexión al enviar solicitud");
+      console.error(error);
+      alert("Error de conexión al enviar solicitud");
+    } finally {
+      setSendingSolicitud(false);
     }
   };
 
@@ -595,9 +598,9 @@ export default function Publicacion() {
             />
             
             <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ mt: 3 }}>
-                <Button onClick={() => setOpenContactModal(false)} color="inherit">Cancelar</Button>
-                <Button onClick={handleEnviarSolicitud} variant="contained" color="primary">
-                  Enviar Solicitud
+                <Button onClick={() => setOpenContactModal(false)} color="inherit" disabled={sendingSolicitud}>Cancelar</Button>
+                <Button onClick={handleEnviarSolicitud} variant="contained" color="primary" disabled={sendingSolicitud} startIcon={sendingSolicitud ? <CircularProgress size={18} color="inherit" /> : null}>
+                  {sendingSolicitud ? 'Enviando...' : 'Enviar Solicitud'}
                 </Button>
             </Stack>
           </Box>
