@@ -17,18 +17,14 @@ import MenuItem from '@mui/material/MenuItem';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import {socketconnection,socketnotificationlisten} from '../utils/socket';
 import { Toaster } from 'react-hot-toast';
-import { socketNotificationsConnected } from '../utils/socket';
 import AddAlertIcon from '@mui/icons-material/AddAlert';
-// import AlignItemsList from '../utils/listaNOt'; // ❌ YA NO LO NECESITAMOS
 import { registrarCallbackAgregar } from "../utils/toastUtil";
 
 const Navbar = () => {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
   const [notificaciones, setNotificaciones] = useState([]);
-  // const [open, setOpen] = useState(false); // ❌ ELIMINADO: Ya no necesitamos abrir/cerrar lista
 
   function agregarNotificacion(noti) {
     setNotificaciones(prev => [...prev, noti]);
@@ -84,7 +80,7 @@ const Navbar = () => {
 
       try {
         const idTokenResult = await user.getIdTokenResult();
-        const esAdmin = !!idTokenResult.claims.admin; // <-- claim admin directo
+        const esAdmin = !!idTokenResult.claims.admin;
         setIsAdmin(esAdmin);
 
         if (esAdmin) {
@@ -98,11 +94,10 @@ const Navbar = () => {
         setIsAdmin(false);
       }
 
-
-      socketconnection(user);
-      if (!socketNotificationsConnected) {
-        socketnotificationlisten(user.uid);
-      }
+      // ---------------------------------------------------------
+      // SECCIÓN ELIMINADA: Ya no iniciamos sockets aquí.
+      // La lógica de polling ahora vive en Notificaciones.jsx
+      // ---------------------------------------------------------
     });
 
     return () => unsubscribe();
@@ -263,16 +258,14 @@ const Navbar = () => {
               <Typography variant="body2" sx={{ display: { xs: 'none', md: 'block' }, color: '#111' }}>{userName}</Typography>
             )}
             
-            {/* --- CAMBIO PRINCIPAL AQUÍ --- */}
             <Tooltip title="Ver Notificaciones">
                <IconButton 
-                 onClick={() => navigate('/notificaciones')} // 1. Navegar directamente
-                 sx={{ color: 'black' }} // 2. Ajuste de color para que se vea bien sobre el fondo crema
+                 onClick={() => navigate('/notificaciones')}
+                 sx={{ color: 'black' }}
                >
                  <AddAlertIcon />
                </IconButton>
             </Tooltip>
-            {/* Se eliminó el bloque {open && ...} */}
 
             <Tooltip title="Abrir opciones">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
