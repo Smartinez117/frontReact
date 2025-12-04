@@ -36,7 +36,7 @@ const categories = [
       { id: 'Inicio', icon: <HomeMaxIcon />, route: 'inicio' },
       { id: 'Usuarios', icon: <PeopleIcon />, route: 'usuarios' },
       { id: 'Publicaciones', icon: <ArticleIcon />, route: 'publicaciones' },
-      { id: 'Imagenes', icon: <PermMediaOutlinedIcon />, route: 'imagenes' },
+     // { id: 'Imagenes', icon: <PermMediaOutlinedIcon />, route: 'imagenes' },
       { id: 'Comentarios', icon: <ChatBubbleOutlineIcon />, route: 'comentarios' },
       { id: 'Ubicaciones', icon: <LocationOnIcon />, route: 'ubicaciones' },
       { id: 'Etiquetas', icon: <LabelIcon />, route: 'etiquetas' },
@@ -46,7 +46,7 @@ const categories = [
     id: 'Seguimiento',
     children: [
       { id: 'Reportes', icon: <ReportIcon />, route: 'reportes' },
-      { id: 'Actividad', icon: <DvrIcon />, route: 'performance' },
+     // { id: 'Actividad', icon: <DvrIcon />, route: 'performance' },
     ],
   },
   { 
