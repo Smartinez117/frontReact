@@ -20,8 +20,11 @@ import UbicacionesAdmin from "../components/PanelAdmin/sections/UbicacionesAdmin
 import EtiquetasAdmin from "../components/PanelAdmin/sections/EtiquetasAdmin.jsx";
 import ReportesAdmin from "../components/PanelAdmin/sections/ReportesAdmin.jsx";
 import MapaInteractivo from '../components/Mapa Interactivo/MapaInteractivo.jsx';
+import Error404 from '../components/Errores/404.jsx';
 
 import ProtectedRoute from "../components/auth/ProtectedRoute.jsx";
+import AdminRoute from "../components/auth/AdminRoute.jsx";
+
 
 function RouterApp() {
   return (
@@ -52,13 +55,13 @@ function RouterApp() {
         <Route path="/mapa" element={<MapaInteractivo />} />
       </Route>
 
-      {/* Rutas admin protegidas */}
+      {/* Rutas protegidas SOLO para admin */}
       <Route
         path="/admin/panel"
         element={
-          <ProtectedRoute>
+          <AdminRoute>
             <PanelAdmin />
-          </ProtectedRoute>
+          </AdminRoute>
         }
       >
         <Route index element={<HomeAdmin />} />
@@ -70,6 +73,9 @@ function RouterApp() {
         <Route path="etiquetas" element={<EtiquetasAdmin />} />
         <Route path="reportes" element={<ReportesAdmin />} />
       </Route>
+
+      {/* Última ruta */}
+      <Route path="*" element={<Error404 />} />
 
     </Routes>
   );
