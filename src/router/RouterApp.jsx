@@ -6,7 +6,6 @@ import Publicar from '../components/Publicar/Publicar';
 import Buscar from '../components/buscar/Buscar';
 import Publicacion from '../components/publicacion/Publicacion';
 import MainLayout from '../layouts/MainLayout';
-//importacion de las publicaciones del perfil de usuario.
 import Perfil from '../components/Perfil/Perfil';
 import Editar from '../components/Editar/editar.jsx';
 import ConfigPerfil from '../components/Perfil/configPerfil.jsx';
@@ -22,45 +21,55 @@ import EtiquetasAdmin from "../components/PanelAdmin/sections/EtiquetasAdmin.jsx
 import ReportesAdmin from "../components/PanelAdmin/sections/ReportesAdmin.jsx";
 import MapaInteractivo from '../components/Mapa Interactivo/MapaInteractivo.jsx';
 
+import ProtectedRoute from "../components/auth/ProtectedRoute.jsx";
+
 function RouterApp() {
   return (
     <Routes>
-      
-      <Route path="/login" element={<Login/>} />
-      <Route path="/app" element={<App/>} />
+
+      {/* Rutas públicas */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/app" element={<App />} />
       <Route path="/pconfig" element={<ConfigPerfil />} />
-      
-      <Route path="/admin/panel" element={<PanelAdmin />} />
 
-
-      {/* Rutas que usan MainLayout */}
-      <Route element={<MainLayout />}>
-        {/*<Route path="/" element={<App/>} />*/}
+      {/* Rutas protegidas con layout */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
         <Route path="/publicar" element={<Publicar />} />
         <Route path="/buscar" element={<Buscar />} />
         <Route path="/publicacion/prueba" element={<Publicacion />} />
         <Route path="/publicacion/:id" element={<Publicacion />} />
-        <Route path="/perfil/:slug" element={<Perfil/>} />
+        <Route path="/perfil/:slug" element={<Perfil />} />
         <Route path="/editar/:id_publicacion" element={<Editar />} />
-        <Route path="/notificaciones" element ={<Notificaciones />} />
-        <Route path="/mapa" element ={<MapaInteractivo />} />
+        <Route path="/notificaciones" element={<Notificaciones />} />
+        <Route path="/mapa" element={<MapaInteractivo />} />
       </Route>
 
-    {/*Rutas admin */}
-      <Route path="/admin/panel" element={<PanelAdmin />}>
-        <Route index element={<HomeAdmin />} />  {/* default /admin/panel */}
+      {/* Rutas admin protegidas */}
+      <Route
+        path="/admin/panel"
+        element={
+          <ProtectedRoute>
+            <PanelAdmin />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<HomeAdmin />} />
         <Route path="usuarios" element={<UsuariosAdmin />} />
         <Route path="publicaciones" element={<PublicacionesAdmin />} />
         <Route path="imagenes" element={<ImagenesAdmin />} />
         <Route path="comentarios" element={<ComentariosAdmin />} />
         <Route path="ubicaciones" element={<UbicacionesAdmin />} />
         <Route path="etiquetas" element={<EtiquetasAdmin />} />
-        <Route path="reportes" element={<ReportesAdmin/>} />
-        {/* más secciones */}
+        <Route path="reportes" element={<ReportesAdmin />} />
       </Route>
-
 
     </Routes>
   );

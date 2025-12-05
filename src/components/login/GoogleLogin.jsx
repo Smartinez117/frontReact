@@ -5,6 +5,8 @@ import { auth } from '../../firebase';
 import './GoogleLogin.css';
 import '../../styles/global.css';
 import Swal from 'sweetalert2';
+import { useSearchParams } from "react-router-dom";
+
 
 import iconoGOOGLE from '../../assets/iconoGOOGLE.svg';
 
@@ -13,6 +15,8 @@ const API_URL = import.meta.env.VITE_API_URL;
 function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [params] = useSearchParams();
+
 
   const handleLogin = async () => {
     setLoading(true);
@@ -55,7 +59,9 @@ function Login() {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem("userIdLocal", data.idLocal); 
-        navigate('/home');
+        const redirect = params.get("redirect");
+        navigate(redirect || '/home');
+
       } else {
         Swal.fire({
           icon: 'error',
