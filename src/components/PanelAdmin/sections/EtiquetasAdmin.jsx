@@ -29,8 +29,9 @@ import { visuallyHidden } from '@mui/utils';
 import { CssVarsProvider } from '@mui/joy/styles';
 import JoyCssBaseline from '@mui/joy/CssBaseline';
 
-
-const API_URL = import.meta.env.VITE_API_URL;
+// --- 1. CORRECCIÓN DE URL (NORMALIZACIÓN) ---
+const RAW_URL = import.meta.env.VITE_API_URL;
+const API_URL = RAW_URL.endsWith('/') ? RAW_URL : `${RAW_URL}/`;
 
 // --- Funciones de Utilidad para Ordenamiento ---
 function descendingComparator(a, b, orderBy) {
@@ -247,8 +248,8 @@ export default function EtiquetasAdmin() {
   // 1. CARGAR DATOS (GET)
   const fetchEtiquetas = async () => {
     try {
-        // AGREGADO: ${API_URL}
-        const response = await fetch(`${API_URL}/api/etiquetas/`);
+        // CORREGIDO: Sin barra inicial y sin barra final
+        const response = await fetch(`${API_URL}api/etiquetas`);
         if (response.ok) {
             const data = await response.json();
             setRows(data);
@@ -269,8 +270,8 @@ export default function EtiquetasAdmin() {
     if (!newTagName.trim()) return;
 
     try {
-        // AGREGADO: ${API_URL}
-        const response = await fetch(`${API_URL}/api/etiquetas/`, {
+        // CORREGIDO: Sin barra inicial y sin barra final
+        const response = await fetch(`${API_URL}api/etiquetas`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre: newTagName })
@@ -281,7 +282,6 @@ export default function EtiquetasAdmin() {
             setOpenModal(false);
             fetchEtiquetas(); // Recargar lista
         } else {
-            // Si el servidor devuelve error pero es JSON válido
             try {
                 const errorData = await response.json();
                 alert(errorData.error);
@@ -299,8 +299,8 @@ export default function EtiquetasAdmin() {
     if(!window.confirm("¿Estás seguro de eliminar esta etiqueta?")) return;
 
     try {
-        // AGREGADO: ${API_URL}
-        const response = await fetch(`${API_URL}/api/etiquetas/${id}`, {
+        // CORREGIDO: Sin barra inicial
+        const response = await fetch(`${API_URL}api/etiquetas/${id}`, {
             method: 'DELETE',
         });
 
@@ -316,13 +316,13 @@ export default function EtiquetasAdmin() {
     }
   };
 
-  // 4. ELIMINAR MÚLTIPLES (DELETE con lógica de frontend loop o endpoint bulk si existiera)
-  // Dado que tu API borra por ID individual, haremos un Promise.all
+  // 4. ELIMINAR MÚLTIPLES
   const handleDeleteSelected = async () => {
     if(!window.confirm(`¿Eliminar ${selected.length} etiquetas seleccionadas?`)) return;
 
+    // CORREGIDO: Sin barra inicial
     const deletePromises = selected.map(id => 
-        fetch(`${API_URL}/api/etiquetas/${id}`, { method: 'DELETE' })
+        fetch(`${API_URL}api/etiquetas/${id}`, { method: 'DELETE' })
     );
 
     try {

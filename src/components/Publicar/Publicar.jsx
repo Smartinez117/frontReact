@@ -110,7 +110,10 @@ function MapaInteractivo({ lat, lng, setLatLng }) {
 }
 
 export default function Publicar() {
-  const API_URL = import.meta.env.VITE_API_URL;
+  // --- 1. CORRECCIÓN DE URL (NORMALIZACIÓN) ---
+  const RAW_URL = import.meta.env.VITE_API_URL;
+  const API_URL = RAW_URL.endsWith('/') ? RAW_URL : `${RAW_URL}/`;
+
   const navigate = useNavigate();
 
   const [titulo, setTitulo] = useState('');
@@ -142,14 +145,15 @@ export default function Publicar() {
 
   // Cargar categorías desde el backend (Actualización silenciosa)
   useEffect(() => {
-    fetch(`${API_URL}/api/categorias`)
+    // CORREGIDO: Quitamos la barra inicial porque API_URL ya la tiene
+    fetch(`${API_URL}api/categorias`)
       .then(res => res.json())
       .then(data => {
          const sorted = data.sort((a, b) => a.id - b.id);
          setCategoriasDisponibles(sorted);
       })
       .catch(console.error);
-  }, []);
+  }, [API_URL]);
 
   // Cargar Borrador
   useEffect(() => {
@@ -209,18 +213,18 @@ export default function Publicar() {
 
   // Cargar Provincias
   useEffect(() => {
-    fetch(`${API_URL}/api/ubicacion/provincias`)
+    fetch(`${API_URL}api/ubicacion/provincias`)
       .then(res => res.json())
       .then(setProvincias)
       .catch(console.error);
-  }, []);
+  }, [API_URL]);
 
   // Cargar Departamentos con PROTECCIÓN (Race Conditions)
   useEffect(() => {
     let active = true; 
 
     if (provinciaId) {
-      fetch(`${API_URL}/api/ubicacion/departamentos?provincia_id=${provinciaId}`)
+      fetch(`${API_URL}api/ubicacion/departamentos?provincia_id=${provinciaId}`)
         .then(res => res.json())
         .then((data) => {
             if (active) setDepartamentos(data);
@@ -232,14 +236,14 @@ export default function Publicar() {
     }
 
     return () => { active = false; }; 
-  }, [provinciaId]);
+  }, [provinciaId, API_URL]);
 
   // Cargar Localidades con PROTECCIÓN (Race Conditions)
   useEffect(() => {
     let active = true;
 
     if (departamentoId) {
-      fetch(`${API_URL}/api/ubicacion/localidades?departamento_id=${departamentoId}`)
+      fetch(`${API_URL}api/ubicacion/localidades?departamento_id=${departamentoId}`)
         .then(res => res.json())
         .then((data) => {
             if(active) setLocalidades(data);
@@ -251,16 +255,20 @@ export default function Publicar() {
     }
 
     return () => { active = false; };
-  }, [departamentoId]);
+  }, [departamentoId, API_URL]);
 
+  // --- CORRECCIÓN ETIQUETAS ---
   useEffect(() => {
-    fetch(`${API_URL}/api/etiquetas`)
+    // Al usar `${API_URL}api/etiquetas` y tener el backend sin barra final,
+    // la URL generada es perfecta: https://.../api/etiquetas
+    fetch(`${API_URL}api/etiquetas`)
       .then(res => res.json())
       .then(data => {
         const mapped = data.map(e => ({ label: e.nombre, id: e.id }));
         setEtiquetas(mapped);
-      });
-  }, []);
+      })
+      .catch(err => console.error("Error cargando etiquetas:", err));
+  }, [API_URL]);
 
   // Handlers de cambio con limpieza en cascada
   const handleProvinciaChange = (val) => {
@@ -331,7 +339,8 @@ export default function Publicar() {
         formData.append("imagenes", img);
       });
 
-      const resImagenes = await fetch(`${API_URL}/subir-imagenes`, {
+      // CORREGIDO: URL sin barra inicial
+      const resImagenes = await fetch(`${API_URL}subir-imagenes`, {
         method: "POST",
         body: formData,
       });
@@ -363,7 +372,8 @@ export default function Publicar() {
       }
       const token = await user.getIdToken();
 
-      const res = await fetch(`${API_URL}/publicaciones`, {
+      // CORREGIDO: URL sin barra inicial
+      const res = await fetch(`${API_URL}publicaciones`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

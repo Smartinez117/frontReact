@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 
 import CssBaseline from '@mui/material/CssBaseline';
-import Box from '@mui/material/Box'; // Importamos Box de MUI
+import Box from '@mui/material/Box'; 
 import Container from '@mui/material/Container';
 import * as React from 'react';
 
@@ -80,7 +80,10 @@ function MapaInteractivo({ lat, lng, setLatLng }) {
 }
 
 export default function Editar() {
-  const API_URL = import.meta.env.VITE_API_URL;
+  // --- 1. CORRECCIÓN DE URL (NORMALIZACIÓN) ---
+  const RAW_URL = import.meta.env.VITE_API_URL;
+  const API_URL = RAW_URL.endsWith('/') ? RAW_URL : `${RAW_URL}/`;
+
   const navigate = useNavigate();
   const { id_publicacion } = useParams();
 
@@ -119,57 +122,58 @@ export default function Editar() {
     return nuevosErrores;
   };
 
-  // Cargas iniciales
+  // Cargas iniciales - CORREGIDO: Quitar barra inicial
   useEffect(() => {
-    fetch(`${API_URL}/api/categorias`)
+    fetch(`${API_URL}api/categorias`)
       .then(res => res.json())
       .then(data => setCategoriasDisponibles(data))
       .catch(console.error);
-  }, []);
+  }, [API_URL]);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/ubicacion/provincias`)
+    fetch(`${API_URL}api/ubicacion/provincias`)
       .then(res => res.json())
       .then(setProvincias)
       .catch(console.error);
-  }, []);
+  }, [API_URL]);
 
   useEffect(() => {
     if (provinciaId) {
-      fetch(`${API_URL}/api/ubicacion/departamentos?provincia_id=${provinciaId}`)
+      fetch(`${API_URL}api/ubicacion/departamentos?provincia_id=${provinciaId}`)
         .then(res => res.json())
         .then(setDepartamentos);
     } else {
       setDepartamentos([]);
       setDepartamentoId('');
     }
-  }, [provinciaId]);
+  }, [provinciaId, API_URL]);
 
   useEffect(() => {
     if (departamentoId) {
-      fetch(`${API_URL}/api/ubicacion/localidades?departamento_id=${departamentoId}`)
+      fetch(`${API_URL}api/ubicacion/localidades?departamento_id=${departamentoId}`)
         .then(res => res.json())
         .then(setLocalidades);
     } else {
       setLocalidades([]);
       setLocalidadId('');
     }
-  }, [departamentoId]);
+  }, [departamentoId, API_URL]);
 
+  // CORREGIDO: Etiquetas sin redirección
   useEffect(() => {
-    fetch(`${API_URL}/api/etiquetas`)
+    fetch(`${API_URL}api/etiquetas`)
       .then(res => res.json())
       .then(data => {
         const mapped = data.map(e => ({ label: e.nombre, id: e.id }));
         setEtiquetas(mapped);
       });
-  }, []);
+  }, [API_URL]);
 
-  // Cargar Publicación
+  // Cargar Publicación - CORREGIDO: Quitar barra inicial
   useEffect(() => {
     const fetchDatosPublicacion = async () => {
       try {
-        const res = await fetch(`${API_URL}/publicaciones/${id_publicacion}`);
+        const res = await fetch(`${API_URL}publicaciones/${id_publicacion}`);
         if (!res.ok) throw new Error("No se pudo obtener la publicación");
         const data = await res.json();
 
@@ -186,7 +190,7 @@ export default function Editar() {
           setCoordenadas({ lat: parseFloat(data.coordenadas[0]), lng: parseFloat(data.coordenadas[1]) });
         }
         if (data.id_locacion) {
-          const resLoc = await fetch(`${API_URL}/api/ubicacion/localidades/${data.id_locacion}`);
+          const resLoc = await fetch(`${API_URL}api/ubicacion/localidades/${data.id_locacion}`);
           if (resLoc.ok) {
             const localidad = await resLoc.json();
             setProvinciaId(localidad.id_provincia.toString());
@@ -211,7 +215,7 @@ export default function Editar() {
     if (id_publicacion) {
       fetchDatosPublicacion();
     }
-  }, [id_publicacion]);
+  }, [id_publicacion, API_URL]);
 
   useEffect(() => {
     if (etiquetas.length > 0 && etiquetasDesdePublicacion.length > 0) {
@@ -260,7 +264,8 @@ export default function Editar() {
           formData.append("imagenes", img);
         });
 
-        const resImagenes = await fetch(`${API_URL}/subir-imagenes`, {
+        // CORREGIDO: Quitar barra inicial
+        const resImagenes = await fetch(`${API_URL}subir-imagenes`, {
           method: "POST",
           body: formData,
         });
@@ -290,7 +295,8 @@ export default function Editar() {
       }
       const token = await user.getIdToken();
 
-      const res = await fetch(`${API_URL}/publicaciones/${id_publicacion}`, {
+      // CORREGIDO: Quitar barra inicial
+      const res = await fetch(`${API_URL}publicaciones/${id_publicacion}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -326,7 +332,6 @@ export default function Editar() {
   return (
     <React.Fragment>
       <CssBaseline />
-      {/* CAMBIO: Padding bottom extra al container principal */}
       <Container maxWidth="md" sx={{ pb: 8 }}>
         <Typography level="h3" sx={{ mt: 2 }}>Editar Publicación</Typography>
 
@@ -476,7 +481,6 @@ export default function Editar() {
           </Typography>
         )}
 
-        {/* CAMBIO: Añadido margen vertical al bloque de imágenes previas */}
         {imagenesExistentes.length > 0 && (
           <Box sx={{ my: 3 }}>
             <Typography level="body2" sx={{ mb: 1 }}>Imágenes previas:</Typography>
@@ -561,7 +565,6 @@ export default function Editar() {
           </Alert>
         )}
 
-        {/* CAMBIO: Box envolvente para margen inferior y superior al botón */}
         <Box sx={{ my: 4 }}>
             <Button
               size="lg"

@@ -1,4 +1,3 @@
-// src/layouts/MainLayout.jsx
 import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from '../components/Navbar';
@@ -14,6 +13,8 @@ const MainLayout = () => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+
+
         setUserName(user.displayName);
         setUserPhoto(user.photoURL);
         localStorage.setItem("userName", user.displayName);
@@ -21,7 +22,6 @@ const MainLayout = () => {
         localStorage.setItem("userSlug", user.slug);
 
         try {
-          // 🔹 Llamamos al backend para traer el usuario con su id interno
           const token = await user.getIdToken();
           const res = await fetch(`${BASE_URL}/api/userconfig`, {
             headers: {
@@ -30,7 +30,6 @@ const MainLayout = () => {
           });
           const data = await res.json();
 
-          // Guardamos el id real de la DB
           localStorage.setItem("userId", data.id);
           localStorage.setItem("userSlug", data.slug);
         } catch (err) {
@@ -41,13 +40,12 @@ const MainLayout = () => {
         setUserPhoto('');
         localStorage.removeItem("userName");
         localStorage.removeItem("userPhoto");
-        localStorage.removeItem("userId"); 
+        localStorage.removeItem("userId");
       }
     });
 
     return () => unsubscribe();
   }, []);
-
 
   return (
     <>

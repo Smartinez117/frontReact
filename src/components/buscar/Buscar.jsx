@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { fetchPublicacionesFiltradas } from '../../services/busquedaService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './Buscar.css';
 import { FormControl, FormLabel, TextField } from '@mui/material';
 import Autocomplete from '@mui/material/Autocomplete';
 import { configUsuarioActual } from '../../services/perfilService';
 
-const API_URL = import.meta.env.VITE_API_URL;
-
 const Buscar = () => {
+  // --- 1. CORRECCIÓN DE URL (NORMALIZACIÓN) ---
+  const RAW_URL = import.meta.env.VITE_API_URL;
+  const API_URL = RAW_URL.endsWith('/') ? RAW_URL : `${RAW_URL}/`;
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -16,10 +17,7 @@ const Buscar = () => {
   const [hasMore, setHasMore] = useState(true);
   const LIMIT = 12;
 
-  // CAMBIO 1: Estado para guardar las categorías que vienen de la DB
   const [listaCategorias, setListaCategorias] = useState([]); 
-  
-  // CAMBIO 2: 'categorias' ahora guardará IDs (números), no strings
   const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState([]); 
 
   const [publicaciones, setPublicaciones] = useState([]);
@@ -39,28 +37,10 @@ const Buscar = () => {
 
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
-  const limpiarFiltros = () => {
-    setCategoriasSeleccionadas([]);
-    setFechaDesde('');
-    setFechaHasta('');
-    setRadioKm('');
-    setEtiquetasSeleccionadas([]);
-    setTagsSeleccionados([]);
-    // No llamamos aplicarFiltros() aquí directamente para evitar conflictos de estado,
-    // mejor dejar que el useEffect o el usuario lo dispare, 
-    // o llamar una funcion que resetee y cargue.
-    cargarPublicaciones(); // Reseteamos a la carga inicial
-  };
-
-  // =====================
-  // CARGA INICIAL (Etiquetas, Categorias y Ubicación)
-  // =====================
-  // =====================
-  // CARGA INICIAL
-  // =====================
+  // --- CARGA INICIAL ---
   useEffect(() => {
-    // 1. Cargar Etiquetas
-    fetch(`${API_URL}/api/etiquetas`)
+    // 1. Cargar Etiquetas (Ruta corregida sin barra inicial)
+    fetch(`${API_URL}api/etiquetas`)
       .then(res => res.json())
       .then(data => {
         const mapped = data.map(e => ({ label: e.nombre, id: e.id }));
@@ -68,68 +48,61 @@ const Buscar = () => {
       })
       .catch(err => console.error("Error al obtener etiquetas:", err));
 
-    // 2. Cargar Categorías
-    fetch(`${API_URL}/api/categorias`) 
+    // 2. Cargar Categorías (Ruta corregida)
+    fetch(`${API_URL}api/categorias`) 
       .then(res => {
           if(!res.ok) throw new Error("Error fetching categorias");
           return res.json();
       })
       .then(data => {
-        setListaCategorias(data);
+        // Ordenamos por ID para consistencia visual
+        setListaCategorias(data.sort((a,b) => a.id - b.id));
       })
       .catch(err => console.error("Error al obtener categorías", err));
 
-    // 3. OBTENER UBICACIÓN (Lógica Modificada)
+    // 3. Obtener Ubicación
     const establecerUbicacion = async () => {
         let ubicacionEncontrada = false;
-
         try {
-            // A) Intentamos obtener la ubicación del PERFIL del usuario
             const usuario = await configUsuarioActual();
-            
             if (usuario && usuario.id_localidad) {
-                // Consultamos las coordenadas de esa localidad específica
-                const res = await fetch(`${API_URL}/api/ubicacion/localidades/${usuario.id_localidad}`);
+                // Ruta corregida
+                const res = await fetch(`${API_URL}api/ubicacion/localidades/${usuario.id_localidad}`);
                 if (res.ok) {
                     const locData = await res.json();
-                    // Asegúrate que tu backend devuelva latitud/longitud en este endpoint
                     if (locData.latitud && locData.longitud) {
                         setLatitud(parseFloat(locData.latitud));
                         setLongitud(parseFloat(locData.longitud));
-                        console.log(`📍 Ubicación establecida desde perfil: ${locData.nombre}`);
+                        console.log(`📍 Ubicación establecida: ${locData.nombre}`);
                         ubicacionEncontrada = true;
                     }
                 }
             }
         } catch (error) {
-            // Si el usuario no está logueado, fallará configUsuarioActual, ignoramos el error
-            console.log("Usuario no logueado o sin localidad, probando GPS...");
+            console.log("Usuario sin localidad o no logueado.");
         }
 
-        // B) Fallback: Si no tiene perfil o localidad, usamos GPS del navegador
         if (!ubicacionEncontrada && navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     setLatitud(position.coords.latitude);
                     setLongitud(position.coords.longitude);
-                    console.log("📍 Ubicación establecida desde GPS Navegador");
                 },
-                (err) => {
-                    console.warn("Ubicación no disponible:", err.message);
-                }
+                (err) => console.warn("GPS no disponible")
             );
         }
     };
 
     establecerUbicacion();
-    cargarPublicaciones();
-  }, []);
+    cargarPublicacionesIniciales();
+  }, [API_URL]); // Dependencia API_URL agregada
 
-  const cargarPublicaciones = async () => {
+  // Función limpia para cargar estado inicial (Home)
+  const cargarPublicacionesIniciales = async () => {
     try {
       setLoadingInitial(true);
-      // Asegúrate de que tu endpoint backend soporte page/limit
-      const res = await fetch(`${API_URL}/publicaciones?page=0&limit=${LIMIT}`);
+      // Ruta corregida
+      const res = await fetch(`${API_URL}publicaciones?page=0&limit=${LIMIT}`);
       const data = await res.json();
       setPublicaciones(data);
       setPage(0);
@@ -142,13 +115,23 @@ const Buscar = () => {
     }
   };
 
+  const limpiarFiltros = () => {
+    setCategoriasSeleccionadas([]);
+    setFechaDesde('');
+    setFechaHasta('');
+    setRadioKm('');
+    setEtiquetasSeleccionadas([]);
+    setTagsSeleccionados([]);
+    cargarPublicacionesIniciales(); // Reset
+  };
+
   // =====================
-  // APLICAR FILTROS
+  // CONSTRUCCIÓN DE FILTROS
   // =====================
   const construirFiltros = () => {
     const params = {};
 
-    // CAMBIO 3: Enviamos el ID de la categoría (id_categoria)
+    // Backend espera 'id_categoria'
     if (categoriasSeleccionadas.length > 0) {
         params.id_categoria = categoriasSeleccionadas[0]; 
     }
@@ -170,18 +153,27 @@ const Buscar = () => {
     return params;
   };
 
+  // =====================
+  // APLICAR FILTROS (Directo con Fetch para asegurar URL correcta)
+  // =====================
   const aplicarFiltros = async () => {
     setLoadingInitial(true);
     setError(null);
 
     const filtros = construirFiltros();
-    
-    try {
-      const publicacionesRaw = await fetchPublicacionesFiltradas({
+    // Agregamos paginación base
+    const queryParams = new URLSearchParams({
         ...filtros,
         page: 0,
-        limit: LIMIT,
-      });
+        limit: LIMIT
+    });
+    
+    try {
+      // Ruta corregida: 'publicaciones/filtrar' sin barra inicial
+      const res = await fetch(`${API_URL}publicaciones/filtrar?${queryParams.toString()}`);
+      if (!res.ok) throw new Error("Error en la petición de filtrado");
+      
+      const publicacionesRaw = await res.json();
 
       setPublicaciones(publicacionesRaw);
       setPage(0);
@@ -194,19 +186,15 @@ const Buscar = () => {
     }
   };
 
-  // CAMBIO 4: Manejo de selección de ID
   const handleCategoriaChange = (idCategoria) => {
     if (categoriasSeleccionadas.includes(idCategoria)) {
       setCategoriasSeleccionadas(categoriasSeleccionadas.filter(id => id !== idCategoria));
     } else {
-      // Si solo permites una categoría a la vez:
       setCategoriasSeleccionadas([idCategoria]);
     }
   };
 
-  // =====================
-  // TAGS INICIALES DESDE URL
-  // =====================
+  // Tags desde URL (Query Params externos)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const etiquetaInicial = params.get("etiqueta");
@@ -222,12 +210,13 @@ const Buscar = () => {
     }
   }, [location.search, etiquetasDisponibles]);
 
+  // Auto-aplicar filtros si cambian los tags
   useEffect(() => {
     if (tagsSeleccionados.length > 0) aplicarFiltros();
-  }, [tagsSeleccionados]);
+  }, [tagsSeleccionados]); // Dependencia simplificada
 
   // =====================
-  // INFINITE SCROLL
+  // LOAD MORE (Scroll Infinito)
   // =====================
   const loadMore = async () => {
     if (!hasMore || loadingMore) return;
@@ -236,26 +225,24 @@ const Buscar = () => {
 
     try {
       const filtros = construirFiltros();
-      const filtrosActivos = Object.keys(filtros).length > 0;
+      const hayFiltrosActivos = Object.keys(filtros).length > 0;
 
-      let url;
       const nextPage = page + 1;
-
-      // Convertimos los filtros a Query Params
       const queryParams = new URLSearchParams({
           page: nextPage,
           limit: LIMIT,
           ...filtros 
       });
 
-      if (filtrosActivos) {
-         // Asegúrate de que tu backend tenga esta ruta o usa la misma ruta con params
-         url = `${API_URL}/publicaciones/filtrar?${queryParams.toString()}`;
+      let endpoint;
+      if (hayFiltrosActivos) {
+         endpoint = `publicaciones/filtrar?${queryParams.toString()}`;
       } else {
-         url = `${API_URL}/publicaciones?${queryParams.toString()}`;
+         endpoint = `publicaciones?${queryParams.toString()}`;
       }
 
-      const res = await fetch(url);
+      // Ruta corregida: API_URL + endpoint sin barra inicial
+      const res = await fetch(`${API_URL}${endpoint}`);
       const data = await res.json();
 
       if (data.length < LIMIT) setHasMore(false);
@@ -269,7 +256,6 @@ const Buscar = () => {
       setLoadingMore(false);
     }
   };
-
 
   // =====================
   // RENDER
@@ -289,7 +275,6 @@ const Buscar = () => {
           <div className="filtros-avanzados">
             <div className="filtro-grupo">
               <label>Categoría:</label>
-              {/* CAMBIO 5: Mapeamos las categorías traídas del backend */}
               {listaCategorias.map((cat) => (
                 <button
                   key={cat.id}
@@ -315,7 +300,7 @@ const Buscar = () => {
             </div>
 
             <div className="filtro-grupo">
-              <label>Buscar cerca de tu ubicación (segun lo configurado en tu perfil):</label>
+              <label>Buscar cerca de tu ubicación (configurada en perfil):</label>
               <select value={radioKm} onChange={e => setRadioKm(e.target.value)}>
                 <option value="">Cualquier distancia</option>
                 <option value="3">Cerca (3 km)</option>
@@ -394,9 +379,9 @@ const Buscar = () => {
                   </p>
                   <p className="publicacion-localidad">📍 {pub.localidad || 'Sin ubicación'}</p>
                   
-                  {/* CAMBIO 6 (CRÍTICO): Renderizado condicional del objeto categoría */}
+                  {/* Renderizado seguro del objeto categoría */}
                   <span className="publicacion-categoria">
-                     {pub.categoria ? pub.categoria.nombre : 'Sin categoría'}
+                      {pub.categoria ? pub.categoria.nombre : 'Sin categoría'}
                   </span>
 
                   <div className="publicacion-etiquetas">
