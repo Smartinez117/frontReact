@@ -70,7 +70,7 @@ export default function Notificaciones() {
           return;
       }
 
-      const res = await fetch(`${API_URL}notificaciones/usuario`, {
+      const res = await fetch(`${API_URL}/notificaciones/usuario`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -163,7 +163,7 @@ export default function Notificaciones() {
     if (!token) return;
 
     if (!noti.leido) {
-        await fetch(`${API_URL}notificaciones/leida/${noti.id}`, {
+        await fetch(`${API_URL}/notificaciones/leida/${noti.id}`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
         });
@@ -180,7 +180,7 @@ export default function Notificaciones() {
     const token = await getFirebaseToken();
     if (!token) return;
 
-    await fetch(`${API_URL}notificaciones/${id}`, {
+    await fetch(`${API_URL}/notificaciones/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
