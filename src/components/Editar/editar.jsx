@@ -367,19 +367,35 @@ export default function Editar() {
         <Input
           placeholder="Título"
           value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
+          // 1. Limitar a 50 caracteres
+          onChange={(e) => setTitulo(e.target.value.slice(0, 80))}
           color={titulo.trim() ? "success" : errores.includes("Título") ? "danger" : "neutral"}
           sx={{ my: 2 }}
+          // 2. Contador visual
+          endDecorator={
+            <Typography level="body-xs" sx={{ color: 'text.tertiary' }}>
+              {titulo.length}/80
+            </Typography>
+          }
+          // 3. Atributo HTML nativo
+          slotProps={{ input: { maxLength: 80 } }}
         />
 
         <Textarea
           placeholder="Descripción del caso…"
           value={descripcion}
-          onChange={(e) => setDescripcion(e.target.value)}
+          // 1. Limitar a 500 caracteres
+          onChange={(e) => setDescripcion(e.target.value.slice(0, 500))}
           minRows={2}
           maxRows={5}
-          color={descripcion && descripcion.length <= 500 ? "success" : errores.includes("Descripción") ? "danger" : "neutral"}
+          color={descripcion.trim() ? "success" : errores.includes("Descripción") ? "danger" : "neutral"}
           sx={{ mb: 2 }}
+          // 2. Contador visual
+          endDecorator={
+            <Typography level="body-xs" sx={{ ml: 'auto', color: 'text.tertiary' }}>
+              {descripcion.length}/500
+            </Typography>
+          }
         />
 
         <Select
