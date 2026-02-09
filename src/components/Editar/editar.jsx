@@ -335,6 +335,11 @@ export default function Editar() {
       <Container maxWidth="md" sx={{ pb: 8 }}>
         <Typography level="h3" sx={{ mt: 2 }}>Editar Publicación</Typography>
 
+        {/* --- Texto de Categoría --- */}
+        <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
+            Categoría
+        </Typography>
+
         <ToggleButtonGroup
           value={seleccionado !== null ? String(seleccionado) : null}
           onChange={(event, newValue) => {
@@ -439,6 +444,10 @@ export default function Editar() {
           ))}
         </Select>
 
+        <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
+           Seleccioná la ubicación exacta en el mapa:
+        </Typography>
+
         <div style={{ height: '400px', marginTop: '1rem' }}>
           <MapContainer
             center={[coordenadas.lat, coordenadas.lng]}
@@ -455,7 +464,9 @@ export default function Editar() {
         </Typography>
 
         <FormControl sx={{ mt: 3 }}>
-          <FormLabel>Etiquetas</FormLabel>
+          <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
+           Etiquetas
+          </Typography>
           <Autocomplete
             multiple
             placeholder="Seleccioná etiquetas"
@@ -474,7 +485,12 @@ export default function Editar() {
             sx={{ width: '100%' }}
           />
         </FormControl>
-
+        
+        {/* Imagenes */}
+        <Typography level="title-md" sx={{ mt: 4, mb: 1, fontWeight: 'lg' }}>
+          Imágenes
+        </Typography>
+        
         <Button
           component="label"
           variant="outlined"
