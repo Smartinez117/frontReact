@@ -247,10 +247,10 @@ const Navbar = () => {
           </Typography>
 
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 1 }}>
-            <Button onClick={() => navigate('/home')} sx={{ my: 2, color: 'black' }}>Inicio</Button>
-            <Button onClick={() => navigate('/publicar')} sx={{ my: 2, color: 'black' }}>Publicar</Button>
-            <Button onClick={() => navigate('/buscar')} sx={{ my: 2, color: 'black' }}>Buscar</Button>
-            <Button onClick={() => navigate('/mapa')} sx={{ my: 2, color: 'black' }}>Mapa</Button>
+            <Button onClick={() => navigate('/home')} sx={{ my: 2, color: 'black', textTransform: 'none' }}>Inicio</Button>
+            <Button onClick={() => navigate('/publicar')} sx={{ my: 2, color: 'black', textTransform: 'none' }}>Publicar</Button>
+            <Button onClick={() => navigate('/buscar')} sx={{ my: 2, color: 'black', textTransform: 'none' }}>Buscar</Button>
+            <Button onClick={() => navigate('/mapa')} sx={{ my: 2, color: 'black', textTransform: 'none' }}>Mapa</Button>
           </Box>
 
           <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center', gap: 1  }}>

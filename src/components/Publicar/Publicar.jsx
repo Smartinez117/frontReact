@@ -413,6 +413,11 @@ export default function Publicar() {
       <Container maxWidth="md" sx={{ pb: 8 }}> 
         <Typography level="h3" sx={{ mt: 2 }}>Crear publicación</Typography>
 
+        {/* --- Texto de Categoría --- */}
+        <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
+           Categoría
+        </Typography>
+
         {/* --- SELECCIÓN DE CATEGORÍA --- */}
         <ToggleButtonGroup
           value={seleccionado !== null ? String(seleccionado) : null} 
@@ -443,19 +448,30 @@ export default function Publicar() {
         <Input
           placeholder="Título"
           value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
+          onChange={(e) => setTitulo(e.target.value.slice(0, 80))}
           color={titulo.trim() ? "success" : errores.includes("Título") ? "danger" : "neutral"}
           sx={{ my: 2 }}
+          endDecorator={
+            <Typography level="body-xs" sx={{ color: 'text.tertiary' }}>
+              {titulo.length}/80
+            </Typography>
+          }
+          slotProps={{ input: { maxLength: 80 } }}
         />
 
         <Textarea
           placeholder="Descripción del caso…"
           value={descripcion}
-          onChange={(e) => setDescripcion(e.target.value)}
+          onChange={(e) => setDescripcion(e.target.value.slice(0, 500))}
           minRows={2}
           maxRows={5}
-          color={descripcion && descripcion.length <= 500 ? "success" : errores.includes("Descripción") ? "danger" : "neutral"}
+          color={descripcion.trim() ? "success" : errores.includes("Descripción") ? "danger" : "neutral"}
           sx={{ mb: 2 }}
+          endDecorator={
+            <Typography level="body-xs" sx={{ ml: 'auto', color: 'text.tertiary' }}>
+              {descripcion.length}/500
+            </Typography>
+          }
         />
 
         {/* SELECT PROVINCIA */}
@@ -502,6 +518,13 @@ export default function Publicar() {
           ))}
         </Select>
 
+        
+        {/* MAPA */}
+
+        <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
+           Seleccioná la ubicación exacta en el mapa:
+        </Typography>
+          
         <div style={{ height: '400px', marginTop: '1rem' }}>
           <MapContainer
             center={[coordenadas.lat, coordenadas.lng]}
@@ -516,9 +539,14 @@ export default function Publicar() {
         <Typography level="body2" sx={{ mt: 1 }}>
           Latitud: {coordenadas.lat.toFixed(6)} | Longitud: {coordenadas.lng.toFixed(6)}
         </Typography>
+        
+
+        {/* ETIQUETAS */}
 
         <FormControl sx={{ mt: 3 }}>
-          <FormLabel>Etiquetas</FormLabel>
+          <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
+           Etiquetas
+          </Typography>
           <Autocomplete
             multiple
             placeholder="Seleccioná etiquetas"
@@ -537,6 +565,11 @@ export default function Publicar() {
             sx={{ width: '100%' }}
           />
         </FormControl>
+
+        {/* Imagenes */}
+        <Typography level="title-md" sx={{ mt: 4, mb: 1, fontWeight: 'lg' }}>
+          Imágenes
+        </Typography>
 
         <Button
           component="label"

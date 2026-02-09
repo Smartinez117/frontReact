@@ -424,10 +424,10 @@ export default function Publicacion() {
                     startIcon={<ChatBubbleOutlineIcon />} // Icono de burbuja de chat neutro
                     onClick={() => setOpenContactModal(true)}
                     sx={{ 
-                        borderRadius: 3, 
+                        borderRadius: 3,
+                        textTransform: 'none',
                         py: 1.5, 
                         fontSize: '1rem', 
-                        fontWeight: 'bold',
                         // Estilos de tu marca (Mismo que botón Publicar)
                         backgroundColor: '#F1B400', 
                         color: '#0D171C',
@@ -461,7 +461,8 @@ export default function Publicacion() {
                   startIcon={<ShareIcon />} 
                   onClick={() => compartirPublicacion(id)} 
                   sx={{ 
-                    borderRadius: 3, 
+                    borderRadius: 3,
+                    textTransform: 'none',
                     py: 1.5, 
                     fontSize: '1rem',
                     // --- ESTILOS PARA EVITAR EL AMARILLO ---
@@ -492,9 +493,20 @@ export default function Publicacion() {
                         placeholder="Escribe un comentario..." 
                         multiline 
                         variant="standard" 
-                        InputProps={{ disableUnderline: true, style: { fontSize: '1.1rem' } }}
+                        InputProps={{ 
+                            disableUnderline: true, 
+                            style: { fontSize: '1.1rem' } 
+                        }}
+                        inputProps={{ maxLength: 500 }} 
+                        helperText={`${nuevoComentario.length}/500`} // Contador visual
                         value={nuevoComentario}
                         onChange={(e) => setNuevoComentario(e.target.value)}
+                        sx={{
+                            '& .MuiFormHelperText-root': {
+                                textAlign: 'right', // Pone el contador a la derecha
+                                color: nuevoComentario.length === 500 ? 'error.main' : 'text.secondary'
+                            }
+                        }}
                     />
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                         <Button 
@@ -530,7 +542,20 @@ export default function Publicacion() {
                                             )}
                                         </Stack>
                                     </Stack>
-                                    <Typography variant="body1" sx={{ mt: 1, fontSize: '1.05rem', lineHeight: 1.6 }}>{c.descripcion}</Typography>
+                                    {/* --- CAMBIO 2: Estilos para evitar desbordamiento --- */}
+                                    <Typography 
+                                        variant="body1" 
+                                        sx={{ 
+                                            mt: 1, 
+                                            fontSize: '1.05rem', 
+                                            lineHeight: 1.6,
+                                            whiteSpace: 'pre-wrap',  // Respeta los saltos de línea del usuario
+                                            wordBreak: 'break-word', // Rompe palabras largas si es necesario
+                                            overflowWrap: 'anywhere' // Asegura que baje de renglón
+                                        }}
+                                    >
+                                        {c.descripcion}
+                                    </Typography>
                                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>{new Date(c.fecha_creacion).toLocaleDateString()}</Typography>
                                 </Box>
                             </Stack>
