@@ -424,10 +424,10 @@ export default function Publicacion() {
                     startIcon={<ChatBubbleOutlineIcon />} // Icono de burbuja de chat neutro
                     onClick={() => setOpenContactModal(true)}
                     sx={{ 
-                        borderRadius: 3, 
+                        borderRadius: 3,
+                        textTransform: 'none',
                         py: 1.5, 
                         fontSize: '1rem', 
-                        fontWeight: 'bold',
                         // Estilos de tu marca (Mismo que botón Publicar)
                         backgroundColor: '#F1B400', 
                         color: '#0D171C',
@@ -461,7 +461,8 @@ export default function Publicacion() {
                   startIcon={<ShareIcon />} 
                   onClick={() => compartirPublicacion(id)} 
                   sx={{ 
-                    borderRadius: 3, 
+                    borderRadius: 3,
+                    textTransform: 'none',
                     py: 1.5, 
                     fontSize: '1rem',
                     // --- ESTILOS PARA EVITAR EL AMARILLO ---

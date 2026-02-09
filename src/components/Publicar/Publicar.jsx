@@ -413,6 +413,11 @@ export default function Publicar() {
       <Container maxWidth="md" sx={{ pb: 8 }}> 
         <Typography level="h3" sx={{ mt: 2 }}>Crear publicación</Typography>
 
+        {/* --- Texto de Categoría --- */}
+        <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
+           Categoría
+        </Typography>
+
         {/* --- SELECCIÓN DE CATEGORÍA --- */}
         <ToggleButtonGroup
           value={seleccionado !== null ? String(seleccionado) : null} 
@@ -502,6 +507,13 @@ export default function Publicar() {
           ))}
         </Select>
 
+        
+        {/* MAPA */}
+
+        <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
+           Seleccioná la ubicación exacta en el mapa:
+        </Typography>
+          
         <div style={{ height: '400px', marginTop: '1rem' }}>
           <MapContainer
             center={[coordenadas.lat, coordenadas.lng]}
@@ -516,9 +528,14 @@ export default function Publicar() {
         <Typography level="body2" sx={{ mt: 1 }}>
           Latitud: {coordenadas.lat.toFixed(6)} | Longitud: {coordenadas.lng.toFixed(6)}
         </Typography>
+        
+
+        {/* ETIQUETAS */}
 
         <FormControl sx={{ mt: 3 }}>
-          <FormLabel>Etiquetas</FormLabel>
+          <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
+           Etiquetas
+          </Typography>
           <Autocomplete
             multiple
             placeholder="Seleccioná etiquetas"
@@ -537,6 +554,11 @@ export default function Publicar() {
             sx={{ width: '100%' }}
           />
         </FormControl>
+
+        {/* Imagenes */}
+        <Typography level="title-md" sx={{ mt: 4, mb: 1, fontWeight: 'lg' }}>
+          Imágenes
+        </Typography>
 
         <Button
           component="label"
