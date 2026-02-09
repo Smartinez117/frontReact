@@ -241,6 +241,7 @@ const Navbar = () => {
               letterSpacing: '.3rem',
               color: 'black',
               textDecoration: 'none',
+              fontSize: { xs: '1.2rem', sm: '1.5rem' }
             }}
           >
             REDEMA

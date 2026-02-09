@@ -89,7 +89,7 @@ const Home = () => {
       </Box>
 
       {/* --- CARDS SECTION --- */}
-      <Container maxWidth="lg" sx={{ mt: -10, mb: 8, position: 'relative', zIndex: 2 }}>
+      <Container maxWidth="lg" sx={{ mt: { xs: 4, md: -10 }, mb: 8, position: 'relative', zIndex: 2 }}>
         <Box 
           sx={{ 
             display: 'flex', 
