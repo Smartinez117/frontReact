@@ -256,12 +256,22 @@ export default function UsuariosAdmin() {
           return (
             <>
               <Button
-                variant="outlined"
+                variant="contained"
                 size="small"
-                sx={{ mr: 1 }}
                 component={Link}
                 to={`/perfil/${row.slug || row.id}`}
                 target="_blank"
+                sx={{
+                  mr: 1,
+                  backgroundColor: '#F1B400;', 
+                  color: '#000000', 
+                  fontWeight: 'bold',
+                  boxShadow: 'none', 
+                  '&:hover': {
+                    backgroundColor: '#e0ba50',
+                    borderColor: '#e0ba50',
+                  }
+                }}
               >
                 Ver
               </Button>

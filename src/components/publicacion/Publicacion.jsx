@@ -368,7 +368,7 @@ export default function Publicacion() {
                     onClick={() => setMostrarModal(true)}
                     sx={{ textTransform: 'none', color: '#d32f2f', opacity: 0.7, '&:hover': { opacity: 1, bgcolor: '#ffebee' } }}
                 >
-                    Reportar publicación
+                    Denunciar publicación
                 </Button>
             </Stack>
 
@@ -597,12 +597,12 @@ export default function Publicacion() {
               Enviar solicitud de contacto
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              El dueño recibirá tu mensaje y, si acepta, verás sus datos para contactarlo.
+              El dueño recibirá tu mensaje junto con tu dato de contacto (unicamente el que elijas) y, si acepta, verás sus datos para contactarlo. 
             </Typography>
             
             {/* SELECTOR DE TIPO */}
             <FormControl component="fieldset" sx={{ mb: 2, width: '100%' }}>
-              <FormLabel component="legend" sx={{ fontSize: '0.9rem' }}>¿Cómo preferís contactar?</FormLabel>
+              <FormLabel component="legend" sx={{ fontSize: '0.9rem' }}>¿Cómo prefieres contactar?</FormLabel>
               <RadioGroup
                 row
                 name="tipoContacto"
@@ -635,7 +635,28 @@ export default function Publicacion() {
             
             <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ mt: 3 }}>
                 <Button onClick={() => setOpenContactModal(false)} color="inherit" disabled={sendingSolicitud}>Cancelar</Button>
-                <Button onClick={handleEnviarSolicitud} variant="contained" color="primary" disabled={sendingSolicitud} startIcon={sendingSolicitud ? <CircularProgress size={18} color="inherit" /> : null}>
+                <Button
+                  onClick={handleEnviarSolicitud}
+                  variant="contained"
+                  disabled={sendingSolicitud}
+                  startIcon={
+                    sendingSolicitud ? (
+                      <CircularProgress size={18} color="inherit" />
+                    ) : null
+                  }
+                  sx={{
+                    backgroundColor: '#f8ce59',
+                    color: '#000000',
+                    '&:hover': {
+                      backgroundColor: '#dfb950', 
+                    },
+                    '&.Mui-disabled': {
+                      backgroundColor: '#f8ce59',
+                      color: '#000000', 
+                      opacity: 0.6,
+                    },
+                  }}
+                >
                   {sendingSolicitud ? 'Enviando...' : 'Enviar Solicitud'}
                 </Button>
             </Stack>

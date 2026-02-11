@@ -35,7 +35,7 @@ export default function ReporteForm({ idPublicacion, idComentario, idUsuario, on
     const user = auth.currentUser;
 
     if (!user) {
-      setError("Debes iniciar sesión para reportar contenido.");
+      setError("Debes iniciar sesión para denunciar contenido.");
       setLoading(false);
       return;
     }
@@ -50,7 +50,6 @@ export default function ReporteForm({ idPublicacion, idComentario, idUsuario, on
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          // Enviamos null si no está definido, para cumplir con el contrato del backend
           id_publicacion: idPublicacion || null,
           id_comentario: idComentario || null,
           id_usuario_reportado: idUsuario || null, // Mapeo correcto
@@ -62,11 +61,10 @@ export default function ReporteForm({ idPublicacion, idComentario, idUsuario, on
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Error al enviar reporte");
+        throw new Error(data.error || "Error al enviar la denuncia");
       }
 
-      setMensaje("Reporte enviado con éxito. Gracias por tu colaboración.");
-      // Cerrar modal después de un breve delay para que el usuario lea el mensaje
+      setMensaje("Denuncia enviada con éxito. Gracias por tu colaboración.");
       setTimeout(() => {
         onClose();
       }, 2000);
@@ -114,11 +112,15 @@ export default function ReporteForm({ idPublicacion, idComentario, idUsuario, on
         </IconButton>
 
         <Typography variant="h6" gutterBottom>
-          {idComentario ? "Reportar Comentario" : "Reportar Publicación"}
+          {idUsuario 
+            ? "Denunciar Usuario" 
+            : idComentario 
+              ? "Denunciar Comentario" 
+              : "Denunciar Publicación"}
         </Typography>
         
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Selecciona el motivo del reporte. Tu identidad se mantendrá anónima para el usuario reportado.
+          Selecciona el motivo de la denuncia. Tu identidad se mantendrá anónima para el usuario denunciado.
         </Typography>
 
         <form onSubmit={handleSubmit}>
