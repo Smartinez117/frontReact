@@ -299,7 +299,7 @@ export default function Publicar() {
     if (imagenesSeleccionadas.length + archivos.length > MAX_IMAGENES) {
       mostrarAlerta({
         titulo: "Demasiadas imágenes",
-        mensaje: "Solo podés subir un máximo de 5 imágenes.",
+        mensaje: "Solo puedes subir un máximo de 5 imágenes.",
         tipo: "warning"
       });
       return;
@@ -365,7 +365,7 @@ export default function Publicar() {
       if (!user) {
         mostrarAlerta({
           titulo: '⚠️ Sesión requerida',
-          mensaje: 'Debés iniciar sesión para publicar',
+          mensaje: 'Debes iniciar sesión para publicar',
           tipo: 'warning'
         });
         return;
@@ -437,13 +437,16 @@ export default function Publicar() {
                         variant={isSelected ? "soft" : "outlined"}
                         aria-pressed={isSelected}
                     >
-                        {/* CAMBIO CLAVE: Priorizamos CONFIG_CATEGORIAS sobre el nombre del backend */}
                         {CONFIG_CATEGORIAS[cat.id] || cat.nombre}
                     </Button>
                 );
             })
           }
         </ToggleButtonGroup>
+        
+        <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
+           Título
+        </Typography>
 
         <Input
           placeholder="Título"
@@ -458,6 +461,10 @@ export default function Publicar() {
           }
           slotProps={{ input: { maxLength: 80 } }}
         />
+
+        <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
+           Descripción
+        </Typography>
 
         <Textarea
           placeholder="Descripción del caso…"
@@ -474,9 +481,13 @@ export default function Publicar() {
           }
         />
 
+        <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
+           Ubicación
+        </Typography>
+
         {/* SELECT PROVINCIA */}
         <Select
-          placeholder="Seleccioná una provincia"
+          placeholder="Selecciona una provincia"
           value={provinciaId ? String(provinciaId) : null}
           onChange={(e, val) => handleProvinciaChange(val)}
           indicator={<KeyboardArrowDown />}
@@ -490,7 +501,7 @@ export default function Publicar() {
 
         {/* SELECT DEPARTAMENTO */}
         <Select
-          placeholder="Seleccioná un partido/departamento/comuna"
+          placeholder="Selecciona un partido/departamento/comuna"
           value={departamentoId ? String(departamentoId) : null}
           onChange={(e, val) => handleDepartamentoChange(val)}
           disabled={!provinciaId}
@@ -505,7 +516,7 @@ export default function Publicar() {
 
         {/* SELECT LOCALIDAD */}
         <Select
-          placeholder="Seleccioná una localidad/barrio"
+          placeholder="Selecciona una localidad/barrio"
           value={localidadId ? String(localidadId) : null}
           onChange={(e, val) => handleLocalidadChange(val)}
           disabled={!departamentoId}
@@ -522,7 +533,7 @@ export default function Publicar() {
         {/* MAPA */}
 
         <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
-           Seleccioná la ubicación exacta en el mapa:
+           Selecciona la ubicación exacta en el mapa:
         </Typography>
           
         <div style={{ height: '400px', marginTop: '1rem' }}>
@@ -536,7 +547,7 @@ export default function Publicar() {
           </MapContainer>
         </div>
 
-        <Typography level="body2" sx={{ mt: 1 }}>
+        <Typography level="body-xs" sx={{ mt: 1, color: '#999' }}>
           Latitud: {coordenadas.lat.toFixed(6)} | Longitud: {coordenadas.lng.toFixed(6)}
         </Typography>
         
@@ -549,12 +560,17 @@ export default function Publicar() {
           </Typography>
           <Autocomplete
             multiple
-            placeholder="Seleccioná etiquetas"
+            placeholder="Selecciona etiquetas"
             limitTags={3}
             options={etiquetas}
             value={etiquetasSeleccionadas}
-            onChange={(event, value) => setEtiquetasSeleccionadas(value)}
+            onChange={(event, value) => {
+               if (value.length <= 8) {
+                 setEtiquetasSeleccionadas(value);
+               }
+            }}
             getOptionLabel={(option) => option.label}
+            getOptionDisabled={(option) => etiquetasSeleccionadas.length >= 8}
             color={
               etiquetasSeleccionadas.length > 0
                 ? "success"
@@ -564,6 +580,9 @@ export default function Publicar() {
             }
             sx={{ width: '100%' }}
           />
+          <Typography level="body-xs" sx={{ mt: 0.5, color: etiquetasSeleccionadas.length >= 8 ? 'warning.main' : 'text.tertiary' }}>
+             {etiquetasSeleccionadas.length}/8 etiquetas seleccionadas
+          </Typography>
         </FormControl>
 
         {/* Imagenes */}

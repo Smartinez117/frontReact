@@ -17,7 +17,7 @@ import TravelExploreIcon from '@mui/icons-material/TravelExplore';
 const cards = [
   {
     id: 1,
-    title: 'Publicá',
+    title: 'Publica',
     description: 'Publica una búsqueda, encuentro, adopción o caso crítico.',
     icon: <PostAddIcon sx={{ fontSize: 50 }} />,
     url: "/publicar",
@@ -26,7 +26,7 @@ const cards = [
   },
   {
     id: 2,
-    title: 'Buscá',
+    title: 'Busca',
     description: 'Filtra entre miles de publicaciones para encontrar a tu compañero.',
     icon: <VisibilityIcon sx={{ fontSize: 50 }} />,
     url: "/buscar",
@@ -35,7 +35,7 @@ const cards = [
   },
   {
     id: 3,
-    title: 'Navegá',
+    title: 'Navega',
     description: 'Explora el mapa interactivo con publicaciones y refugios cercanos.',
     icon: <TravelExploreIcon sx={{ fontSize: 50 }} />,
     url: "/mapa", 
