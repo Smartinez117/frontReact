@@ -203,21 +203,21 @@
 }
 
 .btn-accept {
-  background-color: #48bb78; /* Verde */
+  background-color: #2873d4; /* Verde */
   color: white;
 }
 
 .btn-accept:hover {
-  background-color: #38a169;
+  background-color: #193662;
 }
 
 .btn-reject {
-  background-color: #fc8181; /* Rojo suave */
+  background-color: #c83535; /* Rojo suave */
   color: white;
 }
 
 .btn-reject:hover {
-  background-color: #f56565;
+  background-color: #782a2a;
 }
 
 .btn-accept:active, .btn-reject:active {

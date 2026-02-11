@@ -439,7 +439,6 @@ export default function Publicacion() {
                         textTransform: 'none',
                         py: 1.5, 
                         fontSize: '1rem', 
-                        // Estilos de tu marca (Mismo que botón Publicar)
                         backgroundColor: '#F1B400', 
                         color: '#0D171C',
                         boxShadow: '0 4px 14px rgba(241, 180, 0, 0.4)', // Sombra suave amarilla
@@ -476,7 +475,6 @@ export default function Publicacion() {
                     textTransform: 'none',
                     py: 1.5, 
                     fontSize: '1rem',
-                    // --- ESTILOS PARA EVITAR EL AMARILLO ---
                     color: 'text.primary',       // Texto negro/gris oscuro
                     borderColor: '#bdbdbd',      // Borde gris suave inicial
                     '&:hover': { 
@@ -645,13 +643,13 @@ export default function Publicacion() {
                     ) : null
                   }
                   sx={{
-                    backgroundColor: '#f8ce59',
-                    color: '#000000',
+                    backgroundColor: '#2873d4;',
+                    color: '#ffffff',
                     '&:hover': {
-                      backgroundColor: '#dfb950', 
+                      backgroundColor: '#151665', 
                     },
                     '&.Mui-disabled': {
-                      backgroundColor: '#f8ce59',
+                      backgroundColor: '#2873d4;',
                       color: '#000000', 
                       opacity: 0.6,
                     },
