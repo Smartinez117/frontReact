@@ -300,7 +300,7 @@ const Buscar = () => {
             </div>
 
             <div className="filtro-grupo">
-              <label>Buscar cerca de tu ubicación (configurada en perfil):</label>
+              <label>Distancia (Según la ubicación definida en su perfil):</label>
               <select value={radioKm} onChange={e => setRadioKm(e.target.value)}>
                 <option value="">Cualquier distancia</option>
                 <option value="3">Cerca (3 km)</option>
@@ -311,8 +311,8 @@ const Buscar = () => {
             </div>
 
             <div className="filtro-grupo">
-              <FormControl fullWidth sx={{ mt: 1 }}>
-                <FormLabel>Etiquetas</FormLabel>
+              <FormControl fullWidth sx={{ mt: 0}}>
+                <label>Etiquetas:</label>
                 <Autocomplete
                   multiple
                   options={etiquetasDisponibles}
@@ -329,7 +329,20 @@ const Buscar = () => {
               </FormControl>
             </div>
 
-            <button className="boton-aplicar-filtros" onClick={aplicarFiltros}>
+            <button 
+              className="boton-aplicar-filtros" 
+              onClick={aplicarFiltros}
+              style={{
+                backgroundColor: '#C4D6A6',
+                color: 'black',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                width: '100%',
+                marginTop: '10px'
+              }}
+            >
               Aplicar filtros
             </button>
 
@@ -410,7 +423,16 @@ const Buscar = () => {
         <button
           className="boton-cargar-mas"
           onClick={loadMore}
-          style={{ margin: '20px auto', display: 'block' }}
+          style={{ 
+            margin: '20px auto', 
+            display: 'block',
+            backgroundColor: '#C4D6A6',
+            color: 'black',
+            border: 'none',
+            padding: '10px 20px',
+            borderRadius: '8px',
+            cursor: 'pointer'
+          }}
         >
           Cargar más
         </button>

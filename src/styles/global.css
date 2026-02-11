@@ -253,7 +253,7 @@ background-color: #d69917;
 
 /* ===== Filtros ===== */
 .boton-toggle-filtros {
-background-color: #F1B400;
+background-color: var(--color-acento);
   color: #0D171C;
   border: none;
   padding: 10px 16px;
@@ -264,7 +264,7 @@ background-color: #F1B400;
 }
 
 .boton-toggle-filtros:hover {
-background-color: #d9a900;
+background-color: #849964;
 }
 
 .header-filtros {
