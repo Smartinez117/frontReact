@@ -156,8 +156,9 @@ const Navbar = () => {
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <Box
+              className="nombre-redema"
             component="img"
-            src="/logo.png"
+            src="/Logo.svg"
             alt="Logo"
             sx={{
               width: 40,
@@ -171,13 +172,12 @@ const Navbar = () => {
             noWrap
             component="a"
             href="/"
+            className="nombre-redema"
             sx={{
               mr: 2,
               display: { xs: 'none', md: 'flex' },
-              fontFamily: 'monospace',
               fontWeight: 700,
-              letterSpacing: '.3rem',
-              color: 'black',
+              letterSpacing: '.2rem',
               textDecoration: 'none',
             }}
           >
@@ -228,6 +228,7 @@ const Navbar = () => {
             }}
           />
           <Typography
+              className="nombre-redema"
             variant="h5"
             noWrap
             component="a"
@@ -236,10 +237,8 @@ const Navbar = () => {
               mr: 2,
               display: { xs: 'flex', md: 'none' },
               flexGrow: 1,
-              fontFamily: 'monospace',
               fontWeight: 700,
               letterSpacing: '.3rem',
-              color: 'black',
               textDecoration: 'none',
               fontSize: { xs: '1.2rem', sm: '1.5rem' }
             }}

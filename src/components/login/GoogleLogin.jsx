@@ -101,9 +101,9 @@ function Login() {
       <div className="login-content">
         <div className="logo-text">
           <img src="/Logo.svg" alt="Logo Redema" className="logo" />
-          <h1 className="nombre-redema">Redema</h1>
+          <h1 className="nombre-redema">REDEMA</h1>
         </div>
-        <p className="bienvenida">Bienvenido a Redema</p>
+        <p className="bienvenida">Bienvenid@ a REDEMA</p>
         <button className="google-button" onClick={handleLogin} disabled={loading}>
           {loading ? (
             <>

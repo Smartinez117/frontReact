@@ -6,6 +6,23 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
+/* Fuente local: Chewy */
+@font-face {
+  font-family: 'Chewy';
+  src: url('/assets/fonts/Chewy-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Clase reutilizable para títulos con el nombre REDEMA */
+.nombre-redema {
+  font-family: 'Chewy', monospace !important;
+  color: #aa3939;
+  font-weight: 600;
+  letter-spacing: .2rem;
+  text-decoration: none;
+}
 
 
 /* styles/global.css */
