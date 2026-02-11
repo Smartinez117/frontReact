@@ -174,9 +174,9 @@ const Navbar = () => {
             sx={{
               mr: 2,
               display: { xs: 'none', md: 'flex' },
-              fontFamily: 'monospace',
-              fontWeight: 700,
-              letterSpacing: '.3rem',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              fontWeight: 600,
+              letterSpacing: '0',
               color: 'black',
               textDecoration: 'none',
             }}
@@ -236,9 +236,9 @@ const Navbar = () => {
               mr: 2,
               display: { xs: 'flex', md: 'none' },
               flexGrow: 1,
-              fontFamily: 'monospace',
-              fontWeight: 700,
-              letterSpacing: '.3rem',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              fontWeight: 600,
+              letterSpacing: '0',
               color: 'black',
               textDecoration: 'none',
               fontSize: { xs: '1.2rem', sm: '1.5rem' }
@@ -248,10 +248,62 @@ const Navbar = () => {
           </Typography>
 
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 1 }}>
-            <Button onClick={() => navigate('/home')} sx={{ my: 2, color: 'black', textTransform: 'none' }}>Inicio</Button>
-            <Button onClick={() => navigate('/publicar')} sx={{ my: 2, color: 'black', textTransform: 'none' }}>Publicar</Button>
-            <Button onClick={() => navigate('/buscar')} sx={{ my: 2, color: 'black', textTransform: 'none' }}>Buscar</Button>
-            <Button onClick={() => navigate('/mapa')} sx={{ my: 2, color: 'black', textTransform: 'none' }}>Mapa</Button>
+            <Button 
+              onClick={() => navigate('/home')} 
+              sx={{ 
+                my: 2, 
+                color: 'black', 
+                textTransform: 'none',
+                '&:hover': {
+                  color: '#000000',
+                  backgroundColor: '#f8ce59'
+                }
+              }}
+            >
+              Inicio
+            </Button>
+            <Button 
+              onClick={() => navigate('/publicar')} 
+              sx={{ 
+                my: 2, 
+                color: 'black', 
+                textTransform: 'none',
+                '&:hover': {
+                  color: '#000000',
+                  backgroundColor: '#f8ce59'
+                }
+              }}
+            >
+              Publicar
+            </Button>
+            <Button 
+              onClick={() => navigate('/buscar')} 
+              sx={{ 
+                my: 2, 
+                color: 'black', 
+                textTransform: 'none',
+                '&:hover': {
+                  color: '#000000',
+                  backgroundColor: '#f8ce59'
+                }
+              }}
+            >
+              Buscar
+            </Button>
+            <Button 
+              onClick={() => navigate('/mapa')} 
+              sx={{ 
+                my: 2, 
+                color: 'black', 
+                textTransform: 'none',
+                '&:hover': {
+                  color: '#000000',
+                  backgroundColor: '#f8ce59'
+                }
+              }}
+            >
+              Mapa
+            </Button>
           </Box>
 
           <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center', gap: 1  }}>
@@ -262,7 +314,13 @@ const Navbar = () => {
             <Tooltip title="Ver Notificaciones">
                <IconButton 
                  onClick={() => navigate('/notificaciones')}
-                 sx={{ color: 'black' }}
+                 sx={{ 
+                   color: 'black',
+                   '&:hover': {
+                     backgroundColor: '#f8ce59',
+                     color: 'black' 
+                   }
+                 }}
                >
                  <AddAlertIcon />
                </IconButton>
@@ -290,23 +348,23 @@ const Navbar = () => {
                   <React.Fragment key={setting}>
                     {isAdmin && (
                       <MenuItem key="panel-admin" onClick={() => { handleCloseUserMenu(); navigate('/admin/panel'); }}>
-                        <AdminPanelSettingsIcon/>
+                        <AdminPanelSettingsIcon sx={{ width: 20, height: 20, mr: 1 }} />
                         <Typography textAlign="center">Panel Admin</Typography>
                       </MenuItem>
                     )}
                     <MenuItem key={setting} onClick={() => handleUserMenuClick(setting)}>
-                      {setting === "Configuración" && <SettingsIcon sx={{ mr: 1 }} />}
-                      {setting === "Notificaciones" && <AddAlertIcon sx={{ mr: 1 }} />}
-                      {setting === "Mi perfil" && <Avatar sx={{ width: 20, height: 20, mr: 1 }} />}
+                      {setting === "Configuración" && <SettingsIcon sx={{ width: 20, height: 20, mr: 1 }} />}
+                      {setting === "Notificaciones" && <AddAlertIcon sx={{ width: 20, height: 20, mr: 1 }} />}
+                      {setting === "Mi perfil" && <Avatar sx={{ width: 20, height: 20, mr: 1, bgcolor: 'black' }} />}
                       {setting === "Cerrar sesión" && <LogoutIcon sx={{ width: 20, height: 20, mr: 1 }} />}
                       <Typography textAlign="center">{setting}</Typography>
                     </MenuItem>
                   </React.Fragment>
                 ) : (
                   <MenuItem key={setting} onClick={() => handleUserMenuClick(setting)}>
-                    {setting === "Configuración" && <SettingsIcon sx={{ mr: 1 }} />}
-                    {setting === "Notificaciones" && <AddAlertIcon sx={{ mr: 1 }} />}
-                    {setting === "Mi perfil" && <Avatar sx={{ width: 20, height: 20, mr: 1 }} />}
+                    {setting === "Configuración" && <SettingsIcon sx={{ width: 20, height: 20, mr: 1 }} />}
+                    {setting === "Notificaciones" && <AddAlertIcon sx={{ width: 20, height: 20, mr: 1 }} />}
+                    {setting === "Mi perfil" && <Avatar sx={{ width: 20, height: 20, mr: 1, bgcolor: 'black' }} />}
                     {setting === "Cerrar sesión" && <LogoutIcon sx={{ width: 20, height: 20, mr: 1 }} />}
                     <Typography textAlign="center">{setting}</Typography>
                   </MenuItem>
