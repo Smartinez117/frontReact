@@ -390,7 +390,7 @@ export default function PerfilConfiguracion() {
               </Stack>
               {seccionEditando !== 'ubicacion' && (
                 <Button variant="plain" color="neutral" startDecorator={<EditIcon />} onClick={() => handleModificar('ubicacion')}>
-                  Modificar
+                  Editar
                 </Button>
               )}
             </Box>

@@ -13,14 +13,15 @@ const SelfPublications = ({ userId, isOwner }) => {
   const [loadingAccion, setLoadingAccion] = useState(null); // { idPublicacion, accion } | null
 
   // Eliminar con confirmación
-  const handleEliminar = (id) => {
+  const handleEliminar = (publicacion) => { // Recibimos el objeto completo, no solo el ID
     confirmarAccion({
       tipo: 'publicacion',
+      dato: publicacion.titulo, // <--- AQUÍ PASAMOS EL DATO ESPECÍFICO
       onConfirm: async () => {
-        setLoadingAccion({ idPublicacion: id, accion: 'eliminar' });
+        setLoadingAccion({ idPublicacion: publicacion.id, accion: 'eliminar' });
         try {
-          await eliminarPublicacion(id);
-          setPublicaciones((prev) => prev.filter((pub) => pub.id !== id));
+          await eliminarPublicacion(publicacion.id);
+          setPublicaciones((prev) => prev.filter((pub) => pub.id !== publicacion.id));
         } finally {
           setLoadingAccion(null);
         }

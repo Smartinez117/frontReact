@@ -287,18 +287,29 @@ export default function Publicacion() {
   };
 
   const borrarComentario = (cid) => {
+    const comentarioAborrar = comentarios.find(c => c.id === cid);
+    const textoCorto = comentarioAborrar 
+      ? (comentarioAborrar.contenido || comentarioAborrar.texto || '').substring(0, 30) + '...' 
+      : null;
+
     confirmarAccion({
-      tipo: 'publicacion',
+      tipo: 'comentario',
+      dato: textoCorto, 
+      
       onConfirm: async () => {
-        if (!currentUser) return;
-        try {
-          const token = await currentUser.getIdToken();
-          const res = await fetch(`${API_URL}/comentarios/${cid}`, {
-            method: "DELETE",
-            headers: { "Authorization": `Bearer ${token}` }
-          });
-          if (res.ok) setComentarios(prev => prev.filter(c => c.id !== cid));
-        } catch (e) { alert("Error al eliminar"); }
+        if (!currentUser) throw new Error("No hay sesión activa");
+
+        const token = await currentUser.getIdToken();
+        const res = await fetch(`${API_URL}/comentarios/${cid}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          throw new Error("No se pudo eliminar el comentario");
+        }
+
+        setComentarios(prev => prev.filter(c => c.id !== cid));
       }
     });
   };
