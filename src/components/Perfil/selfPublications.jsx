@@ -13,10 +13,10 @@ const SelfPublications = ({ userId, isOwner }) => {
   const [loadingAccion, setLoadingAccion] = useState(null); // { idPublicacion, accion } | null
 
   // Eliminar con confirmación
-  const handleEliminar = (publicacion) => { // Recibimos el objeto completo, no solo el ID
+  const handleEliminar = (publicacion) => { 
     confirmarAccion({
       tipo: 'publicacion',
-      dato: publicacion.titulo, // <--- AQUÍ PASAMOS EL DATO ESPECÍFICO
+      dato: publicacion.titulo,
       onConfirm: async () => {
         setLoadingAccion({ idPublicacion: publicacion.id, accion: 'eliminar' });
         try {
@@ -29,17 +29,17 @@ const SelfPublications = ({ userId, isOwner }) => {
     });
   };
 
-  //Archivar publicación
-  const handleArchivar = (id) => {
+  const handleArchivar = (publicacion) => {
     confirmarAccion({
       tipo: 'archivar',
+      dato: publicacion.titulo,
       onConfirm: async () => {
-        setLoadingAccion({ idPublicacion: id, accion: 'archivar' });
+        setLoadingAccion({ idPublicacion: publicacion.id, accion: 'archivar' });
         try {
-          await archivarPublicacion(id);
+          await archivarPublicacion(publicacion.id);
           setPublicaciones(prev =>
             prev.map(pub =>
-              pub.id === id ? { ...pub, estado: 1 } : pub
+              pub.id === publicacion.id ? { ...pub, estado: 1 } : pub
             )
           );
         } finally {
@@ -49,16 +49,17 @@ const SelfPublications = ({ userId, isOwner }) => {
     });
   };
 
-  const handleDesarchivar = (id) => {
+  const handleDesarchivar = (publicacion) => {
     confirmarAccion({
       tipo: 'desarchivar',
+      dato: publicacion.titulo,
       onConfirm: async () => {
-        setLoadingAccion({ idPublicacion: id, accion: 'desarchivar' });
+        setLoadingAccion({ idPublicacion: publicacion.id, accion: 'desarchivar' });
         try {
-          await desarchivarPublicacion(id);
+          await desarchivarPublicacion(publicacion.id);
           setPublicaciones(prev =>
             prev.map(pub =>
-              pub.id === id ? { ...pub, estado: 0 } : pub
+              pub.id === publicacion.id ? { ...pub, estado: 0 } : pub
             )
           );
         } finally {
@@ -178,7 +179,7 @@ const SelfPublications = ({ userId, isOwner }) => {
                       <button
                         type="button"
                         className="boton-eliminar"
-                        onClick={() => handleEliminar(pub.id)}
+                        onClick={() => handleEliminar(pub)}
                         disabled={loadingAccion !== null}
                       >
                         {loadingAccion?.idPublicacion === pub.id && loadingAccion?.accion === 'eliminar' ? (
@@ -193,7 +194,7 @@ const SelfPublications = ({ userId, isOwner }) => {
                         <button
                           type="button"
                           className="boton-archivar"
-                          onClick={() => handleArchivar(pub.id)}
+                          onClick={() => handleArchivar(pub)}
                           disabled={loadingAccion !== null}
                         >
                           {loadingAccion?.idPublicacion === pub.id && loadingAccion?.accion === 'archivar' ? (
@@ -211,7 +212,7 @@ const SelfPublications = ({ userId, isOwner }) => {
                         <button
                           type="button"
                           className="boton-desarchivar"
-                          onClick={() => handleDesarchivar(pub.id)}
+                          onClick={() => handleDesarchivar(pub)}
                           disabled={loadingAccion !== null}
                         >
                           {loadingAccion?.idPublicacion === pub.id && loadingAccion?.accion === 'desarchivar' ? (

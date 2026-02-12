@@ -36,6 +36,9 @@ const getMessage = (tipo, dato) => {
     case 'desarchivar':
       return `La publicación ${nombre} volverá a ser pública y visible para todos.`;
     case 'comentario':
+      if (dato) {
+          return `Está por eliminar ${nombre}. Esta acción no se puede deshacer.`;
+      }
       return 'Está por eliminar este comentario. Esta acción no se puede deshacer.';
     case 'suspender':
       return `Está por suspender el acceso a ${nombre}. El usuario no podrá iniciar sesión hasta que sea reactivado.`;

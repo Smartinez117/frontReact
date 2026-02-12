@@ -274,3 +274,11 @@
   cursor: not-allowed;
   pointer-events: none;
 }
+
+
+.publicacion-titulo {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  word-wrap: break-word;
+  max-width: 100%;
+}

@@ -185,12 +185,10 @@ export default function UbicacionesAdmin() {
             const deptoGuardadoNum = Number(formData.id_departamento);
 
             if (selectedDepartamento && deptoGuardadoNum === deptoSeleccionadoNum) {
-                // Caso normal: Actualizamos la tabla
                 fetchLocalidades(selectedDepartamento);
                 mostrarAlerta({ titulo: 'Éxito', mensaje: 'Localidad guardada correctamente', tipo: 'success' });
             } else if (selectedDepartamento) {
-                // Caso especial: Se movió a otro departamento
-                fetchLocalidades(selectedDepartamento); // Se va de la lista actual
+                fetchLocalidades(selectedDepartamento); 
                 mostrarAlerta({ 
                     titulo: 'Atención', 
                     mensaje: 'Guardado correctamente. La localidad se movió a otro partido/departamento y ya no es visible en esta lista.', 
@@ -198,7 +196,6 @@ export default function UbicacionesAdmin() {
                     duracion: 4000
                 });
             } else {
-                // Caso: Creación sin filtro activo (raro por el disabled, pero posible)
                  mostrarAlerta({ titulo: 'Éxito', mensaje: 'Localidad guardada correctamente', tipo: 'success' });
             }
 
@@ -212,16 +209,17 @@ export default function UbicacionesAdmin() {
     }
   };
 
-  // 4. BORRAR CON SWEETALERT
-  const handleDelete = (id) => {
+  // 4. BORRAR CON SWEETALERT (CORREGIDO)
+  const handleDelete = (localidad) => { // Recibimos el objeto completo 'row'
     confirmarAccion({
         tipo: 'localidad',
+        dato: localidad.nombre, // Pasamos el nombre para el mensaje
         onConfirm: async () => {
-             const res = await fetch(`${API_URL}/api/ubicacion/localidades/${id}`, { method: 'DELETE' });
+             const res = await fetch(`${API_URL}/api/ubicacion/localidades/${localidad.id}`, { method: 'DELETE' });
              if (!res.ok) {
                  throw new Error("No se pudo eliminar la localidad.");
              }
-             setLocalidades(prev => prev.filter(l => l.id !== id));
+             setLocalidades(prev => prev.filter(l => l.id !== localidad.id));
         }
     });
   };
@@ -279,7 +277,8 @@ export default function UbicacionesAdmin() {
                                 <IconButton size="sm" variant="plain" color="neutral" onClick={() => handleOpenEdit(row)}><EditIcon /></IconButton>
                             </Tooltip>
                             <Tooltip title="Eliminar">
-                                <IconButton size="sm" variant="plain" color="danger" onClick={() => handleDelete(row.id)}><DeleteIcon /></IconButton>
+                                {/* AQUÍ SE CAMBIÓ: pasamos 'row' en lugar de 'row.id' */}
+                                <IconButton size="sm" variant="plain" color="danger" onClick={() => handleDelete(row)}><DeleteIcon /></IconButton>
                             </Tooltip>
                         </Box>
                     </td>

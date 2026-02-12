@@ -116,6 +116,15 @@ function EnhancedTableHead(props) {
   );
 }
 
+EnhancedTableHead.propTypes = {
+  numSelected: PropTypes.number.isRequired,
+  onRequestSort: PropTypes.func.isRequired,
+  onSelectAllClick: PropTypes.func.isRequired,
+  order: PropTypes.oneOf(['asc', 'desc']).isRequired,
+  orderBy: PropTypes.string.isRequired,
+  rowCount: PropTypes.number.isRequired,
+};
+
 // --- Barra de Herramientas ---
 function EnhancedTableToolbar(props) {
   const { numSelected, onDeleteSelected, onAddNew } = props;
@@ -154,6 +163,12 @@ function EnhancedTableToolbar(props) {
     </Box>
   );
 }
+
+EnhancedTableToolbar.propTypes = {
+  numSelected: PropTypes.number.isRequired,
+  onDeleteSelected: PropTypes.func.isRequired,
+  onAddNew: PropTypes.func.isRequired,
+};
 
 // --- COMPONENTE PRINCIPAL ---
 export default function EtiquetasAdmin() {
@@ -197,11 +212,9 @@ export default function EtiquetasAdmin() {
             setNewTagName('');
             setOpenModal(false);
             fetchEtiquetas(); 
-            // Feedback visual positivo opcional
             mostrarAlerta({ titulo: 'Creada', mensaje: 'Etiqueta creada correctamente', tipo: 'success', duracion: 1500 });
         } else {
             const errorData = await response.json();
-            // REEMPLAZO DE ALERT
             mostrarAlerta({ titulo: 'Error', mensaje: errorData.error || 'No se pudo crear', tipo: 'error' });
         }
     } catch (error) {
@@ -211,17 +224,19 @@ export default function EtiquetasAdmin() {
   };
 
   // 3. ELIMINAR ETIQUETA (DELETE) - Individual
-  const handleDeleteEtiqueta = (id) => {
+  // --- CORRECCIÓN AQUÍ: Recibimos el objeto completo 'etiqueta' ---
+  const handleDeleteEtiqueta = (etiqueta) => {
     confirmarAccion({
         tipo: 'etiqueta',
+        dato: etiqueta.nombre, // Pasamos el nombre para que salga en el mensaje
         onConfirm: async () => {
-             const response = await fetch(`${API_URL}api/etiquetas/${id}`, { method: 'DELETE' });
+             const response = await fetch(`${API_URL}api/etiquetas/${etiqueta.id}`, { method: 'DELETE' });
              if (!response.ok) {
                  const errorData = await response.json();
                  throw new Error(errorData.error || 'No se pudo eliminar la etiqueta');
              }
-             // Si todo sale bien, actualizamos estado
-             setSelected(prev => prev.filter(itemId => itemId !== id));
+             // Si todo sale bien, actualizamos estado usando el ID
+             setSelected(prev => prev.filter(itemId => itemId !== etiqueta.id));
              fetchEtiquetas(); 
         }
     });
@@ -231,7 +246,7 @@ export default function EtiquetasAdmin() {
   const handleDeleteSelected = () => {
     confirmarAccion({
         tipo: 'etiqueta',
-        dato: `${selected.length} etiquetas`, // Feedback visual en el mensaje
+        dato: `${selected.length} etiquetas`, 
         onConfirm: async () => {
             const deletePromises = selected.map(id => 
                 fetch(`${API_URL}api/etiquetas/${id}`, { method: 'DELETE' }).then(res => {
@@ -334,9 +349,11 @@ export default function EtiquetasAdmin() {
                   <th id={labelId} scope="row">{row.id}</th>
                   <td><Typography fontWeight="lg">{row.nombre}</Typography></td>
                   <td>
-                    <IconButton size="sm" color="danger" variant="plain" onClick={(e) => { e.stopPropagation(); handleDeleteEtiqueta(row.id); }}>
-                      <DeleteIcon />
-                    </IconButton>
+                    <Tooltip title="Eliminar">
+                        <IconButton size="sm" color="danger" variant="plain" onClick={(e) => { e.stopPropagation(); handleDeleteEtiqueta(row); }}>
+                            <DeleteIcon />
+                        </IconButton>
+                    </Tooltip>
                   </td>
                 </tr>
               );

@@ -372,7 +372,18 @@ export default function Publicacion() {
                 </Button>
             </Stack>
 
-            <Typography variant="h3" component="h1" fontWeight="800" gutterBottom sx={{ fontSize: { xs: '2rem', md: '2.75rem' }, lineHeight: 1.2 }}>
+            <Typography 
+              variant="h3" 
+              component="h1" 
+              fontWeight="800" 
+              gutterBottom 
+              sx={{ 
+                fontSize: { xs: '2rem', md: '2.75rem' }, 
+                lineHeight: 1.2,
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word'
+              }}
+            >
               {titulo}
             </Typography>
 
@@ -405,8 +416,19 @@ export default function Publicacion() {
 
             <Divider sx={{ my: 3 }} />
 
-            <Typography variant="body1" sx={{ whiteSpace: 'pre-line', mb: 2, lineHeight: 1.8, fontSize: '1.15rem', color: '#333' }}>
-                {verDescripcionCompleta || descripcion.length <= 300 ? descripcion : `${descripcion.substring(0, 300)}...`}
+            <Typography 
+              variant="body1" 
+              sx={{ 
+                whiteSpace: 'pre-line', 
+                mb: 2, 
+                lineHeight: 1.8, 
+                fontSize: '1.15rem', 
+                color: '#333',
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word'
+              }}
+            >
+              {verDescripcionCompleta || descripcion.length <= 300 ? descripcion : `${descripcion.substring(0, 300)}...`}
             </Typography>
             {descripcion.length > 300 && (
                 <Button onClick={() => setVerDescripcionCompleta(!verDescripcionCompleta)} size="large">
