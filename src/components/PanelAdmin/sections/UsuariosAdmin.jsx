@@ -246,7 +246,7 @@ export default function UsuariosAdmin() {
         field: "acciones",
         headerName: "Acciones",
         flex: 1,
-        minWidth: 300,
+        minWidth: 400,
         sortable: false,
         filterable: false,
         renderCell: (params) => {
@@ -254,7 +254,15 @@ export default function UsuariosAdmin() {
           const isAdmin = row.rol?.toLowerCase() === "admin";
 
           return (
-            <>
+            <Box 
+              sx={{ 
+                display: "flex", 
+                alignItems: "center",
+                height: "100%",
+                width: "100%",
+                gap: 1 
+              }}
+            >
               <Button
                 variant="contained"
                 size="small"
@@ -262,15 +270,15 @@ export default function UsuariosAdmin() {
                 to={`/perfil/${row.slug || row.id}`}
                 target="_blank"
                 sx={{
-                  mr: 1,
-                  backgroundColor: '#F1B400;', 
-                  color: '#000000', 
-                  fontWeight: 'bold',
-                  boxShadow: 'none', 
-                  '&:hover': {
-                    backgroundColor: '#e0ba50',
-                    borderColor: '#e0ba50',
-                  }
+                  backgroundColor: "#F1B400;",
+                  color: "#000000",
+                  fontWeight: "bold",
+                  boxShadow: "none",
+                  minWidth: "60px", 
+                  "&:hover": {
+                    backgroundColor: "#e0ba50",
+                    borderColor: "#e0ba50",
+                  },
                 }}
               >
                 Ver
@@ -280,7 +288,7 @@ export default function UsuariosAdmin() {
                 variant="contained"
                 color="primary"
                 size="small"
-                sx={{ mr: 1 }}
+                sx={{ minWidth: "70px" }}
                 onClick={() => handleEditUsuario(row)}
               >
                 Editar
@@ -291,7 +299,7 @@ export default function UsuariosAdmin() {
                   variant="contained"
                   color="inherit"
                   size="small"
-                  sx={{ mr: 1, width: 90 }}
+                  sx={{ width: 90 }}
                   disabled
                 >
                   Denegado
@@ -301,7 +309,7 @@ export default function UsuariosAdmin() {
                   variant="contained"
                   color={row.estado === "activo" ? "secondary" : "success"}
                   size="small"
-                  sx={{ mr: 1, width: 90 }}
+                  sx={{ width: 90 }}
                   onClick={() => handleAccionUsuario(row)}
                 >
                   {row.estado === "activo" ? "Suspender" : "Activar"}
@@ -328,7 +336,7 @@ export default function UsuariosAdmin() {
                   Denegado
                 </Button>
               )}
-            </>
+            </Box>
           );
         },
       },
@@ -381,25 +389,38 @@ export default function UsuariosAdmin() {
         />
       </Box>
 
-      {/* MODAL EDITAR (ESTE SE QUEDA PORQUE ES UN FORMULARIO, NO UNA CONFIRMACIÓN) */}
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Editar Usuario</DialogTitle>
-        <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
-          <TextField
-            label="Nombre"
-            value={usuarioSeleccionado?.nombre || ""}
-            onChange={(e) =>
-              setUsuarioSeleccionado({
-                ...usuarioSeleccionado,
-                nombre: e.target.value.slice(0, 40),
-              })
-            }
-            fullWidth
-            disabled={loadingGuardar}
-            inputProps={{ maxLength: 40 }}
-            helperText={`${usuarioSeleccionado?.nombre?.length || 0}/40 caracteres`}
-          />
-          <FormControl fullWidth disabled={loadingGuardar}>
+        
+        <DialogContent 
+          sx={{ 
+            display: "flex", 
+            flexDirection: "column", 
+            gap: 3,             // Espacio entre los inputs
+            pt: 5,              // AUMENTADO: Padding superior interno del contenedor
+            pb: 3               // Padding inferior
+          }}
+        >
+          {/* Box con margen superior extra para separar del título definitivamente */}
+          <Box sx={{ mt: 2 }}> 
+            <TextField
+              label="Nombre"
+              variant="outlined"
+              value={usuarioSeleccionado?.nombre || ""}
+              onChange={(e) =>
+                setUsuarioSeleccionado({
+                  ...usuarioSeleccionado,
+                  nombre: e.target.value.slice(0, 40),
+                })
+              }
+              fullWidth
+              disabled={loadingGuardar}
+              inputProps={{ maxLength: 40 }}
+              helperText={`${usuarioSeleccionado?.nombre?.length || 0}/40 caracteres`}
+            />
+          </Box>
+
+          <FormControl fullWidth disabled={loadingGuardar} variant="outlined">
             <InputLabel id="rol-label">Rol</InputLabel>
             <Select
               labelId="rol-label"
@@ -419,9 +440,11 @@ export default function UsuariosAdmin() {
               ))}
             </Select>
           </FormControl>
+
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)} disabled={loadingGuardar}>
+        
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={() => setOpen(false)} disabled={loadingGuardar} color="inherit">
             Cancelar
           </Button>
           <Button
@@ -431,15 +454,13 @@ export default function UsuariosAdmin() {
             sx={{ position: "relative" }}
           >
             {loadingGuardar ? (
-              <CircularProgress size={20} sx={{ position: "absolute" }} />
+              <CircularProgress size={24} sx={{ position: "absolute", color: 'inherit' }} />
             ) : (
               "Guardar"
             )}
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* SE ELIMINARON LOS MODALES DE CONFIRMACIÓN Y ELIMINACIÓN YA QUE AHORA LOS MANEJA SWAL */}
 
       <Snackbar
         open={snackbarOpen}

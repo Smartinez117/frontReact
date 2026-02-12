@@ -386,8 +386,8 @@ export default function Publicar() {
       if (res.ok) {
         console.log("Publicación creada:", data);
         mostrarAlerta({
-          titulo: '✅ ¡Listo!',
-          mensaje: 'Publicación enviada con éxito',
+          titulo: '¡Listo!',
+          mensaje: 'Tu publicación se ha compartido con la comunidad.',
           tipo: 'success'
         });
         localStorage.removeItem("borrador_publicacion");

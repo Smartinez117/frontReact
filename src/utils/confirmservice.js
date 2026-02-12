@@ -10,7 +10,7 @@ const getTitle = (tipo) => {
     case 'comentario': return '¿Eliminar comentario?';
     case 'etiqueta': return '¿Eliminar etiqueta?';
     case 'localidad': return '¿Eliminar localidad?';
-    case 'reporte': return '¿Eliminar reporte?';
+    case 'reporte': return '¿Eliminar denuncia?';
     case 'suspender': return '¿Suspender usuario?';
     case 'activar': return '¿Activar usuario?';
     default: return '¿Confirmar acción?';
@@ -30,7 +30,7 @@ const getMessage = (tipo, dato) => {
     case 'localidad':
       return `Está por eliminar la localidad ${nombre}. Esto podría afectar a los usuarios o publicaciones que dependan de esta ubicación.`;
     case 'reporte': 
-      return `Está por eliminar este reporte. Esto significa que la denuncia será desestimada y desaparecerá de la lista.`;
+      return `Está por eliminar esta denuncia. Esto significa que la denuncia será desestimada y desaparecerá de la lista.`;
     case 'archivar':
       return `Está por archivar ${nombre}. Dejará de ser visible para otros usuarios, pero podrás restaurarla luego.`;
     case 'desarchivar':

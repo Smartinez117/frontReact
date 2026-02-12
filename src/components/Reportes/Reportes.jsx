@@ -19,7 +19,7 @@ import { getAuth } from "firebase/auth";
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function ReporteForm({ idPublicacion, idComentario, idUsuario, onClose }) {
-  const [tipo, setTipo] = useState("Spam"); // Valor por defecto para evitar clic extra
+  const [tipo, setTipo] = useState("Spam"); 
   const [descripcion, setDescripcion] = useState("");
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState(null);
@@ -52,7 +52,7 @@ export default function ReporteForm({ idPublicacion, idComentario, idUsuario, on
         body: JSON.stringify({
           id_publicacion: idPublicacion || null,
           id_comentario: idComentario || null,
-          id_usuario_reportado: idUsuario || null, // Mapeo correcto
+          id_usuario_reportado: idUsuario || null, 
           descripcion,
           tipo,
         }),
@@ -138,6 +138,7 @@ export default function ReporteForm({ idPublicacion, idComentario, idUsuario, on
             </RadioGroup>
           </FormControl>
 
+          {/* --- AQUÍ ESTÁN LOS CAMBIOS EN EL TEXTFIELD --- */}
           <TextField
             label="Descripción adicional (Opcional)"
             placeholder="Danos más detalles para ayudarnos a entender..."
@@ -147,7 +148,19 @@ export default function ReporteForm({ idPublicacion, idComentario, idUsuario, on
             variant="outlined"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
-            sx={{ mt: 2, mb: 2 }}
+            // 1. Limite nativo del input
+            inputProps={{ maxLength: 500 }} 
+            // 2. Contador visual
+            helperText={`${descripcion.length}/500`}
+            // 3. Estilos para alinear el contador a la derecha
+            sx={{ 
+              mt: 2, 
+              mb: 2,
+              '& .MuiFormHelperText-root': {
+                textAlign: 'right',
+                color: descripcion.length === 500 ? 'error.main' : 'text.secondary'
+              }
+            }}
           />
 
           {error && (
@@ -170,7 +183,7 @@ export default function ReporteForm({ idPublicacion, idComentario, idUsuario, on
               type="submit" 
               variant="contained" 
               color="error" 
-              disabled={loading || mensaje} // Deshabilitar si carga o si ya se envió éxito
+              disabled={loading || mensaje} 
               startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
             >
               {loading ? "Enviando..." : "Denunciar"}

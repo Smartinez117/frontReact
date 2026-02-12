@@ -16,6 +16,13 @@ import Option from '@mui/joy/Option';
 import Checkbox from '@mui/joy/Checkbox';
 import Chip from '@mui/joy/Chip';
 
+// --- NUEVO: Imports para el Modal de Detalle ---
+import Modal from '@mui/joy/Modal';
+import ModalDialog from '@mui/joy/ModalDialog';
+import ModalClose from '@mui/joy/ModalClose';
+import Divider from '@mui/joy/Divider';
+import Stack from '@mui/joy/Stack';
+
 // Iconos
 import DeleteIcon from '@mui/icons-material/Delete';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -27,6 +34,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import ArticleIcon from '@mui/icons-material/Article';
 import PersonIcon from '@mui/icons-material/Person';
 import CommentIcon from '@mui/icons-material/Comment';
+// --- NUEVO: Icono para ver detalle ---
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 import { visuallyHidden } from '@mui/utils';
 import { CssVarsProvider } from '@mui/joy/styles';
@@ -57,7 +66,7 @@ const headCells = [
   { id: 'objetivo_tipo', numeric: false, disablePadding: false, label: 'Objetivo' },
   { id: 'objetivo_id', numeric: true, disablePadding: false, label: 'ID Ref' },
   { id: 'descripcion', numeric: false, disablePadding: false, label: 'Detalle' },
-  { id: 'id_usuario_denunciante', numeric: true, disablePadding: false, label: 'Denunciante' },
+  { id: 'id_usuario_denunciante', numeric: false, disablePadding: false, label: 'Denunciante' },
   { id: 'fecha', numeric: false, disablePadding: false, label: 'Fecha' },
   { id: 'acciones', numeric: false, disablePadding: false, label: 'Acciones' },
 ];
@@ -87,7 +96,11 @@ function EnhancedTableHead(props) {
             <th
               key={headCell.id}
               aria-sort={active ? { asc: 'ascending', desc: 'descending' }[order] : undefined}
-              style={{ width: headCell.id === 'descripcion' ? 'auto' : '100px' }}
+              style={{ 
+                width: headCell.id === 'descripcion' ? 'auto' : 
+                       headCell.id === 'id_usuario_denunciante' ? '140px' : 
+                       '100px' 
+              }}
             >
               {headCell.id !== 'acciones' ? (
                 <Link
@@ -120,7 +133,7 @@ function EnhancedTableToolbar({ numSelected, onDeleteSelected, filterPubId, setF
       {numSelected > 0 ? (
         <Typography sx={{ flex: '1 1 100%' }} component="div">{numSelected} seleccionado(s)</Typography>
       ) : (
-        <Typography level="h3" component="div">Gestión de Reportes</Typography>
+        <Typography level="h3" component="div">Gestión de Denuncias</Typography>
       )}
 
       {numSelected > 0 ? (
@@ -167,6 +180,9 @@ export default function ReportesAdmin() {
   const [filterPubId, setFilterPubId] = React.useState('');
   const [activeFilter, setActiveFilter] = React.useState(null);
 
+  // --- NUEVO: Estado para el modal de detalle ---
+  const [reporteDetalle, setReporteDetalle] = React.useState(null); 
+
   const fetchReportes = async (publicacionId = null) => {
     setLoading(true);
     try {
@@ -179,7 +195,7 @@ export default function ReportesAdmin() {
         setPage(0);
         setSelected([]);
       } else {
-        console.error("Error obteniendo reportes");
+        console.error("Error obteniendo denuncias");
         setRows([]);
       }
     } catch (error) {
@@ -206,23 +222,20 @@ export default function ReportesAdmin() {
     fetchReportes(null);
   };
 
-  // --- ELIMINAR INDIVIDUAL CON confirmService ---
   const handleDelete = (id) => {
     confirmarAccion({
       tipo: 'reporte',
       onConfirm: async () => {
         const res = await fetch(`${API_URL}/reportes/${id}`, { method: 'DELETE' });
         if (!res.ok) {
-            throw new Error("No se pudo eliminar el reporte");
+            throw new Error("No se pudo eliminar la denuncia");
         }
-        // Actualizar estado local
         setRows(prev => prev.filter(r => r.id !== id));
         setSelected(prev => prev.filter(itemId => itemId !== id));
       }
     });
   };
 
-  // --- ELIMINAR MÚLTIPLE CON confirmService ---
   const handleDeleteSelected = () => {
     confirmarAccion({
         tipo: 'reporte',
@@ -233,7 +246,6 @@ export default function ReportesAdmin() {
                 return res;
             }));
             await Promise.all(promises);
-            // Actualizar estado local
             setRows(prev => prev.filter(r => !selected.includes(r.id)));
             setSelected([]);
         }
@@ -267,7 +279,6 @@ export default function ReportesAdmin() {
       }
   };
 
-  // Manejadores Tabla
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
@@ -337,16 +348,31 @@ export default function ReportesAdmin() {
                     </Typography>
                   </td>
                   <td>
-                    <Tooltip title="Eliminar reporte">
-                      <IconButton size="sm" color="danger" variant="plain" onClick={(e) => { e.stopPropagation(); handleDelete(row.id); }}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
+                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                        <Tooltip title="Ver detalle">
+                            <IconButton 
+                                size="sm" 
+                                variant="plain" 
+                                color="neutral" 
+                                onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    setReporteDetalle(row); 
+                                }}
+                            >
+                                <VisibilityIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Eliminar denuncia">
+                            <IconButton size="sm" color="danger" variant="plain" onClick={(e) => { e.stopPropagation(); handleDelete(row.id); }}>
+                                <DeleteIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
                   </td>
                 </tr>
               );
             })}
-            {rows.length === 0 && !loading && (<tr><td colSpan={8} style={{ textAlign: 'center', padding: '20px' }}>No hay reportes.</td></tr>)}
+            {rows.length === 0 && !loading && (<tr><td colSpan={8} style={{ textAlign: 'center', padding: '20px' }}>No hay denuncias.</td></tr>)}
             {emptyRows > 0 && <tr style={{ height: `calc(${emptyRows} * 40px)` }}><td colSpan={8} /></tr>}
           </tbody>
           <tfoot>
@@ -372,6 +398,85 @@ export default function ReportesAdmin() {
           </tfoot>
         </Table>
       </Sheet>
+
+      {/* --- NUEVO: MODAL DE DETALLE --- */}
+      <Modal open={!!reporteDetalle} onClose={() => setReporteDetalle(null)}>
+        <ModalDialog
+            variant="outlined"
+            role="alertdialog"
+            aria-labelledby="modal-title"
+            aria-describedby="modal-desc"
+            sx={{ maxWidth: 600, width: '100%', p: 3 }}
+        >
+            <ModalClose variant="plain" sx={{ m: 1 }} />
+            <Typography id="modal-title" level="h4" component="h2" startDecorator={<VisibilityIcon />}>
+                Detalle de la denuncia #{reporteDetalle?.id}
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+            
+            <Box id="modal-desc" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box>
+                    <Typography level="title-sm" textColor="neutral.500">Motivo</Typography>
+                    <Chip color={getMotivoColor(reporteDetalle?.tipo_reporte)} size="md" variant="soft" sx={{ mt: 0.5 }}>
+                        {reporteDetalle?.tipo_reporte}
+                    </Chip>
+                </Box>
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                    <Box>
+                        <Typography level="title-sm" textColor="neutral.500">Tipo Objetivo</Typography>
+                        <Typography level="body-md" fontWeight="lg">{reporteDetalle?.objetivo_tipo}</Typography>
+                    </Box>
+                    <Box>
+                        <Typography level="title-sm" textColor="neutral.500">ID Referencia</Typography>
+                        {reporteDetalle?.objetivo_tipo === 'Publicación' && (<Link href={`/publicacion/${reporteDetalle?.objetivo_id}`} target="_blank">{reporteDetalle?.objetivo_id} (Ver Publicación)</Link>)}
+                        {reporteDetalle?.objetivo_tipo === 'Usuario' && (<Link href={`/perfil/${reporteDetalle?.objetivo_slug}`} target="_blank">{reporteDetalle?.objetivo_id} (Ver Perfil)</Link>)}
+                        {reporteDetalle?.objetivo_tipo === 'Comentario' && (<Link href={`/publicacion/${reporteDetalle?.id_publicacion}`} target="_blank">{reporteDetalle?.objetivo_id} (Ver en Contexto)</Link>)}
+                    </Box>
+                </Box>
+
+                <Box>
+                    <Typography level="title-sm" textColor="neutral.500">Descripción completa</Typography>
+                    <Sheet variant="soft" sx={{ p: 2, borderRadius: 'sm', mt: 0.5, bgcolor: 'background.level1' }}>
+                        <Typography level="body-md" sx={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                            {reporteDetalle?.descripcion || "Sin descripción proporcionada."}
+                        </Typography>
+                    </Sheet>
+                </Box>
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                    <Box>
+                        <Typography level="title-sm" textColor="neutral.500">ID Denunciante</Typography>
+                        <Typography level="body-md">{reporteDetalle?.id_usuario_denunciante}</Typography>
+                    </Box>
+                    <Box>
+                        <Typography level="title-sm" textColor="neutral.500">Fecha de Creación</Typography>
+                        <Typography level="body-md">
+                            {reporteDetalle?.fecha_creacion ? new Date(reporteDetalle.fecha_creacion).toLocaleString() : '-'}
+                        </Typography>
+                    </Box>
+                </Box>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 3 }}>
+                <Button variant="outlined" color="neutral" onClick={() => setReporteDetalle(null)}>
+                    Cerrar
+                </Button>
+                <Button 
+                    variant="solid" 
+                    color="danger" 
+                    startDecorator={<DeleteIcon />}
+                    onClick={() => {
+                        handleDelete(reporteDetalle.id);
+                        setReporteDetalle(null); // Cerrar modal tras borrar
+                    }}
+                >
+                    Eliminar Denuncia
+                </Button>
+            </Box>
+        </ModalDialog>
+      </Modal>
+
     </CssVarsProvider>
   );
 }
