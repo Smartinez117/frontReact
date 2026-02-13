@@ -112,11 +112,11 @@ export default function ReporteForm({ idPublicacion, idComentario, idUsuario, on
         </IconButton>
 
         <Typography variant="h6" gutterBottom>
-          {idUsuario 
-            ? "Denunciar Usuario" 
-            : idComentario 
-              ? "Denunciar Comentario" 
-              : "Denunciar Publicación"}
+          {idComentario 
+            ? "Denunciar Comentario" 
+            : idPublicacion 
+              ? "Denunciar Publicación" 
+              : "Denunciar Usuario"}
         </Typography>
         
         <Typography variant="body2" color="text.secondary" gutterBottom>

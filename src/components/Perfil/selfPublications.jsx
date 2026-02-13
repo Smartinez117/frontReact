@@ -140,8 +140,6 @@ const SelfPublications = ({ userId, isOwner }) => {
                     <span className="badge-bloqueado">Bloqueado</span>
                   )}
                   
-                  {/* --- CORRECCIÓN AQUÍ --- */}
-                  {/* Accedemos a .nombre y validamos que exista */}
                   <span className="publicacion-categoria">
                     {pub.categoria ? pub.categoria.nombre : 'Sin categoría'}
                   </span>
@@ -170,7 +168,7 @@ const SelfPublications = ({ userId, isOwner }) => {
                     <>
                       <button
                         type="button"
-                        className="boton-crear boton-editar"
+                        className="boton-editar" // <--- ÚNICO CAMBIO: Se eliminó 'boton-crear'
                         onClick={() => navigate(`/editar/${pub.id}`)}
                         disabled={loadingAccion !== null}
                       >

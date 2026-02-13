@@ -155,9 +155,6 @@ function EnhancedTableToolbar(props) {
       ) : (
         <Box sx={{ display: 'flex', gap: 1 }}>
             <Button startDecorator={<AddIcon />} size="sm" onClick={onAddNew}>Nueva Etiqueta</Button>
-            <Tooltip title="Filter list">
-                <IconButton size="sm" variant="outlined" color="neutral"><FilterListIcon /></IconButton>
-            </Tooltip>
         </Box>
       )}
     </Box>

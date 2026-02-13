@@ -31,7 +31,8 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
 import { getAuth } from "firebase/auth";
-import { confirmarAccion } from '../../utils/confirmservice';
+// --- CAMBIO 1: Importamos mostrarAlerta junto con confirmarAccion ---
+import { confirmarAccion, mostrarAlerta } from '../../utils/confirmservice';
 import ReporteForm from "../Reportes/Reportes.jsx";
 
 // Config Leaflet
@@ -211,7 +212,7 @@ export default function Publicacion() {
       link.click();
       link.remove();
     } catch (err) {
-      alert("Error al generar PDF");
+      mostrarAlerta({ titulo: "Error", mensaje: "Error al generar PDF", tipo: "error" });
     } finally {
       setDownloadingPdf(false);
     }
@@ -223,12 +224,14 @@ export default function Publicacion() {
         navigator.share({ title: publicacion.titulo, text: "Mira esta publicación en REDEMA", url }).catch(() => {});
     } else {
         navigator.clipboard.writeText(url);
-        alert("Enlace copiado al portapapeles");
+        mostrarAlerta({ titulo: "Copiado", mensaje: "Enlace copiado al portapapeles", tipo: "success", duracion: 1500 });
     }
   };
 
+  // --- CAMBIO 2: LÓGICA DE ENVÍO CON ALERTAS ---
   const handleEnviarSolicitud = async () => {
-    if (!currentUser) return alert("Debes iniciar sesión para contactar");
+    if (!currentUser) return mostrarAlerta({ titulo: "Atención", mensaje: "Debes iniciar sesión para contactar", tipo: "warning" });
+    
     setSendingSolicitud(true);
     try {
       const token = await currentUser.getIdToken();
@@ -248,14 +251,41 @@ export default function Publicacion() {
       const data = await res.json();
 
       if (res.ok) {
-        alert("Solicitud enviada con éxito. Te avisaremos cuando el dueño acepte.");
+        // ALERTA: ÉXITO
+        mostrarAlerta({
+            titulo: 'Solicitud Enviada',
+            mensaje: 'El dueño recibirá tu mensaje. Te avisaremos si acepta.',
+            tipo: 'success'
+        });
         setOpenContactModal(false);
       } else {
-        alert(data.error || "Error al enviar solicitud");
+        // ALERTA: ERROR CONTROLADO
+        // Verificamos si el error menciona que ya existe/pendiente
+        const errorMsg = data.error || "";
+        const esPendiente = errorMsg.toLowerCase().includes("pendiente") || errorMsg.toLowerCase().includes("ya existe");
+
+        if (esPendiente) {
+            mostrarAlerta({
+                titulo: 'Solicitud Existente',
+                mensaje: 'Ya tienes una solicitud pendiente para esta publicación. Espera a que el dueño responda.',
+                tipo: 'warning',
+                duracion: 4000
+            });
+        } else {
+            mostrarAlerta({
+                titulo: 'No se pudo enviar',
+                mensaje: errorMsg || "Ocurrió un error al enviar la solicitud.",
+                tipo: 'error'
+            });
+        }
       }
     } catch (error) {
       console.error(error);
-      alert("Error de conexión al enviar solicitud");
+      mostrarAlerta({
+        titulo: 'Error de conexión',
+        mensaje: 'Verifica tu conexión a internet e inténtalo de nuevo.',
+        tipo: 'error'
+      });
     } finally {
       setSendingSolicitud(false);
     }
@@ -288,9 +318,14 @@ export default function Publicacion() {
 
   const borrarComentario = (cid) => {
     const comentarioAborrar = comentarios.find(c => c.id === cid);
-    const textoCorto = comentarioAborrar 
-      ? (comentarioAborrar.contenido || comentarioAborrar.texto || '').substring(0, 30) + '...' 
-      : null;
+    
+    const textoBase = comentarioAborrar 
+      ? (comentarioAborrar.descripcion || comentarioAborrar.contenido || '') 
+      : '';
+
+    const textoCorto = textoBase.length > 30 
+      ? textoBase.substring(0, 30) + '...' 
+      : textoBase;
 
     confirmarAccion({
       tipo: 'comentario',

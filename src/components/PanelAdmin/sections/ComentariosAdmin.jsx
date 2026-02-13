@@ -204,10 +204,18 @@ export default function ComentariosAdmin() {
     fetchComentarios(null);
   };
 
-  // --- ELIMINAR INDIVIDUAL CON confirmService ---
+  // --- CORRECCIÓN AQUÍ: ELIMINAR INDIVIDUAL ---
   const handleDeleteComentario = (id) => {
+    // 1. Buscamos el objeto del comentario usando el ID
+    const comentario = rows.find(r => r.id === id);
+    
+    // 2. Extraemos el texto y hacemos un resumen (truncate)
+    const texto = comentario ? (comentario.descripcion || comentario.contenido || '') : '';
+    const resumen = texto.length > 50 ? texto.substring(0, 50) + '...' : texto;
+
     confirmarAccion({
       tipo: 'comentario',
+      dato: resumen, // 3. Pasamos el resumen aquí
       onConfirm: async () => {
         const response = await fetch(`${API_URL}/comentarios/${id}`, { method: 'DELETE' });
         if (!response.ok) {
@@ -224,7 +232,7 @@ export default function ComentariosAdmin() {
   const handleDeleteSelected = () => {
     confirmarAccion({
       tipo: 'comentario',
-      dato: `${selected.length} comentarios`, // Opcional: muestra cantidad en el mensaje
+      dato: `${selected.length} comentarios`, // Muestra cantidad
       onConfirm: async () => {
         const deletePromises = selected.map((id) =>
           fetch(`${API_URL}/comentarios/${id}`, { method: 'DELETE' }).then(res => {
