@@ -26,10 +26,16 @@
 }
 
 .nombre-redema {
-  font-size: 2rem;
+  font-size: 3rem;
   color: #924c4c;
   margin-top: 0.5rem;
+  font-family: 'Chewy';
+  font-weight: 600;
+  letter-spacing: .2rem;
+  color: #aa3939;
+  text-decoration: none;
 }
+
 
 .bienvenida {
   font-size: 1.25rem;
