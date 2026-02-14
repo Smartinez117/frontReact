@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Toolbar from "@mui/material/Toolbar";
@@ -11,7 +10,6 @@ import IconButton from "@mui/material/IconButton";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import CircularProgress from "@mui/material/CircularProgress";
-// Asegúrate de que esta utilidad funcione correctamente, si falla usa auth.currentUser.getIdToken()
 import { getFreshToken } from "../../../utils/getFreshToken"; 
 import { Snackbar, Alert } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
@@ -26,11 +24,10 @@ import {
   Select,
 } from "@mui/material";
 
-const API_URL = import.meta.env.VITE_API_URL;
+// IMPORTAMOS EL SERVICIO (Asegúrate que la ruta sea correcta)
+import { confirmarAccion } from "../../../utils/confirmservice"; 
 
-// ------------------------------------------------------------------
-// CORRECCIÓN: Eliminamos la variable 'token' global.
-// ------------------------------------------------------------------
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function UsuariosAdmin() {
   const [roles, setRoles] = useState([]);
@@ -44,18 +41,18 @@ export default function UsuariosAdmin() {
     pageSize: 10,
   });
 
+  // Estado para edición
   const [open, setOpen] = useState(false);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
+  const [loadingGuardar, setLoadingGuardar] = useState(false);
+
+  // Snackbar solo para Edición (ConfirmarAccion maneja sus propias alertas)
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [accionUsuario, setAccionUsuario] = useState({ row: null, accion: "" });
-  const [borrarUsuario, setBorrarUsuario] = useState(null);
-  const [confirmBorrarOpen, setConfirmBorrarOpen] = useState(false);
-  const [loadingAccion, setLoadingAccion] = useState(false);
-  const [loadingBorrado, setLoadingBorrado] = useState(false);
-  const [loadingGuardar, setLoadingGuardar] = useState(false);
+
+  // NOTA: Eliminamos estados de confirmación manual (confirmOpen, accionUsuario, borrarUsuario, confirmBorrarOpen)
+  // NOTA: Eliminamos loadingAccion y loadingBorrado porque SweetAlert bloquea la pantalla mientras se ejecuta la promesa
 
   // Cargar roles
   useEffect(() => {
@@ -79,8 +76,6 @@ export default function UsuariosAdmin() {
       const queryPage = paginationModel.page + 1;
       const queryLimit = paginationModel.pageSize;
       
-      // Nota: Si tus rutas GET también son protegidas, deberías añadir el header Authorization aquí también.
-      // Si son públicas, déjalo así.
       const response = await fetch(
         `${API_URL}/api/usuarios?page=${queryPage}&per_page=${queryLimit}&search=${encodeURIComponent(
           search
@@ -121,7 +116,7 @@ export default function UsuariosAdmin() {
     return () => clearTimeout(timeout);
   }, [fetchUsuarios]);
 
-  // Abrir modal EDICIÓN DE USUARIO
+  // Abrir modal EDICIÓN
   const handleEditUsuario = (row) => {
     let roleId = row.role_id;
     if (!roleId && roles.length > 0) {
@@ -137,11 +132,10 @@ export default function UsuariosAdmin() {
     setOpen(true);
   };
 
-  // Guardar cambios
+  // Guardar cambios (Edición)
   const handleGuardar = async () => {
     try {
       setLoadingGuardar(true);
-      // CORRECCIÓN: Obtenemos el token AQUÍ, justo antes de usarlo
       const token = await getFreshToken();
 
       const res = await fetch(
@@ -180,91 +174,64 @@ export default function UsuariosAdmin() {
     }
   };
 
-  // Acciones (Suspender/Activar)
+  // --------------------------------------------------------
+  // NUEVA LÓGICA DE ACCIONES (SUSPENDER/ACTIVAR) CON SERVICIO
+  // --------------------------------------------------------
   const handleAccionUsuario = (row) => {
     const accion = row.estado === "activo" ? "suspender" : "activar";
-    setAccionUsuario({ row, accion });
-    setConfirmOpen(true);
+
+    confirmarAccion({
+      tipo: accion, // 'suspender' o 'activar'
+      dato: row.nombre,
+      onConfirm: async () => {
+        const token = await getFreshToken();
+        const res = await fetch(
+          `${API_URL}/api/admin/usuarios/${row.id}/${accion}`,
+          { 
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+          }
+        );
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Error en la acción");
+
+        // Actualizamos la tabla
+        setRows((prev) =>
+          prev.map((u) =>
+            u.id === row.id ? { ...u, estado: data.usuario.estado } : u
+          )
+        );
+        // NO llamamos a setSnackbar aquí, confirmarAccion muestra el éxito automáticamente
+      }
+    });
   };
 
-  const ejecutarAccion = async () => {
-    if (!accionUsuario) return;
-    const { row, accion } = accionUsuario;
-    setLoadingAccion(true);
-    try {
-      // CORRECCIÓN: Obtenemos el token AQUÍ, justo antes de usarlo
-      const token = await getFreshToken();
-
-      const res = await fetch(
-        `${API_URL}/api/admin/usuarios/${row.id}/${accion}`,
-        { method: "PATCH" ,
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Error en la acción");
-
-      setRows((prev) =>
-        prev.map((u) =>
-          u.id === row.id ? { ...u, estado: data.usuario.estado } : u
-        )
-      );
-
-      setSnackbarMessage(
-        accion === "suspender" ? "Usuario suspendido" : "Usuario activado"
-      );
-      setSnackbarSeverity(accion === "suspender" ? "warning" : "success");
-      setSnackbarOpen(true);
-    } catch (error) {
-      console.error(error);
-      setSnackbarMessage(`Error: ${error.message}`);
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-    } finally {
-      setLoadingAccion(false);
-      setConfirmOpen(false);
-      setAccionUsuario(null);
-    }
-  };
-
-  // Eliminar
+  // --------------------------------------------------------
+  // NUEVA LÓGICA DE ELIMINAR CON SERVICIO
+  // --------------------------------------------------------
   const handleBorrarUsuario = (row) => {
-    setBorrarUsuario(row);
-    setConfirmBorrarOpen(true);
-  };
+    confirmarAccion({
+      tipo: 'usuario', // Usa el mensaje de eliminar usuario
+      dato: row.nombre,
+      onConfirm: async () => {
+        const token = await getFreshToken();
+        const res = await fetch(
+          `${API_URL}/api/admin/usuarios/${row.id}`,
+          { 
+            method: "DELETE", 
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+          }
+        );
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Error al eliminar usuario");
 
-  const ejecutarBorrado = async () => {
-    if (!borrarUsuario) return;
-    setLoadingBorrado(true);
-    try {
-      // CORRECCIÓN: Obtenemos el token AQUÍ, justo antes de usarlo
-      const token = await getFreshToken();
-
-      const res = await fetch(
-        `${API_URL}/api/admin/usuarios/${borrarUsuario.id}`,
-        { method: "DELETE", 
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Error al eliminar usuario");
-
-      setRows((prev) => prev.filter((u) => u.id !== borrarUsuario.id));
-      setRowCount((prev) => prev - 1);
-
-      setSnackbarMessage(`Usuario borrado`);
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-    } catch (error) {
-      console.error(error);
-      setSnackbarMessage(`Error: ${error.message}`);
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-    } finally {
-      setLoadingBorrado(false);
-      setConfirmBorrarOpen(false);
-      setBorrarUsuario(null);
-    }
+        // Actualizamos estado local
+        setRows((prev) => prev.filter((u) => u.id !== row.id));
+        setRowCount((prev) => prev - 1);
+      }
+    });
   };
 
   const columns = useMemo(
@@ -279,7 +246,7 @@ export default function UsuariosAdmin() {
         field: "acciones",
         headerName: "Acciones",
         flex: 1,
-        minWidth: 300,
+        minWidth: 400,
         sortable: false,
         filterable: false,
         renderCell: (params) => {
@@ -287,15 +254,32 @@ export default function UsuariosAdmin() {
           const isAdmin = row.rol?.toLowerCase() === "admin";
 
           return (
-            <>
+            <Box 
+              sx={{ 
+                display: "flex", 
+                alignItems: "center",
+                height: "100%",
+                width: "100%",
+                gap: 1 
+              }}
+            >
               <Button
-                variant="outlined"
+                variant="contained"
                 size="small"
-                sx={{ mr: 1 }}
                 component={Link}
                 to={`/perfil/${row.slug || row.id}`}
                 target="_blank"
-                disabled={loadingAccion || loadingBorrado}
+                sx={{
+                  backgroundColor: "#F1B400;",
+                  color: "#000000",
+                  fontWeight: "bold",
+                  boxShadow: "none",
+                  minWidth: "60px", 
+                  "&:hover": {
+                    backgroundColor: "#e0ba50",
+                    borderColor: "#e0ba50",
+                  },
+                }}
               >
                 Ver
               </Button>
@@ -304,9 +288,8 @@ export default function UsuariosAdmin() {
                 variant="contained"
                 color="primary"
                 size="small"
-                sx={{ mr: 1 }}
+                sx={{ minWidth: "70px" }}
                 onClick={() => handleEditUsuario(row)}
-                disabled={loadingAccion || loadingBorrado}
               >
                 Editar
               </Button>
@@ -316,7 +299,7 @@ export default function UsuariosAdmin() {
                   variant="contained"
                   color="inherit"
                   size="small"
-                  sx={{ mr: 1, width: 90 }}
+                  sx={{ width: 90 }}
                   disabled
                 >
                   Denegado
@@ -326,15 +309,10 @@ export default function UsuariosAdmin() {
                   variant="contained"
                   color={row.estado === "activo" ? "secondary" : "success"}
                   size="small"
-                  sx={{ mr: 1, width: 90, position: "relative" }}
+                  sx={{ width: 90 }}
                   onClick={() => handleAccionUsuario(row)}
-                  disabled={loadingAccion || loadingBorrado}
                 >
-                  {loadingAccion ? (
-                    <CircularProgress size={20} sx={{ position: "absolute" }} />
-                  ) : (
-                    (row.estado === "activo" ? "Suspender" : "Activar")
-                  )}
+                  {row.estado === "activo" ? "Suspender" : "Activar"}
                 </Button>
               )}
 
@@ -344,14 +322,8 @@ export default function UsuariosAdmin() {
                   color="error"
                   size="small"
                   onClick={() => handleBorrarUsuario(row)}
-                  disabled={loadingAccion || loadingBorrado}
-                  sx={{ position: "relative" }}
                 >
-                  {loadingBorrado ? (
-                    <CircularProgress size={20} sx={{ position: "absolute" }} />
-                  ) : (
-                    "Borrar"
-                  )}
+                  Eliminar
                 </Button>
               ) : (
                 <Button
@@ -364,7 +336,7 @@ export default function UsuariosAdmin() {
                   Denegado
                 </Button>
               )}
-            </>
+            </Box>
           );
         },
       },
@@ -417,25 +389,38 @@ export default function UsuariosAdmin() {
         />
       </Box>
 
-      {/* MODAL EDITAR */}
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Editar Usuario</DialogTitle>
-        <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
-          <TextField
-            label="Nombre"
-            value={usuarioSeleccionado?.nombre || ""}
-            onChange={(e) =>
-              setUsuarioSeleccionado({
-                ...usuarioSeleccionado,
-                nombre: e.target.value.slice(0, 40),
-              })
-            }
-            fullWidth
-            disabled={loadingGuardar}
-            inputProps={{ maxLength: 40 }}
-            helperText={`${usuarioSeleccionado?.nombre?.length || 0}/40 caracteres`}
-          />
-          <FormControl fullWidth disabled={loadingGuardar}>
+        
+        <DialogContent 
+          sx={{ 
+            display: "flex", 
+            flexDirection: "column", 
+            gap: 3,             // Espacio entre los inputs
+            pt: 5,              // AUMENTADO: Padding superior interno del contenedor
+            pb: 3               // Padding inferior
+          }}
+        >
+          {/* Box con margen superior extra para separar del título definitivamente */}
+          <Box sx={{ mt: 2 }}> 
+            <TextField
+              label="Nombre"
+              variant="outlined"
+              value={usuarioSeleccionado?.nombre || ""}
+              onChange={(e) =>
+                setUsuarioSeleccionado({
+                  ...usuarioSeleccionado,
+                  nombre: e.target.value.slice(0, 40),
+                })
+              }
+              fullWidth
+              disabled={loadingGuardar}
+              inputProps={{ maxLength: 40 }}
+              helperText={`${usuarioSeleccionado?.nombre?.length || 0}/40 caracteres`}
+            />
+          </Box>
+
+          <FormControl fullWidth disabled={loadingGuardar} variant="outlined">
             <InputLabel id="rol-label">Rol</InputLabel>
             <Select
               labelId="rol-label"
@@ -455,9 +440,11 @@ export default function UsuariosAdmin() {
               ))}
             </Select>
           </FormControl>
+
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)} disabled={loadingGuardar}>
+        
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={() => setOpen(false)} disabled={loadingGuardar} color="inherit">
             Cancelar
           </Button>
           <Button
@@ -467,74 +454,9 @@ export default function UsuariosAdmin() {
             sx={{ position: "relative" }}
           >
             {loadingGuardar ? (
-              <CircularProgress size={20} sx={{ position: "absolute" }} />
+              <CircularProgress size={24} sx={{ position: "absolute", color: 'inherit' }} />
             ) : (
               "Guardar"
-            )}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* MODAL CONFIRMAR ACCIÓN */}
-      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-        <DialogTitle>
-          {accionUsuario?.accion === "suspender"
-            ? "Confirmar suspensión"
-            : "Confirmar activación"}
-        </DialogTitle>
-        <DialogContent>
-          {accionUsuario?.row && (
-            <p>
-              ¿Seguro que quieres {accionUsuario.accion} al usuario{" "}
-              <strong>{accionUsuario.row.nombre}</strong>?
-            </p>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)} disabled={loadingAccion}>
-            Cancelar
-          </Button>
-          <Button
-            variant="contained"
-            onClick={ejecutarAccion}
-            color={accionUsuario?.accion === "suspender" ? "secondary" : "success"}
-            disabled={loadingAccion}
-            sx={{ position: "relative" }}
-          >
-            {loadingAccion ? (
-              <CircularProgress size={20} sx={{ position: "absolute" }} />
-            ) : (
-              (accionUsuario?.accion === "suspender" ? "Suspender" : "Activar")
-            )}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* MODAL ELIMINAR */}
-      <Dialog open={confirmBorrarOpen} onClose={() => setConfirmBorrarOpen(false)}>
-        <DialogTitle>Confirmar eliminación</DialogTitle>
-        <DialogContent>
-          {borrarUsuario && (
-            <p>
-              ¿Seguro que quieres borrar al usuario <strong>{borrarUsuario.nombre}</strong>?
-            </p>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmBorrarOpen(false)} disabled={loadingBorrado}>
-            Cancelar
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={ejecutarBorrado}
-            disabled={loadingBorrado}
-            sx={{ position: "relative" }}
-          >
-            {loadingBorrado ? (
-              <CircularProgress size={20} sx={{ position: "absolute" }} />
-            ) : (
-              "Eliminar"
             )}
           </Button>
         </DialogActions>

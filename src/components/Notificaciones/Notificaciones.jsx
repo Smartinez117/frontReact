@@ -105,7 +105,6 @@ export default function Notificaciones() {
     });
 
     // 2. Intervalo para refrescar (Polling) cada 20s
-    // Al no tener sockets, esto es lo que mantendrá la lista actualizada
     const interval = setInterval(() => {
         const user = auth.currentUser;
         if(user) fetchNotificaciones(user);
@@ -213,21 +212,6 @@ export default function Notificaciones() {
                 {n.tipo === 'solicitud_contacto' && (
                     <div className="noti-actions-row">
                         <button 
-                            className="btn-accept" 
-                            onClick={() => responderSolicitud(n.id, n.id_referencia || n.id_publicacion, 'aceptar')}
-                            disabled={loadingRespuesta !== null}
-                        >
-                            {loadingRespuesta?.idNotificacion === n.id && loadingRespuesta?.accion === 'aceptar' ? (
-                                <>
-                                    <span className="spinner-small"></span> Procesando...
-                                </>
-                            ) : (
-                                <>
-                                    <CheckIcon /> Aceptar
-                                </>
-                            )}
-                        </button>
-                        <button 
                             className="btn-reject"
                             onClick={() => responderSolicitud(n.id, n.id_referencia || n.id_publicacion, 'rechazar')}
                             disabled={loadingRespuesta !== null}
@@ -239,6 +223,21 @@ export default function Notificaciones() {
                             ) : (
                                 <>
                                     <XIcon /> Rechazar
+                                </>
+                            )}
+                        </button>
+                        <button 
+                            className="btn-accept" 
+                            onClick={() => responderSolicitud(n.id, n.id_referencia || n.id_publicacion, 'aceptar')}
+                            disabled={loadingRespuesta !== null}
+                        >
+                            {loadingRespuesta?.idNotificacion === n.id && loadingRespuesta?.accion === 'aceptar' ? (
+                                <>
+                                    <span className="spinner-small"></span> Procesando...
+                                </>
+                            ) : (
+                                <>
+                                    <CheckIcon /> Aceptar
                                 </>
                             )}
                         </button>

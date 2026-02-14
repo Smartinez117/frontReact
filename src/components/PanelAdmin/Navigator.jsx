@@ -44,7 +44,7 @@ const categories = [
   {
     id: 'Seguimiento',
     children: [
-      { id: 'Reportes', icon: <ReportIcon />, route: 'reportes' },
+      { id: 'Denuncias', icon: <ReportIcon />, route: 'reportes' },
      // { id: 'Actividad', icon: <DvrIcon />, route: 'performance' },
     ],
   },

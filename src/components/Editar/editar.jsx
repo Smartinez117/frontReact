@@ -236,8 +236,30 @@ export default function Editar() {
   };
 
   const handleImagenesChange = (event) => {
-    const files = Array.from(event.target.files);
-    setImagenesSeleccionadas(files);
+    const archivos = Array.from(event.target.files);
+    const totalActuales = imagenesExistentes.length + imagenesSeleccionadas.length;
+    const disponibles = 5 - totalActuales;
+
+    if (disponibles <= 0) {
+      mostrarAlerta({ 
+        titulo: "Límite alcanzado",
+        mensaje: "Ya tienes el máximo de 5 imágenes.",
+        tipo: "warning"
+      });
+      return;
+    }
+    if (archivos.length > disponibles) {
+      mostrarAlerta({
+        titulo: "Demasiadas imágenes",
+        mensaje: `Solo puedes agregar ${disponibles} imagen(es) más.`,
+        tipo: "warning"
+      });
+      event.target.value = ""; 
+      return;
+    }
+    setImagenesSeleccionadas(prev => [...prev, ...archivos]);
+
+    event.target.value = "";
   };
 
   const eliminarImagenExistente = (index) => {
@@ -264,7 +286,6 @@ export default function Editar() {
           formData.append("imagenes", img);
         });
 
-        // CORREGIDO: Quitar barra inicial
         const resImagenes = await fetch(`${API_URL}subir-imagenes`, {
           method: "POST",
           body: formData,
@@ -289,13 +310,12 @@ export default function Editar() {
       const auth = getAuth();
       const user = auth.currentUser;
       if (!user) {
-        alert("Debés iniciar sesión para publicar");
+        alert("Debes iniciar sesión para publicar");
         setCargando(false);
         return;
       }
       const token = await user.getIdToken();
 
-      // CORREGIDO: Quitar barra inicial
       const res = await fetch(`${API_URL}publicaciones/${id_publicacion}`, {
         method: "PATCH",
         headers: {
@@ -307,10 +327,10 @@ export default function Editar() {
 
       const data = await res.json();
       if (res.ok) {
-        console.log("Publicación modificada:", data);
+        console.log("Publicación editada:", data);
         mostrarAlerta({
           titulo: '¡Listo!',
-          mensaje: 'Publicación modificada con éxito',
+          mensaje: 'Publicación editada con éxito',
           tipo: 'success'
         });
         navigate(`/publicacion/${id_publicacion}`);
@@ -321,13 +341,16 @@ export default function Editar() {
       console.error("Error al publicar:", error);
       mostrarAlerta({
         titulo: 'Error',
-        mensaje: 'Ocurrió un error al publicar',
+        mensaje: 'Ocurrió un error al editar la publicación.',
         tipo: 'error'
       }); 
     }finally {
       setCargando(false); 
     }
   };
+
+  const totalImagenes = imagenesExistentes.length + imagenesSeleccionadas.length;
+  const estaLleno = totalImagenes >= 5;
 
   return (
     <React.Fragment>
@@ -368,6 +391,10 @@ export default function Editar() {
             })
           )}
         </ToggleButtonGroup>
+        
+        <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
+            Título
+        </Typography>
 
         <Input
           placeholder="Título"
@@ -386,6 +413,11 @@ export default function Editar() {
           slotProps={{ input: { maxLength: 80 } }}
         />
 
+
+        <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
+            Descripción
+        </Typography>
+
         <Textarea
           placeholder="Descripción del caso…"
           value={descripcion}
@@ -403,8 +435,12 @@ export default function Editar() {
           }
         />
 
+        <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
+            Ubicación
+        </Typography>
+
         <Select
-          placeholder="Seleccioná una provincia"
+          placeholder="Selecciona una provincia"
           value={provinciaId || null}
           onChange={(e, val) => setProvinciaId(val)}
           indicator={<KeyboardArrowDown />}
@@ -417,7 +453,7 @@ export default function Editar() {
         </Select>
 
         <Select
-          placeholder="Seleccioná un partido/departamento/comuna"
+          placeholder="Selecciona un partido/departamento/comuna"
           value={departamentoId || null}
           onChange={(e, val) => setDepartamentoId(val)}
           disabled={!provinciaId}
@@ -431,7 +467,7 @@ export default function Editar() {
         </Select>
 
         <Select
-          placeholder="Seleccioná una localidad/barrio"
+          placeholder="Selecciona una localidad/barrio"
           value={localidadId || null}
           onChange={(e, val) => handleLocalidadChange(val)}
           disabled={!departamentoId}
@@ -445,7 +481,7 @@ export default function Editar() {
         </Select>
 
         <Typography level="title-md" sx={{ mt: 2, mb: 1 }}> 
-           Seleccioná la ubicación exacta en el mapa:
+           Selecciona la ubicación exacta en el mapa:
         </Typography>
 
         <div style={{ height: '400px', marginTop: '1rem' }}>
@@ -459,7 +495,7 @@ export default function Editar() {
           </MapContainer>
         </div>
 
-        <Typography level="body2" sx={{ mt: 1 }}>
+        <Typography level="body-xs" sx={{ mt: 1, color: '#999' }}>
           Latitud: {coordenadas.lat.toFixed(6)} | Longitud: {coordenadas.lng.toFixed(6)}
         </Typography>
 
@@ -469,12 +505,17 @@ export default function Editar() {
           </Typography>
           <Autocomplete
             multiple
-            placeholder="Seleccioná etiquetas"
+            placeholder="Selecciona etiquetas"
             limitTags={3}
             options={etiquetas}
             value={etiquetasSeleccionadas}
-            onChange={(event, value) => setEtiquetasSeleccionadas(value)}
+            onChange={(event, value) => {
+               if (value.length <= 8) {
+                 setEtiquetasSeleccionadas(value);
+               }
+            }}
             getOptionLabel={(option) => option.label}
+            getOptionDisabled={(option) => etiquetasSeleccionadas.length >= 8}
             color={
               etiquetasSeleccionadas.length > 0
                 ? "success"
@@ -484,6 +525,9 @@ export default function Editar() {
             }
             sx={{ width: '100%' }}
           />
+          <Typography level="body-xs" sx={{ mt: 0.5, ml: 1, color: etiquetasSeleccionadas.length >= 8 ? 'warning.main' : 'text.tertiary' }}>
+             {etiquetasSeleccionadas.length}/8 etiquetas seleccionadas
+          </Typography>
         </FormControl>
         
         {/* Imagenes */}
@@ -494,6 +538,7 @@ export default function Editar() {
         <Button
           component="label"
           variant="outlined"
+          disabled={estaLleno}
           color={
             imagenesSeleccionadas.length > 0
               ? "success"
@@ -504,7 +549,7 @@ export default function Editar() {
           startDecorator={<SvgIcon>...</SvgIcon>}
         >
           Subir nuevas imágenes ({imagenesSeleccionadas.length})
-          <VisuallyHiddenInput type="file" multiple accept="image/*" onChange={handleImagenesChange} />
+          <VisuallyHiddenInput type="file" multiple accept="image/*" onChange={handleImagenesChange} disabled={estaLleno} />
         </Button>
 
         {imagenesSeleccionadas.length > 0 && (
@@ -546,7 +591,7 @@ export default function Editar() {
             </Box>
           </Box>
         )}
-
+        
         {/* --- SECCIÓN DE IMÁGENES NUEVAS --- */}
         {imagenesSeleccionadas.length > 0 && (
           <Box sx={{ my: 3 }}> {/* Margen vertical */}

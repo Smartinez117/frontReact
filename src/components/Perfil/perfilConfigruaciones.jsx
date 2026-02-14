@@ -334,7 +334,7 @@ export default function PerfilConfiguracion() {
                 <Typography level="h4">Datos Personales</Typography>
               </Stack>
               {seccionEditando !== 'personal' && (
-                <Button variant="plain" color="neutral" startDecorator={<EditIcon />} onClick={() => handleModificar('personal')}>
+                <Button variant="plain" color="primary" startDecorator={<EditIcon />} onClick={() => handleModificar('personal')}>
                   Editar
                 </Button>
               )}
@@ -389,8 +389,8 @@ export default function PerfilConfiguracion() {
                 <Typography level="h4">Ubicación</Typography>
               </Stack>
               {seccionEditando !== 'ubicacion' && (
-                <Button variant="plain" color="neutral" startDecorator={<EditIcon />} onClick={() => handleModificar('ubicacion')}>
-                  Modificar
+                <Button variant="plain" color="primary" startDecorator={<EditIcon />} onClick={() => handleModificar('ubicacion')}>
+                  Editar
                 </Button>
               )}
             </Box>
@@ -464,7 +464,7 @@ export default function PerfilConfiguracion() {
                 <Typography level="h4">Datos de Contacto</Typography>
               </Stack>
               {seccionEditando !== 'contacto' && (
-                <Button variant="plain" color="neutral" startDecorator={<EditIcon />} onClick={() => handleModificar('contacto')}>
+                <Button variant="plain" color="primary" startDecorator={<EditIcon />} onClick={() => handleModificar('contacto')}>
                   Editar
                 </Button>
               )}
@@ -515,7 +515,7 @@ export default function PerfilConfiguracion() {
                 <Typography level="h4">Sobre mí</Typography>
               </Stack>
               {seccionEditando !== 'otros' && (
-                <Button variant="plain" color="neutral" startDecorator={<EditIcon />} onClick={() => handleModificar('otros')}>
+                <Button variant="plain" color="primary" startDecorator={<EditIcon />} onClick={() => handleModificar('otros')}>
                   Editar
                 </Button>
               )}

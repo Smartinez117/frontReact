@@ -192,7 +192,7 @@ transform: translateY(-5px);
 
 
 .boton-limpiar-filtros {
-  background-color: #d9534f;   /* rojo */
+  background-color: #104727;   /* rojo */
   color: white;
   border: none;
   border-radius: 6px;
@@ -203,7 +203,7 @@ transform: translateY(-5px);
 }
 
 .boton-limpiar-filtros:hover {
-  background-color: #c9302c;
+  background-color: #000000;
 }
 
 
@@ -235,4 +235,19 @@ transform: translateY(-5px);
 
 .boton-cargar-mas:hover {
   background-color: #2c63c9;
+}
+
+.boton-toggle-filtros {
+background-color: var(--color-acento);
+  color: #0D171C;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.boton-toggle-filtros:hover {
+background-color: #000000;
 }

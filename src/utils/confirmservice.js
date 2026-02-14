@@ -1,107 +1,114 @@
-// confirmationService.js
 import Swal from 'sweetalert2';
-import './confirm.css'; // Asegúrate de importar el CSS con los estilos y blur
+import './confirm.css'; 
 
-
-
-export function mostrarAlerta({ titulo, mensaje, tipo = 'info', duracion = 2000 }) {
-  return Swal.fire({
-    icon: tipo, // info | success | error | warning
-    title: titulo,
-    text: mensaje,
-    timer: duracion,
-    showConfirmButton: false,
-  });
-}
-
-// Funciones que devuelven textos parametrizados según tipo
 const getTitle = (tipo) => {
   switch (tipo) {
-    case 'publicacion':
-      return '¿Eliminar publicación?';
-    case 'usuario':
-      return '¿Eliminar usuario?';
-    case 'archivar':
-      return '¿Archivar publicación?';
-    case 'desarchivar':
-      return '¿Desarchivar publicación?';  
-    default:
-      return '¿Confirmar acción?';
+    case 'publicacion': return '¿Eliminar publicación?';
+    case 'usuario': return '¿Eliminar usuario?';
+    case 'archivar': return '¿Archivar publicación?';
+    case 'desarchivar': return '¿Desarchivar publicación?';
+    case 'comentario': return '¿Eliminar comentario?';
+    case 'etiqueta': return '¿Eliminar etiqueta?';
+    case 'localidad': return '¿Eliminar localidad?';
+    case 'reporte': return '¿Eliminar denuncia?';
+    case 'suspender': return '¿Suspender usuario?';
+    case 'activar': return '¿Activar usuario?';
+    default: return '¿Confirmar acción?';
   }
 };
 
-const getMessage = (tipo) => {
+const getMessage = (tipo, dato) => {
+  const nombre = dato ? `<b>"${dato}"</b>` : 'este elemento'; 
+
   switch (tipo) {
     case 'publicacion':
-      return '¿Estás seguro de que deseas eliminar esta publicación?';
+      return `Está por eliminar la publicación ${nombre}. Esta acción no se puede deshacer y el contenido se perderá permanentemente.`;
     case 'usuario':
-      return '¿Estás seguro de que deseas eliminar este usuario?';
+      return `Está por eliminar al usuario ${nombre}. Esta acción es irreversible y se eliminarán todas sus publicaciones asociadas.`;
+    case 'etiqueta':
+      return `Está por eliminar la etiqueta ${nombre}. Se desvinculará de las publicaciones que la usen.`;
+    case 'localidad':
+      return `Está por eliminar la localidad ${nombre}. Esto podría afectar a los usuarios o publicaciones que dependan de esta ubicación.`;
+    case 'reporte': 
+      return `Está por eliminar esta denuncia. Esto significa que la denuncia será desestimada y desaparecerá de la lista.`;
     case 'archivar':
-      return 'La publicación será archivada y no será visible para otros usuarios.';
+      return `Está por archivar ${nombre}. Dejará de ser visible para otros usuarios, pero podrás restaurarla luego.`;
     case 'desarchivar':
-      return 'La publicación volverá a estar visible para todos.';
+      return `La publicación ${nombre} volverá a ser pública y visible para todos.`;
+    case 'comentario':
+      if (dato) {
+          return `Está por eliminar ${nombre}. Esta acción no se puede deshacer.`;
+      }
+      return 'Está por eliminar este comentario. Esta acción no se puede deshacer.';
+    case 'suspender':
+      return `Está por suspender el acceso a ${nombre}. El usuario no podrá iniciar sesión hasta que sea reactivado.`;
+    case 'activar':
+      return `Está por reactivar el acceso a ${nombre}. El usuario podrá volver a iniciar sesión inmediatamente.`;
+
     default:
-      return '¿Estás seguro de realizar esta acción?';
+      return '¿Realmente deseas realizar esta acción?';
   }
 };
+
+const getConfirmButtonColor = (tipo) => {
+    switch(tipo) {
+        case 'publicacion':
+        case 'usuario':
+        case 'comentario':
+        case 'etiqueta':
+        case 'localidad':
+        case 'reporte':
+            return '#d33';
+        case 'archivar':
+            return '#3085d6';
+        case 'suspender': 
+            return '#bc22e6'; 
+        case 'desarchivar':
+        case 'activar': 
+            return '#3085d6'; 
+        default:
+            return '#3085d6'; 
+    }
+}
 
 const getConfirmText = (tipo) => {
   switch (tipo) {
     case 'publicacion':
-    case 'usuario':
-      return 'Eliminar';
-    case 'archivar':
-      return 'Archivar';
-    case 'desarchivar':
-      return 'Desarchivar';
-    default:
-      return 'Confirmar';
+    case 'usuario': 
+    case 'etiqueta':
+    case 'localidad': 
+    case 'reporte': return 'Sí, eliminar'; 
+    case 'archivar': return 'Sí, archivar';
+    case 'desarchivar': return 'Sí, desarchivar';
+    case 'comentario': return 'Sí, eliminar';
+    case 'suspender': return 'Sí, suspender';
+    case 'activar': return 'Sí, activar';
+    default: return 'Confirmar';
   }
 };
 
-const getCancelText = () => 'Cancelar';
+export async function confirmarAccion({ tipo, dato, onConfirm }) {
+  const iconType = (tipo === 'activar' || tipo === 'desarchivar' || tipo === 'archivar') ? 'question' : 'warning';
 
-// El icono rojo cuadrado personalizado con el signo "!" más pequeño y centrado
-const iconHtml = `
-  <div style="
-    background: #e74646;
-    color: white;
-    border-radius: 8px;
-    width: 60px;
-    height: 40px;
-    font-weight: bold;
-    font-size: 1.8rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 10px auto;
-    user-select: none;
-  ">
-    !
-  </div>
-`;
-
-// Función principal para mostrar la confirmación
-export async function confirmarAccion({ tipo, onConfirm }) {
   const result = await Swal.fire({
     title: getTitle(tipo),
-    html: `${iconHtml}${getMessage(tipo)}`,
-    icon: null, // usamos icono customHtml, no icon por defecto
+    html: getMessage(tipo, dato), 
+    icon: iconType,
     showCancelButton: true,
+    confirmButtonColor: getConfirmButtonColor(tipo),
+    cancelButtonColor: '#6c757d',
     confirmButtonText: getConfirmText(tipo),
-    cancelButtonText: getCancelText(),
+    cancelButtonText: 'Cancelar',
     reverseButtons: true,
     focusCancel: true,
     customClass: {
       popup: 'custom-popup',
-      confirmButton: 'custom-confirm-button',
-      cancelButton: 'custom-cancel-button',
     },
   });
 
   if (result.isConfirmed) {
     try {
-      await onConfirm(); // Ejecuta la acción confirmada que recibimos por parámetro
+      if (onConfirm) await onConfirm(); 
       await Swal.fire({
         icon: 'success',
         title: 'Operación exitosa',
@@ -109,6 +116,7 @@ export async function confirmarAccion({ tipo, onConfirm }) {
         showConfirmButton: false,
       });
     } catch (error) {
+      console.error(error);
       await Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -116,4 +124,14 @@ export async function confirmarAccion({ tipo, onConfirm }) {
       });
     }
   }
+}
+
+export function mostrarAlerta({ titulo, mensaje, tipo = 'info', duracion = 2000 }) {
+  return Swal.fire({
+    icon: tipo,
+    title: titulo,
+    text: mensaje,
+    timer: duracion,
+    showConfirmButton: false,
+  });
 }

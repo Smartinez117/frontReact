@@ -69,10 +69,10 @@ const PublicBanner = ({ userId }) => {
       <Paper 
         elevation={0}
         sx={{ 
-          p: 3, 
+          p: 3,
+          mt: 2, 
           mb: 4, 
           borderRadius: 4,
-          // Mismo degradado que MyBanner para consistencia
           background: 'linear-gradient(135deg, #fffbf2 0%, #fef2dc 100%)',
           border: '1px solid #f0e6d2',
           maxWidth: '800px',
@@ -124,7 +124,7 @@ const PublicBanner = ({ userId }) => {
           {/* --- DERECHA: ACCIONES (Mensaje / Reporte) --- */}
           <Stack direction="row" spacing={1}>
             {/* Botón Reportar */}
-            <Tooltip title="Reportar usuario">
+            <Tooltip title="Denunciar usuario">
               <IconButton 
                 onClick={() => setMostrarModalReporte(true)}
                 sx={{ 

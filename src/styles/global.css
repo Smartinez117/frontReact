@@ -44,7 +44,7 @@ html, body, #root {
 :root {
   /* 🎨 Paleta de colores */
   --color-primario: #f8ce59;   /* Amarillo miel */
-  --color-secundario: #FFF4E0; /* Beige cálido (ajustado porque tu tabla tenía "#F" incompleto) */
+  --color-secundario: #FFF4E0; /* Beige cálido */
   --color-fondo: #FFFCF4;      /* Marfil */
   --color-texto: #3A2E2E;      /* Marrón grafito */
   --color-texto-sec: #7E7E7E;  /* Gris cálido */
@@ -270,7 +270,7 @@ background-color: #d69917;
 
 /* ===== Filtros ===== */
 .boton-toggle-filtros {
-background-color: #F1B400;
+background-color: var(--color-acento);
   color: #0D171C;
   border: none;
   padding: 10px 16px;
@@ -281,7 +281,7 @@ background-color: #F1B400;
 }
 
 .boton-toggle-filtros:hover {
-background-color: #d9a900;
+background-color: #849964;
 }
 
 .header-filtros {

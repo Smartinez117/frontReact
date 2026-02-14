@@ -19,7 +19,7 @@ import { getAuth } from "firebase/auth";
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function ReporteForm({ idPublicacion, idComentario, idUsuario, onClose }) {
-  const [tipo, setTipo] = useState("Spam"); // Valor por defecto para evitar clic extra
+  const [tipo, setTipo] = useState("Spam"); 
   const [descripcion, setDescripcion] = useState("");
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState(null);
@@ -35,7 +35,7 @@ export default function ReporteForm({ idPublicacion, idComentario, idUsuario, on
     const user = auth.currentUser;
 
     if (!user) {
-      setError("Debes iniciar sesión para reportar contenido.");
+      setError("Debes iniciar sesión para denunciar contenido.");
       setLoading(false);
       return;
     }
@@ -50,10 +50,9 @@ export default function ReporteForm({ idPublicacion, idComentario, idUsuario, on
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          // Enviamos null si no está definido, para cumplir con el contrato del backend
           id_publicacion: idPublicacion || null,
           id_comentario: idComentario || null,
-          id_usuario_reportado: idUsuario || null, // Mapeo correcto
+          id_usuario_reportado: idUsuario || null, 
           descripcion,
           tipo,
         }),
@@ -62,11 +61,10 @@ export default function ReporteForm({ idPublicacion, idComentario, idUsuario, on
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Error al enviar reporte");
+        throw new Error(data.error || "Error al enviar la denuncia");
       }
 
-      setMensaje("Reporte enviado con éxito. Gracias por tu colaboración.");
-      // Cerrar modal después de un breve delay para que el usuario lea el mensaje
+      setMensaje("Denuncia enviada con éxito. Gracias por tu colaboración.");
       setTimeout(() => {
         onClose();
       }, 2000);
@@ -114,11 +112,15 @@ export default function ReporteForm({ idPublicacion, idComentario, idUsuario, on
         </IconButton>
 
         <Typography variant="h6" gutterBottom>
-          {idComentario ? "Reportar Comentario" : "Reportar Publicación"}
+          {idComentario 
+            ? "Denunciar Comentario" 
+            : idPublicacion 
+              ? "Denunciar Publicación" 
+              : "Denunciar Usuario"}
         </Typography>
         
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Selecciona el motivo del reporte. Tu identidad se mantendrá anónima para el usuario reportado.
+          Selecciona el motivo de la denuncia. Tu identidad se mantendrá anónima para el usuario denunciado.
         </Typography>
 
         <form onSubmit={handleSubmit}>
@@ -136,6 +138,7 @@ export default function ReporteForm({ idPublicacion, idComentario, idUsuario, on
             </RadioGroup>
           </FormControl>
 
+          {/* --- AQUÍ ESTÁN LOS CAMBIOS EN EL TEXTFIELD --- */}
           <TextField
             label="Descripción adicional (Opcional)"
             placeholder="Danos más detalles para ayudarnos a entender..."
@@ -145,7 +148,19 @@ export default function ReporteForm({ idPublicacion, idComentario, idUsuario, on
             variant="outlined"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
-            sx={{ mt: 2, mb: 2 }}
+            // 1. Limite nativo del input
+            inputProps={{ maxLength: 500 }} 
+            // 2. Contador visual
+            helperText={`${descripcion.length}/500`}
+            // 3. Estilos para alinear el contador a la derecha
+            sx={{ 
+              mt: 2, 
+              mb: 2,
+              '& .MuiFormHelperText-root': {
+                textAlign: 'right',
+                color: descripcion.length === 500 ? 'error.main' : 'text.secondary'
+              }
+            }}
           />
 
           {error && (
@@ -168,7 +183,7 @@ export default function ReporteForm({ idPublicacion, idComentario, idUsuario, on
               type="submit" 
               variant="contained" 
               color="error" 
-              disabled={loading || mensaje} // Deshabilitar si carga o si ya se envió éxito
+              disabled={loading || mensaje} 
               startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
             >
               {loading ? "Enviando..." : "Denunciar"}

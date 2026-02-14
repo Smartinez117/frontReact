@@ -23,6 +23,9 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { CssVarsProvider } from '@mui/joy/styles';
 import JoyCssBaseline from '@mui/joy/CssBaseline';
 
+// --- IMPORTACIÓN DEL SERVICIO ---
+import { confirmarAccion, mostrarAlerta } from "../../../utils/confirmservice";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function UbicacionesAdmin() {
@@ -45,19 +48,14 @@ export default function UbicacionesAdmin() {
     nombre: '',
     latitud: '',
     longitud: '',
-    id_provincia: '',     // Necesario para la lógica visual del select
-    id_departamento: ''   // Necesario para la FK en la base de datos
+    id_provincia: '',    
+    id_departamento: ''  
   });
   
-  // Departamentos específicos del modal (para cuando editamos y la localidad puede ser de otra provincia)
   const [modalDepartamentos, setModalDepartamentos] = React.useState([]);
 
-  // ----------------------------------------------------------------
-  // 1. CARGA INICIAL (Provincias)
-  // ----------------------------------------------------------------
-  React.useEffect(() => {
-    fetchProvincias();
-  }, []);
+  // 1. CARGA INICIAL
+  React.useEffect(() => { fetchProvincias(); }, []);
 
   const fetchProvincias = async () => {
     try {
@@ -68,28 +66,21 @@ export default function UbicacionesAdmin() {
     }
   };
 
-  // ----------------------------------------------------------------
-  // 2. MANEJO DE FILTROS EN CASCADA (Toolbar Principal)
-  // ----------------------------------------------------------------
-  
-  // Al cambiar Provincia -> Cargo departamentos
+  // 2. MANEJO DE FILTROS EN CASCADA
   const handleFilterProvinciaChange = async (event, newValue) => {
     setSelectedProvincia(newValue);
-    setSelectedDepartamento(null); // Reset departamento
-    setLocalidades([]); // Limpiar tabla
-    setDepartamentos([]); // Limpiar select de deptos
+    setSelectedDepartamento(null);
+    setLocalidades([]);
+    setDepartamentos([]);
 
     if (newValue) {
       try {
         const res = await fetch(`${API_URL}/api/ubicacion/departamentos?provincia_id=${newValue}`);
         if (res.ok) setDepartamentos(await res.json());
-      } catch (error) {
-        console.error(error);
-      }
+      } catch (error) { console.error(error); }
     }
   };
 
-  // Al cambiar Departamento -> Cargo Localidades
   const handleFilterDepartamentoChange = async (event, newValue) => {
     setSelectedDepartamento(newValue);
     if (newValue) {
@@ -103,21 +94,12 @@ export default function UbicacionesAdmin() {
     try {
       const res = await fetch(`${API_URL}/api/ubicacion/localidades?departamento_id=${deptId}`);
       if (res.ok) setLocalidades(await res.json());
-    } catch (error) {
-      console.error("Error cargando localidades:", error);
-    }
+    } catch (error) { console.error("Error cargando localidades:", error); }
   };
 
-  // ----------------------------------------------------------------
-  // 3. LOGICA DEL MODAL (Crear / Editar)
-  // ----------------------------------------------------------------
-
-  // Abrir modal para CREAR
+  // 3. LOGICA DEL MODAL
   const handleOpenCreate = () => {
     setIsEditing(false);
-    
-    // Pre-llenamos el formulario con lo que el usuario ya seleccionó en el filtro
-    // para ahorrarle clics.
     const provId = selectedProvincia || '';
     const deptId = selectedDepartamento || '';
 
@@ -129,7 +111,6 @@ export default function UbicacionesAdmin() {
       id_departamento: deptId
     });
 
-    // Si hay provincia seleccionada, usamos los departamentos que ya tenemos cargados
     if (provId) {
         setModalDepartamentos(departamentos);
     } else {
@@ -138,24 +119,18 @@ export default function UbicacionesAdmin() {
     setOpenModal(true);
   };
 
-  // Abrir modal para EDITAR
   const handleOpenEdit = async (localidad) => {
     setIsEditing(true);
     setCurrentLocalidadId(localidad.id);
-
     try {
-        // 1. Obtenemos el detalle completo para saber el ID de Provincia y Departamento
         const res = await fetch(`${API_URL}/api/ubicacion/localidades/${localidad.id}`);
         const data = await res.json();
 
         if (res.ok) {
-            // 2. Cargamos los departamentos de la provincia a la que pertenece esta localidad
-            // (Puede ser distinta a la del filtro actual si los datos estuvieran mezclados)
             const resDept = await fetch(`${API_URL}/api/ubicacion/departamentos?provincia_id=${data.id_provincia}`);
             const depts = await resDept.json();
             setModalDepartamentos(depts);
 
-            // 3. Llenamos el form
             setFormData({
                 nombre: data.nombre,
                 latitud: data.latitud || '',
@@ -165,12 +140,9 @@ export default function UbicacionesAdmin() {
             });
             setOpenModal(true);
         }
-    } catch (error) {
-        console.error("Error obteniendo detalles:", error);
-    }
+    } catch (error) { console.error("Error obteniendo detalles:", error); }
   };
 
-  // Cascada interna del Modal (Si cambia provincia en el modal, recargar deptos del modal)
   const handleModalProvinciaChange = async (e, newValue) => {
     setFormData(prev => ({ ...prev, id_provincia: newValue, id_departamento: '' }));
     if (newValue) {
@@ -187,7 +159,7 @@ export default function UbicacionesAdmin() {
         nombre: formData.nombre,
         latitud: formData.latitud,
         longitud: formData.longitud,
-        id_departamento: formData.id_departamento // FK Obligatoria según tu modelo
+        id_departamento: formData.id_departamento
     };
 
     try {
@@ -207,40 +179,49 @@ export default function UbicacionesAdmin() {
 
         if (res.ok) {
             setOpenModal(false);
-            // Si estamos visualizando el mismo departamento donde guardamos/editamos, refrescar tabla
-            if (selectedDepartamento && Number(formData.id_departamento) === Number(selectedDepartamento)) {
+            
+            // Lógica de feedback visual
+            const deptoSeleccionadoNum = Number(selectedDepartamento);
+            const deptoGuardadoNum = Number(formData.id_departamento);
+
+            if (selectedDepartamento && deptoGuardadoNum === deptoSeleccionadoNum) {
                 fetchLocalidades(selectedDepartamento);
+                mostrarAlerta({ titulo: 'Éxito', mensaje: 'Localidad guardada correctamente', tipo: 'success' });
             } else if (selectedDepartamento) {
-                // Si movimos la localidad a otro departamento, avisar y refrescar (desaparecerá de la vista actual)
-                alert("Guardado correctamente. La localidad se movió a otro partido/departamento.");
-                fetchLocalidades(selectedDepartamento);
+                fetchLocalidades(selectedDepartamento); 
+                mostrarAlerta({ 
+                    titulo: 'Atención', 
+                    mensaje: 'Guardado correctamente. La localidad se movió a otro partido/departamento y ya no es visible en esta lista.', 
+                    tipo: 'warning',
+                    duracion: 4000
+                });
+            } else {
+                 mostrarAlerta({ titulo: 'Éxito', mensaje: 'Localidad guardada correctamente', tipo: 'success' });
             }
+
         } else {
             const err = await res.json();
-            alert(err.error || "Error al guardar");
+            mostrarAlerta({ titulo: 'Error', mensaje: err.error || "Error al guardar", tipo: 'error' });
         }
     } catch (error) {
         console.error(error);
+        mostrarAlerta({ titulo: 'Error', mensaje: 'Error de conexión', tipo: 'error' });
     }
   };
 
-  // ----------------------------------------------------------------
-  // 4. BORRAR
-  // ----------------------------------------------------------------
-  const handleDelete = async (id) => {
-    if (!window.confirm("¿Estás seguro de eliminar esta localidad?")) return;
-    try {
-        const res = await fetch(`${API_URL}/api/ubicacion/localidades/${id}`, {
-            method: 'DELETE'
-        });
-        if (res.ok) {
-            setLocalidades(prev => prev.filter(l => l.id !== id));
-        } else {
-            alert("Error al eliminar");
+  // 4. BORRAR CON SWEETALERT (CORREGIDO)
+  const handleDelete = (localidad) => { // Recibimos el objeto completo 'row'
+    confirmarAccion({
+        tipo: 'localidad',
+        dato: localidad.nombre, // Pasamos el nombre para el mensaje
+        onConfirm: async () => {
+             const res = await fetch(`${API_URL}/api/ubicacion/localidades/${localidad.id}`, { method: 'DELETE' });
+             if (!res.ok) {
+                 throw new Error("No se pudo eliminar la localidad.");
+             }
+             setLocalidades(prev => prev.filter(l => l.id !== localidad.id));
         }
-    } catch (error) {
-        console.error(error);
-    }
+    });
   };
 
   return (
@@ -248,72 +229,30 @@ export default function UbicacionesAdmin() {
       <JoyCssBaseline />
       
       {/* --- BARRA DE HERRAMIENTAS / FILTROS --- */}
-      <Sheet
-        variant="outlined"
-        sx={{
-          width: '100%',
-          maxWidth: '1000px',
-          mx: 'auto',
-          borderRadius: 'sm',
-          p: 2,
-          mb: 2,
-          display: 'flex',
-          gap: 2,
-          alignItems: 'flex-end',
-          flexWrap: 'wrap',
-          bgcolor: 'background.surface'
-        }}
-      >
+      <Sheet variant="outlined" sx={{ width: '100%', maxWidth: '1000px', mx: 'auto', borderRadius: 'sm', p: 2, mb: 2, display: 'flex', gap: 2, alignItems: 'flex-end', flexWrap: 'wrap', bgcolor: 'background.surface' }}>
         <FormControl size="sm" sx={{ minWidth: 200 }}>
             <FormLabel>1. Provincia</FormLabel>
-            <Select 
-                placeholder="Seleccionar..." 
-                value={selectedProvincia} 
-                onChange={handleFilterProvinciaChange}
-            >
-                {provincias.map(p => (
-                    <Option key={p.id} value={p.id}>{p.nombre}</Option>
-                ))}
+            <Select placeholder="Seleccionar..." value={selectedProvincia} onChange={handleFilterProvinciaChange}>
+                {provincias.map(p => ( <Option key={p.id} value={p.id}>{p.nombre}</Option> ))}
             </Select>
         </FormControl>
 
         <FormControl size="sm" sx={{ minWidth: 200 }}>
             <FormLabel>2. Partido / Departamento</FormLabel>
-            <Select 
-                placeholder="Seleccionar..." 
-                value={selectedDepartamento} 
-                onChange={handleFilterDepartamentoChange}
-                disabled={!selectedProvincia}
-            >
-                {departamentos.map(d => (
-                    <Option key={d.id} value={d.id}>{d.nombre}</Option>
-                ))}
+            <Select placeholder="Seleccionar..." value={selectedDepartamento} onChange={handleFilterDepartamentoChange} disabled={!selectedProvincia}>
+                {departamentos.map(d => ( <Option key={d.id} value={d.id}>{d.nombre}</Option> ))}
             </Select>
         </FormControl>
 
         <Box sx={{ ml: 'auto' }}>
-            <Button 
-                startDecorator={<AddIcon />} 
-                onClick={handleOpenCreate}
-                disabled={!selectedDepartamento} // Obligamos a seleccionar contexto antes de crear
-            >
+            <Button startDecorator={<AddIcon />} onClick={handleOpenCreate} disabled={!selectedDepartamento}>
                 Nueva Localidad
             </Button>
         </Box>
       </Sheet>
 
       {/* --- TABLA DE DATOS --- */}
-      <Sheet
-        variant="outlined"
-        sx={{
-          width: '100%',
-          maxWidth: '1000px',
-          mx: 'auto',
-          borderRadius: 'sm',
-          boxShadow: 'sm',
-          overflow: 'auto'
-        }}
-      >
+      <Sheet variant="outlined" sx={{ width: '100%', maxWidth: '1000px', mx: 'auto', borderRadius: 'sm', boxShadow: 'sm', overflow: 'auto' }}>
         <Table hoverRow stickyHeader>
           <thead>
             <tr>
@@ -329,24 +268,17 @@ export default function UbicacionesAdmin() {
                 localidades.map((row) => (
                 <tr key={row.id}>
                     <td><Typography level="body-xs">{row.id}</Typography></td>
-                    <td>
-                        <Typography fontWeight="lg" startDecorator={<LocationOnIcon color="error" sx={{ fontSize: 18 }} />}>
-                            {row.nombre}
-                        </Typography>
-                    </td>
+                    <td><Typography fontWeight="lg" startDecorator={<LocationOnIcon color="error" sx={{ fontSize: 18 }} />}>{row.nombre}</Typography></td>
                     <td>{row.latitud}</td>
                     <td>{row.longitud}</td>
                     <td style={{ textAlign: 'center' }}>
                         <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                             <Tooltip title="Editar">
-                                <IconButton size="sm" variant="plain" color="neutral" onClick={() => handleOpenEdit(row)}>
-                                    <EditIcon />
-                                </IconButton>
+                                <IconButton size="sm" variant="plain" color="neutral" onClick={() => handleOpenEdit(row)}><EditIcon /></IconButton>
                             </Tooltip>
                             <Tooltip title="Eliminar">
-                                <IconButton size="sm" variant="plain" color="danger" onClick={() => handleDelete(row.id)}>
-                                    <DeleteIcon />
-                                </IconButton>
+                                {/* AQUÍ SE CAMBIÓ: pasamos 'row' en lugar de 'row.id' */}
+                                <IconButton size="sm" variant="plain" color="danger" onClick={() => handleDelete(row)}><DeleteIcon /></IconButton>
                             </Tooltip>
                         </Box>
                     </td>
@@ -355,9 +287,7 @@ export default function UbicacionesAdmin() {
             ) : (
                 <tr>
                     <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: '#777' }}>
-                        {!selectedDepartamento 
-                            ? "Por favor selecciona una Provincia y un Partido para gestionar las localidades."
-                            : "No hay localidades cargadas en este partido."}
+                        {!selectedDepartamento ? "Por favor selecciona una Provincia y un Partido para gestionar las localidades." : "No hay localidades cargadas en este partido."}
                     </td>
                 </tr>
             )}
@@ -368,75 +298,41 @@ export default function UbicacionesAdmin() {
       {/* --- MODAL FORMULARIO --- */}
       <Modal open={openModal} onClose={() => setOpenModal(false)}>
         <ModalDialog sx={{ minWidth: 400 }}>
-            <Typography level="h4" mb={2}>
-                {isEditing ? 'Editar Localidad' : 'Nueva Localidad'}
-            </Typography>
+            <Typography level="h4" mb={2}>{isEditing ? 'Editar Localidad' : 'Nueva Localidad'}</Typography>
             <form onSubmit={handleSubmit}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    
-                    {/* Select Provincia (Solo lectura visual o cambio de contexto) */}
                     <FormControl required>
                         <FormLabel>Provincia</FormLabel>
-                        <Select 
-                            value={formData.id_provincia} 
-                            onChange={handleModalProvinciaChange}
-                            placeholder="Seleccione provincia"
-                        >
-                            {provincias.map(p => (
-                                <Option key={p.id} value={p.id}>{p.nombre}</Option>
-                            ))}
+                        <Select value={formData.id_provincia} onChange={handleModalProvinciaChange} placeholder="Seleccione provincia">
+                            {provincias.map(p => ( <Option key={p.id} value={p.id}>{p.nombre}</Option> ))}
                         </Select>
                     </FormControl>
 
-                    {/* Select Departamento (Define la FK id_departamento) */}
                     <FormControl required>
                         <FormLabel>Partido / Departamento</FormLabel>
-                        <Select 
-                            value={formData.id_departamento} 
-                            onChange={(e, val) => setFormData({ ...formData, id_departamento: val })}
-                            placeholder="Seleccione departamento"
-                            disabled={!formData.id_provincia}
-                        >
-                            {modalDepartamentos.map(d => (
-                                <Option key={d.id} value={d.id}>{d.nombre}</Option>
-                            ))}
+                        <Select value={formData.id_departamento} onChange={(e, val) => setFormData({ ...formData, id_departamento: val })} placeholder="Seleccione departamento" disabled={!formData.id_provincia}>
+                            {modalDepartamentos.map(d => ( <Option key={d.id} value={d.id}>{d.nombre}</Option> ))}
                         </Select>
                     </FormControl>
 
                     <FormControl required>
                         <FormLabel>Nombre Localidad</FormLabel>
-                        <Input 
-                            value={formData.nombre} 
-                            onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} 
-                        />
+                        <Input value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} />
                     </FormControl>
 
-                    {/* Inputs Lat/Long adaptados para Numeric(15,10) */}
                     <Box sx={{ display: 'flex', gap: 2 }}>
                         <FormControl sx={{ flex: 1 }}>
                             <FormLabel>Latitud</FormLabel>
-                            <Input 
-                                type="number" 
-                                step="any" // Permite decimales de alta precisión
-                                value={formData.latitud} 
-                                onChange={(e) => setFormData({ ...formData, latitud: e.target.value })} 
-                            />
+                            <Input type="number" step="any" value={formData.latitud} onChange={(e) => setFormData({ ...formData, latitud: e.target.value })} />
                         </FormControl>
                         <FormControl sx={{ flex: 1 }}>
                             <FormLabel>Longitud</FormLabel>
-                            <Input 
-                                type="number" 
-                                step="any" // Permite decimales de alta precisión
-                                value={formData.longitud} 
-                                onChange={(e) => setFormData({ ...formData, longitud: e.target.value })} 
-                            />
+                            <Input type="number" step="any" value={formData.longitud} onChange={(e) => setFormData({ ...formData, longitud: e.target.value })} />
                         </FormControl>
                     </Box>
 
                     <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 2 }}>
-                        <Button variant="plain" color="neutral" onClick={() => setOpenModal(false)}>
-                            Cancelar
-                        </Button>
+                        <Button variant="plain" color="neutral" onClick={() => setOpenModal(false)}>Cancelar</Button>
                         <Button type="submit">Guardar</Button>
                     </Box>
                 </Box>

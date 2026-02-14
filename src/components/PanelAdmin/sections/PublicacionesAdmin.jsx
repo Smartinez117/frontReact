@@ -23,7 +23,10 @@ import { red, grey } from '@mui/material/colors';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete'; 
 import SearchIcon from '@mui/icons-material/Search'; 
-import { Dialog, DialogTitle, DialogContent, DialogActions, Chip } from '@mui/material';
+import { Chip } from '@mui/material';
+
+// IMPORTAMOS EL SERVICIO DE CONFIRMACIÓN
+import { confirmarAccion } from "../../../utils/confirmservice";
 
 const ExpandMore = styled((props) => {
   const { expand, ...other } = props;
@@ -49,8 +52,6 @@ function PaginationRounded({ count, page, onChange }) {
 export default function PublicacionesAdmin() {
   const [publicaciones, setPublicaciones] = React.useState([]);
   const [expanded, setExpanded] = React.useState({});
-  const [confirmBorrarPubOpen, setConfirmBorrarPubOpen] = React.useState(false);
-  const [publicacionSeleccionada, setPublicacionSeleccionada] = React.useState(null);
   const [page, setPage] = React.useState(1);
   const [total, setTotal] = React.useState(0);
   
@@ -60,12 +61,11 @@ export default function PublicacionesAdmin() {
   const [activeFilter, setActiveFilter] = React.useState('');
   // -------------------------------------
 
+  // Snackbar se mantiene para feedback de acciones masivas o errores generales
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const [snackbarMessage, setSnackbarMessage] = React.useState('');
   const [snackbarSeverity, setSnackbarSeverity] = React.useState('success');
   const [loadingArchivar, setLoadingArchivar] = React.useState({});
-  const [loadingBorrar, setLoadingBorrar] = React.useState({});
-  const [loadingBorrarModal, setLoadingBorrarModal] = React.useState(false);
 
   const limit = 9;
 
@@ -128,83 +128,68 @@ export default function PublicacionesAdmin() {
     });
   };
 
-  // --- BORRADO MASIVO ---
-  const handleBulkDelete = async () => {
-    if (!window.confirm(`¿Estás seguro de eliminar ${selectedIds.length} publicaciones seleccionadas?`)) return;
+  // --- BORRADO MASIVO CON CONFIRMACIÓN ---
+  const handleBulkDelete = () => {
+    confirmarAccion({
+      tipo: 'publicacion', // Reutilizamos el estilo de eliminación
+      dato: `${selectedIds.length} publicaciones seleccionadas`, // El mensaje dirá: eliminar la publicación "5 publicaciones..." (se entiende)
+      onConfirm: async () => {
+        const deletePromises = selectedIds.map(id => 
+            fetch(`${API_URL}/publicaciones/${id}`, { method: 'DELETE' })
+        );
 
-    const deletePromises = selectedIds.map(id => 
-        fetch(`${API_URL}/publicaciones/${id}`, { method: 'DELETE' })
-    );
+        const results = await Promise.all(deletePromises);
+        // Verificar si alguno falló (opcional)
+        const algunFallo = results.some(r => !r.ok);
+        
+        if (algunFallo) {
+           throw new Error("Error al eliminar algunas publicaciones");
+        }
 
-    try {
-        await Promise.all(deletePromises);
         fetchPublicaciones(page, activeFilter);
         setSelectedIds([]);
-        setSnackbarMessage(`${selectedIds.length} publicaciones eliminadas.`);
-        setSnackbarSeverity("success");
-        setSnackbarOpen(true);
-    } catch (error) {
-        console.error("Error en borrado masivo:", error);
-        setSnackbarMessage("Error al eliminar algunas publicaciones");
-        setSnackbarSeverity("error");
-        setSnackbarOpen(true);
-    }
+      }
+    });
   };
 
-  // --- Lógica Individual ---
-  const handleArchivar = async (pub) => {
+  // --- ARCHIVAR / DESARCHIVAR CON CONFIRMACIÓN ---
+  const handleArchivar = (pub) => {
     const isArchived = pub.estado === 1; 
-    const endpoint = isArchived ? 'desarchivar' : 'archivar';
+    const accion = isArchived ? 'desarchivar' : 'archivar';
     
-    setLoadingArchivar(prev => ({ ...prev, [pub.id]: true }));
-    try {
-      const res = await fetch(`${API_URL}/publicaciones/${pub.id}/${endpoint}`, { method: 'PATCH' });
-      if (!res.ok) throw new Error(`Error al ${endpoint}`);
-
-      setPublicaciones(prev => prev.map(p => {
-        if (p.id === pub.id) return { ...p, estado: isArchived ? 0 : 1 };
-        return p;
-      }));
-
-      setSnackbarMessage(isArchived ? "Publicación desarchivada" : "Publicación archivada");
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
-    } catch (error) {
-      setSnackbarMessage(`Error: ${error.message}`);
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-    } finally {
-      setLoadingArchivar(prev => ({ ...prev, [pub.id]: false }));
-    }
+    confirmarAccion({
+      tipo: accion,
+      dato: pub.titulo,
+      onConfirm: async () => {
+        setLoadingArchivar(prev => ({ ...prev, [pub.id]: true }));
+        try {
+          const res = await fetch(`${API_URL}/publicaciones/${pub.id}/${accion}`, { method: 'PATCH' });
+          if (!res.ok) throw new Error(`Error al ${accion}`);
+    
+          setPublicaciones(prev => prev.map(p => {
+            if (p.id === pub.id) return { ...p, estado: isArchived ? 0 : 1 };
+            return p;
+          }));
+        } finally {
+          setLoadingArchivar(prev => ({ ...prev, [pub.id]: false }));
+        }
+      }
+    });
   };
 
-  const handleBorrarPublicacionModal = (pub) => {
-    setPublicacionSeleccionada(pub);
-    setConfirmBorrarPubOpen(true);
-  };
-
-  const ejecutarBorradoPublicacion = async () => {
-    if (!publicacionSeleccionada) return;
-    setLoadingBorrarModal(true);
-    try {
-      const res = await fetch(`${API_URL}/publicaciones/${publicacionSeleccionada.id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Error al eliminar");
-
-      setPublicaciones(prev => prev.filter(p => p.id !== publicacionSeleccionada.id));
-      setTotal(prev => prev - 1);
-      setConfirmBorrarPubOpen(false);
-      setPublicacionSeleccionada(null);
-
-      setSnackbarMessage("Publicación borrada");
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
-    } catch (error) {
-      setSnackbarMessage(`Error: ${error.message}`);
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-    } finally {
-      setLoadingBorrarModal(false);
-    }
+  // --- BORRAR INDIVIDUAL CON CONFIRMACIÓN ---
+  const handleBorrarPublicacion = (pub) => {
+    confirmarAccion({
+        tipo: 'publicacion',
+        dato: pub.titulo,
+        onConfirm: async () => {
+            const res = await fetch(`${API_URL}/publicaciones/${pub.id}`, { method: "DELETE" });
+            if (!res.ok) throw new Error("Error al eliminar");
+      
+            setPublicaciones(prev => prev.filter(p => p.id !== pub.id));
+            setTotal(prev => prev - 1);
+        }
+    });
   };
 
   const handlePageChange = (event, value) => {
@@ -242,16 +227,14 @@ export default function PublicacionesAdmin() {
                         Limpiar
                     </Button>
                     
-                    {/* CHECKBOX MAESTRO ARREGLADO */}
+                    {/* CHECKBOX MAESTRO */}
                     <Box 
                         sx={{ display: 'flex', alignItems: 'center', ml: 2, borderLeft: '1px solid #ccc', pl: 2, cursor: 'pointer' }}
                         onClick={(e) => {
                             e.stopPropagation();
                             if (isAllSelected) {
-                                // Desmarcar todos los visibles
                                 setSelectedIds(prev => prev.filter(id => !allVisibleIds.includes(id)));
                             } else {
-                                // Marcar todos los visibles
                                 setSelectedIds(prev => [...new Set([...prev, ...allVisibleIds])]);
                             }
                         }}
@@ -259,7 +242,6 @@ export default function PublicacionesAdmin() {
                         <Checkbox 
                             checked={isAllSelected}
                             indeterminate={isSomeSelected && !isAllSelected}
-                            // SOLUCION: Desactivar eventos de puntero en el Checkbox para que el Box capture el clic siempre
                             style={{ pointerEvents: 'none' }} 
                             color="error"
                             sx={{ p: 0, mr: 1 }}
@@ -322,7 +304,6 @@ export default function PublicacionesAdmin() {
                                     e.stopPropagation();
                                     handleToggleSelect(pub.id);
                                 }}
-                                // Aseguramos que aquí SÍ se pueda hacer click
                                 sx={{ p: 0, pointerEvents: 'auto' }} 
                                 color="error"
                             />
@@ -359,7 +340,17 @@ export default function PublicacionesAdmin() {
                       color="primary" 
                       href={`/publicacion/${pub.id}`} 
                       target="_blank"
-                      disabled={loadingArchivar[pub.id] || loadingBorrar[pub.id]}
+                      sx={{
+                        mr: 1,
+                        backgroundColor: '#F1B400;', 
+                        color: '#000000', 
+                        fontWeight: 'bold',
+                        boxShadow: 'none', 
+                        '&:hover': {
+                          backgroundColor: '#e0ba50',
+                          borderColor: '#e0ba50',
+                        }
+                      }}
                     >
                       Ver
                     </Button>
@@ -367,10 +358,9 @@ export default function PublicacionesAdmin() {
                     <Button
                       variant="contained"
                       size="small"
-                      color={isArchived ? "success" : "warning"} 
                       onClick={() => handleArchivar(pub)}
-                      disabled={loadingArchivar[pub.id] || loadingBorrar[pub.id]}
-                      sx={{ position: "relative" }}
+                      disabled={loadingArchivar[pub.id]}
+                      sx={{ position: "relative", color: "#ffffff", backgroundColor: isArchived ? "#34495e" : "#34495e", '&:hover': { backgroundColor: isArchived ? "#2c3e50" : "#2c3e50" } }}
                     >
                       {loadingArchivar[pub.id] ? (
                         <CircularProgress size={20} sx={{ position: "absolute" }} />
@@ -383,15 +373,9 @@ export default function PublicacionesAdmin() {
                       variant="contained" 
                       size="small" 
                       color="error" 
-                      onClick={() => handleBorrarPublicacionModal(pub)}
-                      disabled={loadingArchivar[pub.id] || loadingBorrar[pub.id]}
-                      sx={{ position: "relative" }}
+                      onClick={() => handleBorrarPublicacion(pub)}
                     >
-                      {loadingBorrar[pub.id] ? (
-                        <CircularProgress size={20} sx={{ position: "absolute" }} />
-                      ) : (
-                        "Borrar"
-                      )}
+                      Eliminar
                     </Button>
 
                     <ExpandMore
@@ -399,7 +383,6 @@ export default function PublicacionesAdmin() {
                       onClick={() => handleExpandClick(pub.id)}
                       aria-expanded={expanded[pub.id]}
                       aria-label="show more"
-                      disabled={loadingArchivar[pub.id] || loadingBorrar[pub.id]}
                     >
                       <ExpandMoreIcon />
                     </ExpandMore>
@@ -421,33 +404,6 @@ export default function PublicacionesAdmin() {
         page={page}
         onChange={handlePageChange}
       />
-
-      <Dialog open={confirmBorrarPubOpen} onClose={() => setConfirmBorrarPubOpen(false)}>
-        <DialogTitle>Confirmar eliminación</DialogTitle>
-        <DialogContent>
-          {publicacionSeleccionada && (
-            <Typography>
-              ¿Seguro que quieres borrar la publicación <b>{publicacionSeleccionada.titulo}</b>?
-            </Typography>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmBorrarPubOpen(false)} disabled={loadingBorrarModal}>Cancelar</Button>
-          <Button 
-            variant="contained" 
-            color="error" 
-            onClick={ejecutarBorradoPublicacion}
-            disabled={loadingBorrarModal}
-            sx={{ position: "relative" }}
-          >
-            {loadingBorrarModal ? (
-              <CircularProgress size={20} sx={{ position: "absolute" }} />
-            ) : (
-              "Eliminar"
-            )}
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       <Snackbar
         open={snackbarOpen}

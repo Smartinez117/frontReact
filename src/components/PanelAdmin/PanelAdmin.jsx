@@ -223,7 +223,7 @@ export default function PanelAdmin() {
     if (location.pathname.includes("comentarios")) return "Comentarios";
     if (location.pathname.includes("ubicaciones")) return "Ubicaciones";
     if (location.pathname.includes("etiquetas")) return "Etiquetas";
-    if (location.pathname.includes("reportes")) return "Reportes";
+    if (location.pathname.includes("reportes")) return "Denuncias";
     if (location.pathname.includes("actividad")) return "Actividad";
     return "Inicio";
   };
